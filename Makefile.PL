@@ -14,7 +14,7 @@ WriteMakefile(
 		'Scalar::Util::Numeric'			=> '0.40',
 		'Tk::FontDialog'					=> '0.18',
 		'Tk'									=> 0,
-		'Tk::GtkSettings'					=> '0.03'
+		'Tk::GtkSettings'					=> '0.03',
 		'Tk::Pod'							=> 0,
 	},
 	ABSTRACT_FROM		=> 'lib/Tk/AppWindow.pm',
