@@ -5,14 +5,14 @@ use AWTestSuite;
 use Tk;
 
 use Test::More tests => 4;
-BEGIN { use_ok('Tk::AppWindow::AWMessage') };
+BEGIN { use_ok('Tk::YAMessage') };
 
 
 CreateTestApp(
 	-plugins => [qw[Art]],
 );
 
-my $dialog = $app->AWMessage(
+my $dialog = $app->YAMessage(
 	-text => "This is a loong looooong \nloooooong\n long longer\n longest message!",
 	-image => $app->GetArt('dialog-information', 32),
 	-defaultbutton => 'Ok',

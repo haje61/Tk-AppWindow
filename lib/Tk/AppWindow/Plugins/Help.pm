@@ -15,7 +15,7 @@ use base qw( Tk::AppWindow::BaseClasses::Plugin );
 
 use Browser::Open qw(open_browser);
 use Tk;
-require Tk::AppWindow::AWDialog;
+require Tk::YADialog;
 require Tk::NoteBook;
 require Tk::ROText;
 require Tk::Pod::Text;
@@ -71,7 +71,7 @@ sub CmdAbout {
 	my $self = shift;
 	my $inf = $self->ConfigGet('-aboutinfo');
 	my $w = $self->GetAppWindow;
-	my $db = $w->AWDialog(
+	my $db = $w->YADialog(
 		-buttons => ['Ok'],
 		-defaultbutton => 'Ok',
 		-title => 'About ' . $w->AppName,
@@ -136,7 +136,7 @@ sub CmdHelp {
 	my $file = $self->ConfigGet('-helpfile');
 	if ($type eq 'pod') {
 		my $w = $self->GetAppWindow;
-		my $db = $w->AWDialog(
+		my $db = $w->YADialog(
 			-buttons => ['Ok'],
 			-title => 'Help',
 		);

@@ -6,13 +6,13 @@ use AWTestSuite;
 use Tk;
 
 use Test::More tests => 4;
-BEGIN { use_ok('Tk::AppWindow::AWDialog') };
+BEGIN { use_ok('Tk::YADialog') };
 
 
 CreateTestApp(
 );
 
-my $dialog = $app->AWDialog(
+my $dialog = $app->YADialog(
 	-buttons => ['Close'],
 );
 

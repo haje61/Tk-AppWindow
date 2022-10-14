@@ -6,13 +6,13 @@ use AWTestSuite;
 use Tk;
 
 use Test::More tests => 4;
-BEGIN { use_ok('Tk::AppWindow::AWColorDialog') };
+BEGIN { use_ok('Tk::YAColorDialog') };
 
 
 CreateTestApp(
 );
 
-my $dialog = $app->AWColorDialog(
+my $dialog = $app->YAColorDialog(
 );
 
 @tests = (

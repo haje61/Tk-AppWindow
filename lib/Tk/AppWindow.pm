@@ -19,7 +19,7 @@ Construct Tk::Widget 'AppWindow';
 use File::Basename;
 use Module::Load::Conditional('check_install', 'can_load');
 require Tk::AppWindow::BaseClasses::Callback;
-require Tk::AppWindow::AWMessage;
+require Tk::YAMessage;
 require Tk::PNG;
 # use Tk::Xrm;
 
@@ -415,7 +415,7 @@ sub PopMessage {
 	my ($self, $text, $icon, $size) = @_;
 	$icon = 'dialog-information' unless defined $icon;
 	$size = 32 unless defined $size;
-	my $m = $self->AWMessage(
+	my $m = $self->YAMessage(
 		-text => $text,
 		-image => $self->GetArt($icon, $size),
 	);

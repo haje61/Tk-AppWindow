@@ -6,7 +6,6 @@ use warnings;
 use vars qw($VERSION);
 $VERSION="0.01";
 use File::Basename;
-require Tk::AppWindow::AWDialog;
 
 use base qw( Tk::AppWindow::BaseClasses::Plugin );
 

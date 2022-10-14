@@ -4,7 +4,7 @@ use warnings;
 use lib './t/lib';
 use AWTestSuite;
 
-use Test::More tests => 5;
+use Test::More tests => 4;
 BEGIN { 
 # 	use_ok('Tk::AppWindow::AWSettingsDialog::CBooleanItem');
 # 	use_ok('Tk::AppWindow::AWSettingsDialog::CColorItem');

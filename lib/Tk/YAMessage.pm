@@ -1,8 +1,8 @@
-package Tk::YAMessageDialog;
+package Tk::YAMessage;
 
 use Tk;
 use base qw(Tk::Derived Tk::YADialog);
-Construct Tk::Widget 'YAMessageDialog';
+Construct Tk::Widget 'YAMessage';
 
 sub Populate {
 	my ($self,$args) = @_;
