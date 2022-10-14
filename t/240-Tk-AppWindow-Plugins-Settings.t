@@ -6,17 +6,6 @@ use AWTestSuite;
 
 use Test::More tests => 4;
 BEGIN { 
-# 	use_ok('Tk::AppWindow::AWSettingsDialog::CBooleanItem');
-# 	use_ok('Tk::AppWindow::AWSettingsDialog::CColorItem');
-# 	use_ok('Tk::AppWindow::AWSettingsDialog::CFileItem');
-# 	use_ok('Tk::AppWindow::AWSettingsDialog::CFloatItem');
-# 	use_ok('Tk::AppWindow::AWSettingsDialog::CFolderItem');
-# 	use_ok('Tk::AppWindow::AWSettingsDialog::CFontItem');
-# 	use_ok('Tk::AppWindow::AWSettingsDialog::CIntegerItem');
-# 	use_ok('Tk::AppWindow::AWSettingsDialog::CListItem');
-# 	use_ok('Tk::AppWindow::AWSettingsDialog::CRadioItem');
-# 	use_ok('Tk::AppWindow::AWSettingsDialog::CTextItem');
-# 	use_ok('Tk::AppWindow::AWSettingsDialog');
 	use_ok('Tk::AppWindow::Plugins::Settings');
 };
 
