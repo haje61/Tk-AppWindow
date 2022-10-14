@@ -25,7 +25,7 @@ sub Populate {
 		-filestamp => ['PASSIVE', undef, undef, ''],
 		DEFAULT => ['SELF'],
 	);
-	$self->after(1, ['Configure', $self]);
+	$self->after(1, ['ConfigureCM', $self]);
 }
 
 sub Close {
@@ -35,7 +35,14 @@ sub Close {
 	return 1
 }
 
-sub Configure {
+sub ConfigureCM {
+	my $self = shift;
+	my $plug = $self->Plug;
+	my $cmopt = $plug->ConfigGet('-contentmanageroptions');
+	for (@$cmopt) {
+		my $val = $plug->ConfigGet($_);
+		$self->configure($_, $val) if ((defined $val) and ($val ne ''));
+	}
 }
 
 sub ConfigureBindings {

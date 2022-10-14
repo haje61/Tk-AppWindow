@@ -116,14 +116,7 @@ sub CmdFileClose {
 sub CmdFileNew {
 	my $self = shift;
 	if ($self->CmdFileClose) {
-		my @opt = (-plugin => $self);
-# 		my $cmopt = $self->ConfigGet('-contentmanageroptions');
-# 		for (@$cmopt) {
-# 			my $val = $self->ConfigGet($_);
-# 			push @opt, $_, $val if (defined $val) and ($val ne '');
-# 		}
-		my $cmclass = $self->ConfigGet('-contentmanagerclass');
-		my $cm = $self->WorkSpace->$cmclass(@opt)->pack(-expand => 1, -fill => 'both');
+		my $cm = $self->CreateContentHandler->pack(-expand => 1, -fill => 'both');
 		$self->CurDoc($cm);
 		$self->update;
 		return 1
@@ -218,6 +211,14 @@ sub CmdPopulateHistoryMenu {
 	}
 }
 
+sub CreateContentHandler {
+	my $self = shift;
+	my $cmclass = $self->ConfigGet('-contentmanagerclass');
+	my $h = $self->WorkSpace->$cmclass(-plugin => $self);
+# 	$h->ConfigureCM;
+	return $h
+}
+
 sub LoadHistory {
 	my $self = shift;
 	my $folder = $self->ConfigGet('-configfolder');
@@ -262,7 +263,7 @@ sub ReConfigure {
 	my $self = shift;
 	print "reconfigure called\n";
 	my $doc = $self->CurDoc;
-	$doc->Configure if defined $doc;
+	$doc->ConfigureCM if defined $doc;
 }
 
 sub SaveHistory {

@@ -14,16 +14,9 @@ $VERSION="0.01";
 
 use base qw( Tk::AppWindow::BaseClasses::Plugin );
 
-require Tk::AppWindow::AWSettingsDialog;
+require Tk::YADialog;
+require Tk::TabbedForm;
 
-
-my %typeclasses = (
-	boolean => 'CBooleanItem',
-	color => 'CColorItem',
-	float => 'CFloatItem',
-	'integer' => 'CIntegerItem',
-	text => 'CTextItem',
-);
 
 =head1 SYNOPSIS
 
@@ -36,7 +29,7 @@ my %typeclasses = (
 
 =cut
 
-=head1 B<CONFIG VARIABLES>
+=head1 CONFIG VARIABLES
 
 =over 4
 
@@ -72,12 +65,63 @@ sub new {
 
 sub CmdSettings {
 	my $self = shift;
-	my $m = $self->AWSettingsDialog(
+	my $m = $self->GetAppWindow->YADialog(
+		-buttons => ['Close'],
 		-title => 'Configure settings',
-		-plugin => $self,
 	);
-	$m->Show(-popover => $self);
+	
+	my $f;
+	my $b = $m->Subwidget('buttonframe')->Button(
+		-text => 'Apply',
+		-command => sub {
+			my %options = $f->Get;
+			my @opts = sort keys %options;
+			for (@opts) {
+				my $val = $options{$_};
+				$self->ConfigPut($_, $val) if $val ne '';
+			}
+			$self->ReConfigureAll;
+			$self->SaveSettings(@opts);
+		}
+	);
+	$f = $m->TabbedForm(
+		-listcall => ['CommandExecute', $self],
+		-structure => $self->ConfigGet('-useroptions'),
+		-postvalidatecall => sub {
+			my $flag = shift;
+			if ($flag) {
+				$b->configure('-state', 'normal')
+			} else {
+				$b->configure('-state', 'disabled')
+			}
+		},
+	)->pack(-expand => 1, -fill => 'both');
+	$f->CreateForm;
+	$f->Put($self->GetUserOptions);
+	
+	$m->ButtonPack($b);
+	$m->Show(-popover => $self->GetAppWindow);
 	$m->destroy;
+}
+
+sub GetUserOptions {
+	my $self = shift;
+	my $uo = $self->ConfigGet('-useroptions');
+	my @options = @$uo;
+	my %usopt = ();
+	while (@options) {
+		my $key = shift @options;
+		if (($key eq '*page') or ($key eq '*section')) {
+			shift @options;
+			next;
+		}
+		if ($key eq '*end') {
+			next;
+		}
+		shift @options;
+		$usopt{$key} = $self->ConfigGet($key);
+	}
+	return %usopt
 }
 
 sub LoadSettings {
@@ -89,11 +133,11 @@ sub LoadSettings {
 	my @temp = (@$uo);
 	while (@temp) {
 		my $key = shift @temp;
-		if (($key eq 'page') or ($key eq 'section')) {
+		if (($key eq '*page') or ($key eq '*section')) {
 			shift @temp;
 			next;
 		}
-		if ($key eq 'end') {
+		if ($key eq '*end') {
 			next;
 		}
 		shift @temp;

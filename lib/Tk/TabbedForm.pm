@@ -4,36 +4,46 @@
 
 ##################################################################################
 
-package CBooleanItem;
+package CTextItem;
 
 use strict;
 use warnings;
-use Tk;
 use base qw(Tk::Derived Tk::Frame);
-Construct Tk::Widget 'CBooleanItem';
+use Tie::Watch;
+Construct Tk::Widget 'CTextItem';
 
 sub Populate {
 	my ($self,$args) = @_;
 
 	$self->SUPER::Populate($args);
-	my $var = 0;
+	my $var = '';
+	Tie::Watch->new(
+		-variable => \$var,
+		-store => sub {
+			my ($watch, $value) = @_;
+			$watch->Store($value);
+			$self->Callback('-validatecall');
+		},
+	);
 	$self->CreateHandler(\$var);
 
 	$self->ConfigSpecs(
-		-variable => ['PASSIVE', undef, undef, \$var],
-		-errorcolor => ['PASSIVE', 'errorColor', 'ErrorColor', '#ff0000'],
 		-background => ['SELF', 'DESCENDANTS'],
+		-entryforeground => ['PASSIVE', undef, undef, $self->cget('-foreground')],
+		-errorcolor => ['PASSIVE', 'errorColor', 'ErrorColor', '#ff0000'],
+		-regex => ['PASSIVE', undef, undef, '.*'],
+		-validatecall => ['CALLBACK', undef, undef, sub {}],
+		-variable => ['PASSIVE', undef, undef, \$var],
 		DEFAULT => ['SELF'],
 	);
 }
 
 sub CreateHandler {
 	my ($self, $var) = @_;
-	$self->Checkbutton(
-		-onvalue => 1,
-		-offvalue => 0,
-		-variable => $var,
-	)->pack(-side => 'left', -padx => 2);
+	my $e = $self->Entry(
+		-textvariable => $var,
+	)->pack(-side => 'left', -padx => 2, -expand => 1, -fill => 'x');
+	$self->Advertise(Entry => $e);
 }
 
 sub Get {
@@ -49,10 +59,58 @@ sub Put {
 }
 
 sub Validate {
-	return 1
+	my ($self, $test) = @_;
+	my $var = $self->cget('-variable');
+	return 1 unless defined $var;
+	$test = $$var unless defined $test;
+	my $reg = $self->cget('-regex');
+	my $flag = $test =~ /$reg/;
+	$self->ValidUpdate($flag);
+	return $flag;
 }
 
 sub ValidUpdate {
+	my ($self, $flag) = @_;
+	unless (defined $self->cget('-entryforeground')) {
+		$self->configure(-entryforeground => $self->Subwidget('Entry')->cget('-foreground'));
+	}
+	if ($flag) {
+		$self->Subwidget('Entry')->configure(-foreground => $self->cget('-entryforeground'));
+	} else {
+		$self->Subwidget('Entry')->configure(-foreground => $self->cget('-errorcolor'));
+	}
+}
+
+##################################################################################
+package CBooleanItem;
+
+use strict;
+use warnings;
+use Tk;
+use base qw(Tk::Derived CTextItem);
+Construct Tk::Widget 'CBooleanItem';
+
+sub Populate {
+	my ($self,$args) = @_;
+
+	$self->SUPER::Populate($args);
+
+	$self->ConfigSpecs(
+		DEFAULT => [$self->Subwidget('Check')],
+	);
+}
+
+sub CreateHandler {
+	my ($self, $var) = @_;
+	my $c = $self->Checkbutton(
+		-variable => $var,
+	)->pack(-side => 'left', -padx => 2);
+	$self->Advertise(Check => $c);
+}
+
+
+sub ValidUpdate {
+	my $self = shift
 }
 
 ##################################################################################
@@ -61,41 +119,37 @@ package CColorItem;
 use strict;
 use warnings;
 use Tk;
-use base qw(Tk::Derived CBooleanItem);
+use base qw(Tk::Derived CTextItem);
 Construct Tk::Widget 'CColorItem';
-require Tk::AppWindow::AWColorDialog;
+require Tk::YAColorDialog;
 
 sub Populate {
 	my ($self,$args) = @_;
+	$args->{'-regex'} = '^#(?:[0-9a-fA-F]{3}){1,4}$';
 	$self->SUPER::Populate($args);
 	$self->ConfigSpecs(
 		-image => [$self->Subwidget('Select')],
-		-background => ['SELF', 'DESCENDANTS'],
 		DEFAULT => ['SELF'],
 	);
 }
 
 sub CreateHandler {
-	my ($self, $var) = @_;
-	my $entry = $self->Entry(
-		-textvariable => $var,
-		-width => 8,
-	)->pack(-side => 'left', -padx => 2);
-	$self->Advertise(Entry => $entry);
+	my $self = shift;
+	$self->SUPER::CreateHandler(@_);
 	my $colorview = $self->Label(
 		-width => 8,
-	)->pack(-side => 'left', -padx => 2, -expand => 1, -fill => 'both');
+	)->pack(-side => 'left', -padx => 2, -fill => 'y');
 	$self->Advertise(ColorView => $colorview);
 
 	my $but = $self->Button(
 		-command => sub {
-			my $dialog = $self->AWColorDialog(
+			my $dialog = $self->YAColorDialog(
 				-title => "Select color",
 				-initialcolor => $self->Get,
 			);
 			my $answer = $dialog->Show(-popover => $self->toplevel);
 			if ($answer eq 'Select') {
-				$$var = $dialog->Get;
+				$self->Put($dialog->Get);
 			}
 			$dialog->destroy;
 		}
@@ -103,59 +157,14 @@ sub CreateHandler {
 	$self->Advertise(Select => $but);
 }
 
-sub Validate {
-	my $self = shift;
-	my $var = $self->cget('-variable');
-	return 1 unless defined $var;
-	return 1 if $$var eq '';
-	return $$var =~ /^#(?:[0-9a-fA-F]{3}){1,4}$/
-}
-
 sub ValidUpdate {
-	my $self = shift;
-	if ($self->Validate) {
+	my ($self, $flag) = @_;
+	$self->SUPER::ValidUpdate($flag);
+	if ($flag) {
 		my $var = $self->cget('-variable');
-		$self->Subwidget('ColorView')->configure(-background => $$var);
-		$self->Subwidget('Entry')->configure(-foreground => $self->cget('-entryforeground'));
+		$self->Subwidget('ColorView')->configure(-background => $$var) unless $$var eq '';
 	} else {
 		$self->Subwidget('ColorView')->configure(-background => $self->cget('-background'));
-		$self->Subwidget('Entry')->configure(-foreground => $self->cget('-errorcolor'));
-	}
-}
-
-##################################################################################
-package CTextItem;
-
-use strict;
-use warnings;
-use Tk;
-use base qw(Tk::Derived CBooleanItem);
-Construct Tk::Widget 'CTextItem';
-
-sub Populate {
-	my ($self,$args) = @_;
-
-	$self->SUPER::Populate($args);
-	$self->ConfigSpecs(
-		-entryforeground => ['PASSIVE', undef, undef, $self->Subwidget('Entry')->cget('-foreground')],
-		DEFAULT => ['SELF'],
-	);
-}
-
-sub CreateHandler {
-	my ($self, $var) = @_;
-	my $e = $self->Entry(
-		-textvariable => $var,
-	)->pack(-side => 'left', -padx => 2, -expand => 1, -fill => 'x');
-	$self->Advertise(Entry => $e);
-}
-
-sub ValidUpdate {
-	my $self = shift;
-	if ($self->Validate) {
-		$self->Subwidget('Entry')->configure(-foreground => $self->cget('-entryforeground'));
-	} else {
-		$self->Subwidget('Entry')->configure(-foreground => $self->cget('-errorcolor'));
 	}
 }
 
@@ -209,8 +218,11 @@ use Scalar::Util::Numeric qw(isfloat isint);
 sub Validate {
 	my $self = shift;
 	my $var = $self->cget('-variable');
-	return 1 if $$var eq '';
-	return isint $$var unless isfloat $$var;
+	my $flag = 0;
+	$flag = 1 if $$var eq '';
+	$flag = 1 if isint $$var;
+	$flag = 1 if isfloat $$var;
+	$self->ValidUpdate($flag);
 	return 1
 }
 
@@ -273,30 +285,12 @@ sub CreateHandler {
 			);
 			my $font = $dialog->Show(-popover => $self->toplevel);
 			if (defined $font) {
-				$$var = $font;
+				$$var =  $dialog->GetDescriptiveFontName($font)
 			}
 			$dialog->destroy;
 		}
 	)->pack(-side => 'left', -padx => 2);
 	$self->Advertise(Select => $but);
-}
-
-##################################################################################
-package CIntegerItem;
-
-use strict;
-use warnings;
-use Tk;
-use base qw(Tk::Derived CTextItem);
-Construct Tk::Widget 'CIntegerItem';
-
-use Scalar::Util::Numeric qw(isint);
-
-sub Validate {
-	my $self = shift;
-	my $var = $self->cget('-variable');
-	return 1 if $$var eq '';
-	return isint $$var
 }
 
 ##################################################################################
@@ -337,8 +331,9 @@ sub CreateHandler {
 sub Validate {
 	my $self = shift;
 	my $var = $self->cget('-variable');
-	return 1 if $$var eq '';
-	return $self->Subwidget('Entry')->Validate
+	my $flag = $self->Subwidget('Entry')->Validate;
+	$self->ValidUpdate($flag);
+	return $flag
 }
 
 ##################################################################################
@@ -377,6 +372,7 @@ sub CreateHandler {
 	}
 }
 
+sub ValidUpdate {}
 
 ##################################################################################
 
@@ -392,65 +388,47 @@ use Tk;
 use base qw(Tk::Frame);
 Construct Tk::Widget 'TabbedForm';
 
+require Tk::LabFrame;
+require Tk::NoteBook;
 
 sub Populate {
 	my ($self,$args) = @_;
 
-	my $structure = delete $args->{'-structure'};
-	$structure = [] unless defined $structure;
-
-	my $colorimage = delete $args->{'-colorimage'};
-	$colorimage = $self->Pixmap(-file => Tk->findINC('color_icon.xpm')) unless defined $colorimage;
-
-	my $fileimage = delete $args->{'-fileimage'};
-	$fileimage = $self->Pixmap(-file => Tk->findINC('file.xpm')) unless defined $fileimage;
-
-	my $folderimage = delete $args->{'-folderimage'};
-	$folderimage = $self->Pixmap(-file => Tk->findINC('folder.xpm')) unless defined $folderimage;
-	
-	my $fontimage = delete $args->{'-fontimage'};
-	$fontimage = $self->Pixmap(-file => Tk->findINC('font_icon.xpm')) unless defined $fontimage;
-	
 	$self->SUPER::Populate($args);
+	
 
-	my %typeclasses = (
-		boolean => {
-			class => 'CBooleanItem',
-		},
-		color => {
-			class => 'CColorItem',
-			image => $colorimage,
-		},
-		file => {
-			class => 'CFileItem',
-			image => $fileimage,
-		},
-		float => {
-			class => 'CFloatItem',
-		},
-		folder => {
-			class => 'CFolderItem',
-			image => $folderimage,
-		},
-		font => {
-			class => 'CFontItem',
-			image => $fontimage,
-		},
-		integer => {
-			class => 'CIntegerItem',
-		},
-		list => {
-			class => 'CListItem',
-		},
-		radio => {
-			class => 'CRadioItem',
-		},
-		text => {
-			class => 'CTextItem',
-		},
-	);
+	$self->{TYPES} = {
+		boolean => ['CBooleanItem', -onvalue => 1, -offvalue => 0],
+		color => ['CColorItem', -image => '-colorimage'],
+		file => ['CFileItem', -image => '-fileimage'],
+		float => ['CFloatItem', ],
+		folder => ['CFolderItem', -image => '-folderimage'],
+		font => ['CFontItem', -image => '-fontimage'],
+		'integer' => ['CTextItem', -regex => '^-?\d+$'],
+		list => ['CListItem'],
+		radio => ['CRadioItem'],
+		text => ['CTextItem'],
+	};
 
 	$self->gridColumnconfigure(1, -weight => 1);
+
+	$self->ConfigSpecs(
+		-acceptempty => ['PASSIVE', undef, undef, 0],
+		-autovalidate => ['PASSIVE', undef, undef, 1],
+		-background => ['SELF', 'DESCENDANTS'],
+		-colorimage => ['PASSIVE', undef, undef, $self->Pixmap(-file => Tk->findINC('color_icon.xpm'))],
+		-fileimage => ['PASSIVE', undef, undef, $self->Pixmap(-file => Tk->findINC('file.xpm'))],
+		-folderimage => ['PASSIVE', undef, undef, $self->Pixmap(-file => Tk->findINC('folder.xpm'))],
+		-fontimage => ['PASSIVE', undef, undef, $self->Pixmap(-file => Tk->findINC('font_icon.xpm'))],
+		-listcall => ['CALLBACK', undef, undef, sub {}],
+		-postvalidatecall => ['CALLBACK', undef, undef, sub {}],
+		-structure => ['PASSIVE', undef, undef, []],
+		DEFAULT => ['SELF'],
+	);
+}
+
+sub CreateForm {
+	my $self = shift;
 	my @holderstack = ({
 		holder => $self,
 		type => 'root',
@@ -458,18 +436,19 @@ sub Populate {
 	});
 	my $notebook;
 
-	my @useroptions = @$structure;
+	my $structure = $self->cget('-structure');
+	my @options = @$structure;
 	my $labelwidth = 0;
-	while (@useroptions) {
-		my $key = shift @useroptions;
+	while (@options) {
+		my $key = shift @options;
 		if (($key eq '*page') or ($key eq '*section')) {
-			shift @useroptions;
+			shift @options;
 			next;
 		}
 		if ($key eq '*end') {
 			next;
 		}
-		my $conf = shift @useroptions;
+		my $conf = shift @options;
 		my $l = length $conf->[1];
 		$labelwidth = $l if $l > $labelwidth;
 	}
@@ -477,12 +456,12 @@ sub Populate {
 	my %options = ();
 	my @padding = (-padx => 2, -pady => 2);
 
-	@useroptions = @$structure;
-	while (@useroptions) {
-		my $key = shift @useroptions;
+	@options = @$structure;
+	while (@options) {
+		my $key = shift @options;
 
 		if ($key eq '*page') {
-			my $label = shift @useroptions;
+			my $label = shift @options;
 			unless (defined $notebook) {
 				$notebook = $holderstack[0]->{holder}->NoteBook->grid(-column => 0, -row => $holderstack[0]->{row}, -columnspan => 2, -sticky => 'nesw');
 			}
@@ -497,7 +476,7 @@ sub Populate {
 			};
 
 		} elsif ($key eq '*section') {
-			my $label = shift @useroptions;
+			my $label = shift @options;
 			my $h = $holderstack[0];
 			my $lf = $h->{holder}->LabFrame(
 				-label => $label,
@@ -521,62 +500,50 @@ sub Populate {
 				warn "Holder stack is already empty"
 			}
 		} else {
-			my $conf = shift @useroptions;
-			my ($type, $label, $defaultvalue, $values) = @$conf;
+			my $conf = shift @options;
+			my ($type, $label, $values) = @$conf;
 
 			$holderstack[0]->{holder}->Label(-width => $labelwidth, -text => $label, -anchor => 'e')->grid(@padding, -column => 0, -row => $holderstack[0]->{row}, -sticky => 'e');
 
-			my $class = $typeclasses{$type};
-			my @opts = ();
-			if (exists $class->{'image'}) {
-				push @opts, '-image', $class->{'image'}
+			my $t = $self->{TYPES}->{$type};
+			my @o = @$t;
+			my $class = shift @o;
+			my %opts = (@o,
+				-validatecall => ['Validate', $self]
+			);
+			if ((exists $opts{'-image'}) and ($opts{'-image'} =~ /^-/)) {
+				$opts{'-image'} = $self->cget($opts{'-image'})
 			}
-			use Data::Dumper; print Dumper $values;
+
 			if (defined $values) {
 				if ((ref $values) and ($values =~/^ARRAY/)) {
-					push @opts, -values => $values;
+					$opts{'-values'} = $values;
 				} elsif ((ref $values) and ($values =~/^CODE/))  {
 					my @vals = &$values;
-					push @opts, -values => \@vals;
+					$opts{'-values'} = \@vals;
 				} else {
-					warn "Value should be list or anonymous sub"
+					my @vals = $self->Callback('-listcall', $values);
+					$opts{'-values'} = \@vals;
 				}
 			}
 
-			my $class_name = $class->{'class'};
-			my $widg = $holderstack[0]->{holder}->$class_name(@opts,
+			my $widg = $holderstack[0]->{holder}->$class(%opts,
 			)->grid(-column => 1, -row => $holderstack[0]->{row}, -sticky => 'ew', -padx => 2, -pady => 2);
-			$widg->Put($defaultvalue) if defined $defaultvalue;
 			$options{$key} = $widg;
 			$holderstack[0]->{row} ++;
 		}
 	}
 	$self->{OPTIONS} = \%options;
-
-	$self->ConfigSpecs(
-		-updatecycle => ['PASSIVE', undef, undef, 1000],
-		-autovalidupdate => ['PASSIVE', undef, undef, 1],
-		-background => ['SELF', 'DESCENDANTS'],
-		DEFAULT => ['SELF'],
-	);
-	$self->after(1, sub { $self->AutoValidUpdate($self->cget('-autovalidupdate')) });
+	$self->Validate;
 }
 
-sub AutoValidUpdate {
-	my ($self, $flag) = @_;
-	if (defined $flag) {
-		if ($flag) {
-			my $opt = $self->{OPTIONS};
-			for (keys %$opt) { $opt->{$_}->ValidUpdate }
-			$self->{AUTOID} = $self->after($self->cget('-updatecycle'), ['AutoValidUpdate', $self, 1]);
-		} else {
-			if (exists $self->{AUTOID}) {
-				$self->afterCancel($self->{AUTOID});
-				delete $self->{AUTOID}
-			}
-		}
+sub DefineTypes {
+	my $self = shift;
+	while (@_) {
+		my $type = shift;
+		my $conf = shift;
+		$self->{TYPES}->{$type} = $conf;
 	}
-	return exists $self->{AUTOID};
 }
 
 sub Get {
@@ -586,7 +553,7 @@ sub Get {
 	warn "Invalid key $key" if defined $key;
 	my @get = ();
 	for (keys %$opt) {
-		push @get, $_, $_->Get
+		push @get, $_, $opt->{$_}->Get
 	}
 	return @get
 }
@@ -611,7 +578,11 @@ sub Validate {
 	return $opt->{$key}->Validate if (defined $key) and (exists $opt->{$key});
 	warn "Invalid key $key" if defined $key;
 	my $valid = 1;
-	for (keys %$opt) { $valid = 0 unless $opt->{$_}->Validate }
+	for (keys %$opt) {
+		next if ($self->cget('-acceptempty') and ($opt->{$_}->Get eq ''));
+		$valid = 0 unless $opt->{$_}->Validate;
+	}
+	$self->Callback('-postvalidatecall', $valid);
 	return $valid
 }
 

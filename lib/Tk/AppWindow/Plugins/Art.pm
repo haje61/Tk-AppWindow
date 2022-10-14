@@ -102,7 +102,7 @@ sub new {
 
 	$self->AddPreConfig(
 		-iconsize => ['PASSIVE', 'iconSize', 'IconSize', 16],
-		-icontheme => ['PASSIVE', 'iconTheme', 'IconTheme', 'Oxygen'],
+		-icontheme => ['PASSIVE', 'iconTheme', 'IconTheme', 'breeze'],
 	);
 
 	my $ip = delete $args->{'-iconpath'};
@@ -330,11 +330,7 @@ sub CollectThemes {
 						my $index = $self->LoadThemeFile($fullname);
 						my $main = delete $index->{general};
 						if (%$index) {
-							my $name = $entry;
-							if (exists $main->{Name}) {
-								$name = $main->{Name}
-							}
-							$themes{$name} = {
+							$themes{$entry} = {
 								path => $fullname,
 								general => $main,
 								folders => $index,

@@ -5,6 +5,14 @@ use warnings;
 use vars qw($VERSION);
 $VERSION="0.01";
 
+use Tk::GtkSettings qw(gtkKey initDefaults export2xrdb groupOption);
+initDefaults;
+my $iconlib = gtkKey('gtk-icon-theme-name');
+# $iconlib = ucfirst($iconlib);
+groupOption('main', 'iconTheme', $iconlib) if defined $iconlib;
+export2xrdb;
+# applyGtkSettings;
+
 use base qw(Tk::Derived Tk::MainWindow);
 Construct Tk::Widget 'AppWindow';
 

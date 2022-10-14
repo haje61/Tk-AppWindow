@@ -36,8 +36,8 @@ sub Populate {
 	my $height = 10;
 	if (@$values < $height) { $height = @$values }
 	my $listbox = $tp->Scrolled('Listbox',
-		-borderwidth => 0,
-		-relief => 'flat',
+		-borderwidth => 1,
+		-relief => 'sunken',
 		-height => $height,
 		-listvariable => $values,
 		-scrollbars => 'oe',

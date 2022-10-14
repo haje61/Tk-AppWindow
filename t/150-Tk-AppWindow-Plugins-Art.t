@@ -16,55 +16,55 @@ my @tests = (
 		name => 'Available themes',
 		args => [],
 		method => 'AvailableThemes',
-		expected => [ 'png_1', 'png_2', 'svg_1' ]
+		expected => [ 'PNG1', 'PNG2', 'SVG1' ]
 	},
 
 	# Testing available contexts
 	{
 		name => 'All available contexts',
-		args => ['png_1' ],
+		args => ['PNG1' ],
 		method => 'AvailableContexts',
 		expected => [ 'Actions', 'Applications', ]
 	},
 	{
 		name => 'Available contexts in name',
-		args => ['png_1', 'edit-cut' ],
+		args => ['PNG1', 'edit-cut' ],
 		method => 'AvailableContexts',
 		expected => [ 'Actions', ]
 	},
 	{
 		name => 'No available contexts in name',
-		args => ['png_1', 'does-not-exist' ],
+		args => ['PNG1', 'does-not-exist' ],
 		method => 'AvailableContexts',
 		expected => [ ]
 	},
 	{
 		name => 'Available contexts in name and size',
-		args => ['png_1', 'edit-cut', 32 ],
+		args => ['PNG1', 'edit-cut', 32 ],
 		method => 'AvailableContexts',
 		expected => [ 'Actions', ]
 	},
 	{
 		name => 'No available contexts in name and size 1',
-		args => ['png_1', 'does-not-exist', 32 ],
+		args => ['PNG1', 'does-not-exist', 32 ],
 		method => 'AvailableContexts',
 		expected => [ ]
 	},
 	{
 		name => 'No available contexts in name and size 2',
-		args => ['png_1', 'edit-cut', 45 ],
+		args => ['PNG1', 'edit-cut', 45 ],
 		method => 'AvailableContexts',
 		expected => [ ]
 	},
 	{
 		name => 'Available contexts in size',
-		args => ['png_1', undef, 22 ],
+		args => ['PNG1', undef, 22 ],
 		method => 'AvailableContexts',
 		expected => [ 'Actions', 'Applications', ]
 	},
 	{
 		name => 'No available contexts in size',
-		args => ['png_1', undef, 46 ],
+		args => ['PNG1', undef, 46 ],
 		method => 'AvailableContexts',
 		expected => [ ]
 	},
@@ -72,50 +72,50 @@ my @tests = (
 	# Testing available icons
 	{
 		name => 'All available icons',
-		args => ['png_1' ],
+		args => ['PNG1' ],
 		method => 'AvailableIcons',
 		expected => [ 'accessories-text-editor', 'document-new', 'document-save', 'edit-cut', 'edit-find',
 			'help-browser', 'multimedia-volume-control', 'system-file-manager' ]
 	},
 	{
 		name => 'Available icons in size',
-		args => ['png_1', 32 ],
+		args => ['PNG1', 32 ],
 		method => 'AvailableIcons',
 		expected => [ 'accessories-text-editor', 'edit-cut', 'edit-find', 'help-browser' ]
 	},
 	{
 		name => 'No available icons in size',
-		args => ['png_1', 47 ],
+		args => ['PNG1', 47 ],
 		method => 'AvailableIcons',
 		expected => [ ]
 	},
 	{
 		name => 'Available icons in size and context',
-		args => ['png_1', 32, 'Actions' ],
+		args => ['PNG1', 32, 'Actions' ],
 		method => 'AvailableIcons',
 		expected => [ 'edit-cut', 'edit-find', ]
 	},
 	{
 		name => 'No available icons in size and context 1',
-		args => ['png_1', 48, 'Actions' ],
+		args => ['PNG1', 48, 'Actions' ],
 		method => 'AvailableIcons',
 		expected => [ ]
 	},
 	{
 		name => 'No available icons in size and context 2',
-		args => ['png_1', 32, 'Blobber' ],
+		args => ['PNG1', 32, 'Blobber' ],
 		method => 'AvailableIcons',
 		expected => [ ]
 	},
 	{
 		name => 'Available icons in context',
-		args => ['png_1', undef, 'Actions' ],
+		args => ['PNG1', undef, 'Actions' ],
 		method => 'AvailableIcons',
 		expected => [ 'document-new', 'document-save', 'edit-cut', 'edit-find' ]
 	},
 	{
 		name => 'No available icons in context',
-		args => ['png_1', undef, 'Blobber' ],
+		args => ['PNG1', undef, 'Blobber' ],
 		method => 'AvailableIcons',
 		expected => [ ]
 	},
@@ -123,49 +123,49 @@ my @tests = (
 	# Testing available sizes
 	{
 		name => 'All available sizes',
-		args => ['png_1' ],
+		args => ['PNG1' ],
 		method => 'AvailableSizes',
 		expected => [ 22, 32 ]
 	},
 	{
 		name => 'Available sizes in name',
-		args => ['png_1', 'edit-cut'],
+		args => ['PNG1', 'edit-cut'],
 		method => 'AvailableSizes',
 		expected => [ 32 ]
 	},
 	{
 		name => 'No available sizes in name',
-		args => ['png_1', 'does-not-exist'],
+		args => ['PNG1', 'does-not-exist'],
 		method => 'AvailableSizes',
 		expected => [ ]
 	},
 	{
 		name => 'Available sizes in name and context',
-		args => ['png_1', 'edit-cut', 'Actions'],
+		args => ['PNG1', 'edit-cut', 'Actions'],
 		method => 'AvailableSizes',
 		expected => [ 32 ]
 	},
 	{
 		name => 'No available sizes in name and context 1',
-		args => ['png_1', 'does-not-exist', 'Actions' ],
+		args => ['PNG1', 'does-not-exist', 'Actions' ],
 		method => 'AvailableSizes',
 		expected => [ ]
 	},
 	{
 		name => 'No available sizes in name and context 2',
-		args => ['png_1', 'edit-cut', 'Blobber' ],
+		args => ['PNG1', 'edit-cut', 'Blobber' ],
 		method => 'AvailableSizes',
 		expected => [ ]
 	},
 	{
 		name => 'Available sizes in context',
-		args => ['png_1', undef, 'Actions'],
+		args => ['PNG1', undef, 'Actions'],
 		method => 'AvailableSizes',
 		expected => [ 22, 32 ]
 	},
 	{
 		name => 'No available sizes in context',
-		args => ['png_1', undef, 'Blobber'],
+		args => ['PNG1', undef, 'Blobber'],
 		method => 'AvailableSizes',
 		expected => [ ]
 	},
@@ -204,7 +204,7 @@ my @tests = (
 my $app = new Tk::AppWindow(
 	-plugins => ['Art'],
 	-iconpath => \@iconpath,
-	-icontheme =>  'png_1',
+	-icontheme =>  'PNG1',
 );
 ok(defined $app, "can create");
 $app->after(10, \&DoTesting);
@@ -212,19 +212,19 @@ $app->after(10, \&DoTesting);
 my $art = $app->GetPlugin('Art');
 
 # More tests for loading bitmapped icons
-my @names = $art->AvailableIcons('png_1');
-my @sizes = $art->AvailableSizes('png_1');
+my @names = $art->AvailableIcons('PNG1');
+my @sizes = $art->AvailableSizes('PNG1');
 &CreateImageTests(\@names, \@sizes, {
-	theme => 'png_1',
+	theme => 'PNG1',
 	validate => 'image',
 });
 
 # Tests for loading svg icons
-my @svgnames = $art->AvailableIcons('svg_1');
+my @svgnames = $art->AvailableIcons('SVG1');
 use Data::Dumper; print Dumper \@svgnames;
-my @svgsizes = $art->AvailableSizes('svg_1');
+my @svgsizes = $art->AvailableSizes('SVG1');
 &CreateImageTests(\@svgnames, \@svgsizes, {
-	theme => 'svg_1',
+	theme => 'SVG1',
 	validate => 'image',
 	is_svg => 1,
 });

@@ -1,8 +1,8 @@
-package Tk::AppWindow::AWDialog;
+package Tk::YADialog;
 
 use Tk;
 use base qw(Tk::Derived Tk::Toplevel);
-Construct Tk::Widget 'AWDialog';
+Construct Tk::Widget 'YADialog';
 
 sub Populate {
 	my ($self,$args) = @_;
@@ -11,14 +11,12 @@ sub Populate {
 	$buttons = [] unless defined $buttons;
 	my $padding = delete $args->{'-padding'};
 	$padding = 20 unless defined $padding;
-	my $plugin = delete $args->{'-plugin'};
 
 	$self->{DEFAULTBUTTON} = delete $args->{'-defaultbutton'};
 
 	$self->SUPER::Populate($args);
 	
 	$self->{PADDING} = $padding;
-	$self->{PLUGIN} = $plugin;
 	$self->{PRESSED} = '';
 	
 	$self->protocol('WM_DELETE_WINDOW', sub { $self->CancelDialog });
@@ -69,8 +67,6 @@ sub CancelDialog {
 }
 
 sub Get { return $_[0]->{PRESSED} }
-
-sub Plugin { return $_[0]->{PLUGIN} }
 
 sub Pressed {
 	my $self = shift;

@@ -1,11 +1,11 @@
-package Tk::AppWindow::AWColorDialog;
+package Tk::YAColorDialog;
 
 use strict;
 use warnings;
 
 use Tk;
-use base qw(Tk::Derived Tk::AppWindow::AWDialog);
-Construct Tk::Widget 'AWColorDialog';
+use base qw(Tk::Derived Tk::YADialog);
+Construct Tk::Widget 'YAColorDialog';
 require Tk::NoteBook;
 
 my @colspaces = (

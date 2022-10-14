@@ -3,9 +3,6 @@
 use strict;
 use warnings;
 
-use Tk::GtkSettings;
-applyGtkSettings;
-
 use Tk;
 
 #########################################
@@ -30,31 +27,29 @@ sub Populate {
 	$text->bind('<Control-Z>', [$text, 'redo']);
 
 	$self->ConfigSpecs(
+		-contentbackground => [{-background => $text}],
+		-contentforeground => [{-foreground => $text}],
+		-contentfont => [{-font => $text}],
+		-contenttabs => [{-tabs => $text}],
+		-contentwrap => [{-wrap => $text}],
 		-background => ['SELF', 'DESCENDANTS'],
 		DEFAULT => [$text],
 	);
 }
 
-sub Configure {
+sub ConfigureCM {
 	my $self = shift;
-	my $t = $self->CWidg;
-	print "$t\n";
-	my $p = $self->Plug;
-	for (
-		[-background => '-contentbackground'],
-		[-foreground => '-contentforeground'],
-		[-font => '-contentfont'],
-# 		[-tabs => '-contenttabsize'],
-		[-wrap => '-contentwrap'],
-	) {
-		print "doing ", $_->[0], " from ", $_->[1], "\n";
-		my $v = $p->ConfigGet($_->[1]);
-		print "value '$v'\n";
-		$t->configure($_->[0], $v) if (defined $v) and ($v ne '');
+	my $plug = $self->Plug;
+	my $cmopt = $plug->ConfigGet('-contentmanageroptions');
+	for (@$cmopt) {
+		my $val = $plug->ConfigGet($_);
+		if ((defined $val) and ($val ne '')) {
+			$val = [$val] if $_ eq '-contenttabs';
+			$self->configure($_, $val) ;
+		}
 	}
-	my $tb = $p->ConfigGet('-contenttabsize');
-	$t->configure(-tabs => [ $tb ]) if (defined $tb) and ($tb ne '');
 }
+
 
 sub doClear {
 	my $self = shift;
@@ -93,7 +88,8 @@ require Tk::AppWindow;
 my $se = Tk::AppWindow->new(
 	-appname => 'Sed',
 	-contentmanagerclass => 'TextManager',
-	-contentmanageroptions => ['-contentbackground', '-contentfont', '-contentforeground', '-contenttabsize', '-contentwrap'],
+	-contentmanageroptions => ['-contentbackground', '-contentfont', '-contentforeground', '-contenttabs', '-contentwrap'],
+# 	-contentmanageroptions => ['-contentbackground', '-contentfont', '-contentforeground', '-contentwrap'],
 	-mainmenuitems => [
 #This table is best viewed with tabsize 3.
 #			 type					menupath			label						cmd						icon					keyb			config variable
@@ -119,31 +115,31 @@ my $se = Tk::AppWindow->new(
 		[	'tool_button',		'Redo',		'<Control-Z>',		'edit-redo',		'Cancel undo'], 
 	],
 	-useroptions => [
-		page => 'Editing',
-		section => 'User interface',
+		'*page' => 'Editing',
+		'*section' => 'User interface',
 		-contentforeground => ['color', 'Foreground'],
 		-contentbackground => ['color', 'Background'],
 		-contentfont => ['font', 'Font'],
-		'end',
-		section => 'Editor settings',
-		-contenttabsize => ['text', 'Tab size'],
+		'*end',
+		'*section' => 'Editor settings',
+		-contenttabs => ['text', 'Tab size'],
 		-contentwrap => ['radio', 'Wrap', [qw[none char word]]],
-		'end',
-		page => 'Icons',
+		'*end',
+		'*page' => 'Icons',
 		-icontheme => ['list', 'Icon theme', 'available_icon_themes'],
 		-iconsize => ['list', 'Icon size', 'available_icon_sizes'],
-		page => 'Bars',
-		section => 'Menubar',
+		'*page' => 'Bars',
+		'*section' => 'Menubar',
 		-menuiconsize => ['list', 'Icon size', 'available_icon_sizes'],
-		'end',
-		section => 'Toolbar',
+		'*end',
+		'*section' => 'Toolbar',
 		-toolbarvisible => ['boolean', 'Visible at launch'],
 		-tooliconsize => ['list', 'Icon size', 'available_icon_sizes'],
 		-tooltextposition => ['radio', 'Text position', [qw[none left right top bottom]]],
-		'end',
-		section => 'Statusbar',
+		'*end',
+		'*section' => 'Statusbar',
 		-statusbarvisible => ['boolean', 'Visible at launch'],
-		'end',
+		'*end',
 	],
 	-verbose => 1,
 );

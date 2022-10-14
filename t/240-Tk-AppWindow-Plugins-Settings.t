@@ -4,19 +4,19 @@ use warnings;
 use lib './t/lib';
 use AWTestSuite;
 
-use Test::More tests => 15;
+use Test::More tests => 5;
 BEGIN { 
-	use_ok('Tk::AppWindow::AWSettingsDialog::CBooleanItem');
-	use_ok('Tk::AppWindow::AWSettingsDialog::CColorItem');
-	use_ok('Tk::AppWindow::AWSettingsDialog::CFileItem');
-	use_ok('Tk::AppWindow::AWSettingsDialog::CFloatItem');
-	use_ok('Tk::AppWindow::AWSettingsDialog::CFolderItem');
-	use_ok('Tk::AppWindow::AWSettingsDialog::CFontItem');
-	use_ok('Tk::AppWindow::AWSettingsDialog::CIntegerItem');
-	use_ok('Tk::AppWindow::AWSettingsDialog::CListItem');
-	use_ok('Tk::AppWindow::AWSettingsDialog::CRadioItem');
-	use_ok('Tk::AppWindow::AWSettingsDialog::CTextItem');
-	use_ok('Tk::AppWindow::AWSettingsDialog');
+# 	use_ok('Tk::AppWindow::AWSettingsDialog::CBooleanItem');
+# 	use_ok('Tk::AppWindow::AWSettingsDialog::CColorItem');
+# 	use_ok('Tk::AppWindow::AWSettingsDialog::CFileItem');
+# 	use_ok('Tk::AppWindow::AWSettingsDialog::CFloatItem');
+# 	use_ok('Tk::AppWindow::AWSettingsDialog::CFolderItem');
+# 	use_ok('Tk::AppWindow::AWSettingsDialog::CFontItem');
+# 	use_ok('Tk::AppWindow::AWSettingsDialog::CIntegerItem');
+# 	use_ok('Tk::AppWindow::AWSettingsDialog::CListItem');
+# 	use_ok('Tk::AppWindow::AWSettingsDialog::CRadioItem');
+# 	use_ok('Tk::AppWindow::AWSettingsDialog::CTextItem');
+# 	use_ok('Tk::AppWindow::AWSettingsDialog');
 	use_ok('Tk::AppWindow::Plugins::Settings');
 };
 
@@ -29,12 +29,12 @@ CreateTestApp(
 	-plugins => [qw[Art MenuBar TestPlugin Settings]],
 	-useroptions => [
 		-set_boolean => ['boolean', 'Boolean test'],
-		page => 'Page 1',
-		section => 'Section 1',
+		'*page' => 'Page 1',
+		'*section' => 'Section 1',
 		-set_color => ['color', 'Color test'],
 		-set_list_command => ['list', 'List values test', 'available_icon_themes'],
 		-set_file => ['file', 'File test'],
-		'end',
+		'*end',
 		-set_float => ['float', 'Float test'],
 		-set_folder => ['folder', 'Folder test'],
 		-set_font => ['font', 'Font test'],

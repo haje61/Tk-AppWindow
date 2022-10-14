@@ -1,8 +1,8 @@
-package Tk::AppWindow::AWMessage;
+package Tk::YAMessageDialog;
 
 use Tk;
-use base qw(Tk::Derived Tk::AppWindow::AWDialog);
-Construct Tk::Widget 'AWMessage';
+use base qw(Tk::Derived Tk::YADialog);
+Construct Tk::Widget 'YAMessageDialog';
 
 sub Populate {
 	my ($self,$args) = @_;
