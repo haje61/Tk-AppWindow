@@ -29,8 +29,8 @@ sub Populate {
 	my $commands = delete $args->{'-commands'};
 	$commands = [] unless defined $commands;
 
-	my $plugins = delete $args->{'-plugins'};
-	$plugins = [] unless defined $plugins;
+	my $extensions = delete $args->{'-extensions'};
+	$extensions = [] unless defined $extensions;
 	
 	my $preconfig = delete $args->{'-preconfig'};
 	$preconfig = [] unless defined $preconfig;
@@ -45,8 +45,8 @@ sub Populate {
 	$self->{ARGS} = $args;
 	$self->{CMNDTABLE} = {};
 	$self->{CONFIGTABLE} = {};
-	$self->{PLUGINS} = {};
-	$self->{PLUGLOADORDER} = [];
+	$self->{EXTENSIONS} = {};
+	$self->{EXTLOADORDER} = [];
 	$self->{WORKSPACE} = $self;
 	$self->{VERBOSE} = 0;
 
@@ -62,11 +62,11 @@ sub Populate {
 	
 	$self->{POSTCONFIG} = [];
 	$self->{PRECONFIG} = $preconfig;
-	for (@$plugins) {
-		$self->LoadPlugin($_, $args);
+	for (@$extensions) {
+		$self->LoadExtension($_, $args);
 	}
 	
-	my $setplug = $self->GetPlugin('Settings');
+	my $setplug = $self->GetExt('Settings');
 	if (defined $setplug) {
 		my @useroptions = $setplug->LoadSettings;
 		my $tab = $self->{CONFIGTABLE};
@@ -133,7 +133,7 @@ It queries all plugins for permission and exits.
 sub CmdQuit {
 	my $self = shift;
 	my $quit = 1;
-	my $plgs = $self->{PLUGINS};
+	my $plgs = $self->{EXTENSIONS};
 	for (keys %$plgs) {
 		$quit = 0 unless $plgs->{$_}->CanQuit;
 	}
@@ -283,38 +283,52 @@ sub CreateOptionsFileName {
 	return "$dir/$file";
 }
 
+=item B<ExtensionList>
+
+Returns a list of all loaded extensions
+
+=cut
+
+sub ExtensionList {
+	my $self = shift;
+	my $pl = $self->{EXTENSIONS};
+	my @plugs = ();
+	for (keys %$pl) { push @plugs, $pl->{$_} }
+	return @plugs;
+}
+
 =item B<GetArt>($icon);
 
 =cut
 
 sub GetArt {
 	my ($self, $icon, $size) = @_;
-	my $art = $self->GetPlugin('Art');
+	my $art = $self->GetExt('Art');
 	if (defined $art) {
 		return $art->GetIcon($icon, $size);
 	}
 	return undef
 }
 
-=item B<GetPlugin>('PluginName')
+=item B<GetExt>('ExtensionName')
 
 Returns the position of 'PluginName' in the plugin stack.
 returns undef if the plugin is not loaded.
 
 =cut
 
-sub GetPlugin {
+sub GetExt {
 	my ($self, $name) = @_;
-	my $plgs = $self->{PLUGINS};
+	my $plgs = $self->{EXTENSIONS};
 	if (exists $plgs->{$name}) {
 		return $plgs->{$name}
 	}
 	return undef
 }
 
-sub GetPlugLoadOrder {
+sub GetExtLoadOrder {
 	my $self = shift;
-	my $o = $self->{PLUGLOADORDER};
+	my $o = $self->{EXTLOADORDER};
 	return @$o;
 }
 
@@ -325,12 +339,12 @@ If it fails it will give a warning. No crashes here. Also no error messages.
 
 =cut
 
-sub LoadPlugin {
+sub LoadExtension {
 	my ($self, $name, $args) = @_;
-	my $plgs = $self->{PLUGINS};
+	my $plgs = $self->{EXTENSIONS};
 	my $plug = undef;
 	unless (exists $plgs->{$name}) { #unless already loaded
-		my $module = "Tk::AppWindow::Plugins::$name";
+		my $module = "Tk::AppWindow::Ext::$name";
 		my $inst = check_install(module => $module);
 		if (defined $inst) {
 			if (can_load(modules => {$module => $inst->{'version'}})){
@@ -338,10 +352,10 @@ sub LoadPlugin {
 			}
 		}
 		if (defined($plug)) {
-			print "Plugin $name loaded\n" if $self->Verbose;
+			print "Extension $name loaded\n" if $self->Verbose;
 			$plgs->{$name} = $plug;
 			$plug->CleanUp;
-			my $o = $self->{PLUGLOADORDER};
+			my $o = $self->{EXTLOADORDER};
 			push @$o, $name;
 		} else {
 			warn "unable to load plugin $name\n";
@@ -395,20 +409,6 @@ sub MenuItems {
 		[	'menu', 				undef,			"~appname", 		], 
 		[	'menu_normal',		'appname::',		"~Quit",					'quit',		'application-exit',		'Control-q',	], 
 	)
-}
-
-=item B<PluginList>
-
-Returns a list of all loaded plugins
-
-=cut
-
-sub PluginList {
-	my $self = shift;
-	my $pl = $self->{PLUGINS};
-	my @plugs = ();
-	for (keys %$pl) { push @plugs, $pl->{$_} }
-	return @plugs;
 }
 
 sub PopMessage {

@@ -37,7 +37,7 @@ CreateTestApp(
 		test1 => [\&Blabber, 12],
 		test2 => ['Get', $blobber, 35],
 	],
-	-plugins => ['TestPlugin'],
+	-extensions => ['TestPlugin'],
 	-quitter => 0,
 );
 
@@ -46,8 +46,8 @@ CreateTestApp(
 	[sub { return $app->CommandExecute('test1', 60) }, 'Caterpillar60', 'anonymous command with parameter'],
 	[sub { return $app->CommandExecute('test2') }, 'Butterfly35', 'object command without parameter'],
 	[sub { return $app->CommandExecute('test2', 76) }, 'Butterfly76', 'object command with parameter'],
-	[sub { return $app->GetPlugin('TestPlugin')->Name }, 'TestPlugin', 'TestPlugin loaded'],
-	[sub { return $app->GetPlugin('Dummy')->Name }, 'Dummy', 'Dummy plugin loaded'],
+	[sub { return $app->GetExt('TestPlugin')->Name }, 'TestPlugin', 'TestPlugin loaded'],
+	[sub { return $app->GetExt('Dummy')->Name }, 'Dummy', 'Dummy plugin loaded'],
 	[sub { return $app->CommandExecute('plugcmd') }, 'TestCmd56', 'plugin command without parameter'],
 	[sub { return $app->CommandExecute('plugcmd', 84) }, 'TestCmd84', 'plugin command with parameter'],
 	[sub { return $app->ConfigGet('-plugoption') }, 'Romulus', 'plugin option loaded'],
