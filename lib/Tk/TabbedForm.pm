@@ -59,13 +59,13 @@ sub Put {
 }
 
 sub Validate {
-	my ($self, $test) = @_;
+	my ($self, $val) = @_;
 	my $var = $self->cget('-variable');
 	return 1 unless defined $var;
-	$test = $$var unless defined $test;
+	$val = $$var unless defined $val;
 	my $reg = $self->cget('-regex');
-	my $flag = $test =~ /$reg/;
-	$self->ValidUpdate($flag);
+	my $flag = $val =~ /$reg/;
+	$self->ValidUpdate($flag, $val);
 	return $flag;
 }
 
@@ -137,7 +137,7 @@ sub CreateHandler {
 	my $self = shift;
 	$self->SUPER::CreateHandler(@_);
 	my $colorview = $self->Label(
-		-width => 8,
+		-width => 4,
 	)->pack(-side => 'left', -padx => 2, -fill => 'y');
 	$self->Advertise(ColorView => $colorview);
 
@@ -158,11 +158,10 @@ sub CreateHandler {
 }
 
 sub ValidUpdate {
-	my ($self, $flag) = @_;
+	my ($self, $flag, $val) = @_;
 	$self->SUPER::ValidUpdate($flag);
 	if ($flag) {
-		my $var = $self->cget('-variable');
-		$self->Subwidget('ColorView')->configure(-background => $$var) unless $$var eq '';
+		$self->Subwidget('ColorView')->configure(-background => $val) unless $val eq '';
 	} else {
 		$self->Subwidget('ColorView')->configure(-background => $self->cget('-background'));
 	}
@@ -575,8 +574,8 @@ sub Put {
 sub Validate {
 	my ($self, $key) = @_;
 	my $opt = $self->{OPTIONS};
-	return $opt->{$key}->Validate if (defined $key) and (exists $opt->{$key});
-	warn "Invalid key $key" if defined $key;
+# 	return $opt->{$key}->Validate if (defined $key) and (exists $opt->{$key});
+# 	warn "Invalid key $key" if defined $key;
 	my $valid = 1;
 	for (keys %$opt) {
 		next if ($self->cget('-acceptempty') and ($opt->{$_}->Get eq ''));
