@@ -6,6 +6,7 @@ use warnings;
 use vars qw($VERSION);
 $VERSION="0.01";
 use File::Basename;
+require Tk::YAMessage;
 
 use base qw( Tk::AppWindow::BaseClasses::Extension );
 
@@ -71,7 +72,7 @@ sub CmdFileClose {
 	my $w = $self->GetAppWindow;
 	if ($doc->IsModified) {
 	#confirm save dialog comes here
-		my $q = $w->AWMessage(
+		my $q = $w->YAMessage(
 			-title => 'Warning, file modified',
 			-image => $self->GetArt('dialog-warning', 32),
 			-buttons => [qw(Yes No Cancel)],
