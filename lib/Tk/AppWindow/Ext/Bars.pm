@@ -11,6 +11,7 @@ use warnings;
 use vars qw($VERSION);
 $VERSION="0.01";
 use Tk;
+require Tk::Adjuster;
 
 use base qw( Tk::AppWindow::BaseClasses::Extension );
 

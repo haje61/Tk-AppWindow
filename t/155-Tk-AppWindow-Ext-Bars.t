@@ -28,14 +28,10 @@ for (qw[LEFT RIGHT TOP BOTTOM]) {
 		-variable => \$var,
 		-command => sub {
 			my $vis = $visible{$bar};
-			unless ($$vis) {
-				print "hiding $$vis\n";
-				$ext->Hide($bar);
-# 				$$vis = 0
-			} else {
-				print "showing $$vis\n";
+			if ($$vis) {
 				$ext->Show($bar);
-# 				$$vis = 1;
+			} else {
+				$ext->Hide($bar);
 			}
 		}
 	)->pack(-anchor => 'w');

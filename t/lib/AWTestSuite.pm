@@ -15,6 +15,7 @@ our @EXPORT = qw(
 	@tests
 	$show
 	$settingsfolder
+	$delay
 );
 
 our $app;
@@ -22,7 +23,7 @@ our $mwclass = 'Tk::AppWindow';
 our @tests = ();
 our $show = 0;
 our $settingsfolder = 't/settings';
-
+our $delay = 10;
 
 my $arg = shift @ARGV;
 $show = 1 if (defined($arg) and ($arg eq 'show'));
@@ -36,7 +37,7 @@ sub CreateTestApp {
 		@_
 	);
 	ok(defined $app, "can create");
-	$app->after(10, \&DoTests);
+	$app->after($delay, \&DoTests);
 }
 
 sub DoTests {
