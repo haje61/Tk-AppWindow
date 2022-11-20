@@ -38,9 +38,9 @@ sub new {
 
 	$self->Require('Bars');
 	$self->{VISIBLE} = 1;
-	$self->{POSITION} = undef;
+	$self->{CONFIGMODE} = 1;
 
-
+	$self->AddPostConfig('PostConfig', $self);
 	return $self;
 }
 
@@ -56,29 +56,24 @@ sub Bar {
 
 sub BarVisible {
 	my $self = shift;
+	return $self->{VISIBLE} unless exists $self->{CONFIGMODE};
 	my $bars = $self->GetExt('Bars');
 	if (@_) {
 		my $status = shift;
 		if ($status eq 1) {
-			$bars->Show($self->Position);
+			my $bar = $self->Bar;
+			print "Bar $bar\n";
+			$bars->Show($self->Bar);
 			$self->{VISIBLE} = 1;
 		} elsif ($status eq 0) {
-			$bars->Hide($self->Position);
+			$bars->Hide($self->Bar);
 			$self->{VISIBLE} = 0;
 		}
 	}
 	return $self->{VISIBLE}
 }
 
-sub PackInfo {
-	my $self = shift;
-	if (@_) { $self->{PACKINFO} = shift }
-	return $self->{PACKINFO}
-}
-
-sub Position {
-	my $self = shift;
-	if (@_) { $self->{POSITION} = shift }
-	return $self->{POSITION}
+sub PostConfig {
+	delete $_[0]->{CONFIGMODE}
 }
 1;

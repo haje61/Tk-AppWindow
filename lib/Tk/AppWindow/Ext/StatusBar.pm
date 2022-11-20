@@ -61,6 +61,7 @@ sub new {
 	my $class = shift;
 
 	my $self = $class->SUPER::new(@_);
+	$self->Bar('BOTTOM');
 	$self->AddPreConfig(
 		-statusitemrelief => ['PASSIVE', undef, undef, 'groove'],
 		-statusitemborderwidth => ['PASSIVE', undef, undef, 2],
@@ -72,8 +73,6 @@ sub new {
 	$self->{MI} = undef;
 	$self->{ITEMS} = [];
 
-	$self->Bar($self->Subwidget('BOTTOM'));
-	$self->Position('BOTTOM');
 	
 	$self->ConfigInit(
 		-statusbarvisible	=> ['BarVisible', $self, 1],
@@ -105,7 +104,7 @@ sub Add {
 		my $b = $items->[$pos];
 		push @$pack, (-before => $b) if defined $b;
 	}
-	my $i = $self->Bar->$class(%params, 
+	my $i = $self->Subwidget($self->Bar)->$class(%params, 
 		-relief => $self->ConfigGet('-statusitemrelief'),
 		-borderwidth => $self->ConfigGet('-statusitemborderwidth'),
 	)->pack(@$pack, @$itempadding, -side => 'left');

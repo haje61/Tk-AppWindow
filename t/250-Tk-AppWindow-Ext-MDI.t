@@ -3,7 +3,12 @@ use strict;
 use warnings;
 use lib './t/lib';
 use AWTestSuite;
-$delay = 1500;
+$delay = 500;
+
+use Test::More tests => 5;
+BEGIN { 
+	use_ok('Tk::AppWindow::Ext::MDI');
+};
 
 {
 	package TestTextManager;
@@ -58,24 +63,20 @@ $delay = 1500;
 	1;
 }
 
-use Test::More tests => 4;
-BEGIN { use_ok('Tk::AppWindow::Ext::SDI') };
-
-my $settingsfolder = 't/settings';
-
 
 CreateTestApp(
+	-extensions => [qw[Art MenuBar MDI ToolBar]],
 	-configfolder => $settingsfolder,
-	-extensions => [qw[Art ToolBar SDI]],
 	-contentmanagerclass => 'TestTextManager',
 );
 
-my $plug = $app->GetExt('SDI');
+my $ext = $app->GetExt('MDI');
 
 @tests = (
-	[sub { return $plug->Name eq 'SDI' }, 1, 'plugin SDI loaded']
+	[sub { return defined $ext }, 1, 'Extension defined'],
+	[sub { return $ext->Name eq 'MDI' }, 1, 'Extension MDI loaded'],
 );
 
-$app->CommandExecute('file_new');
+# $app->CommandExecute('file_new');
 $app->MainLoop;
 

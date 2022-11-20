@@ -8,7 +8,7 @@ use Tk;
 use Test::More tests => 4;
 BEGIN { use_ok('Tk::YANoteBook') };
 
-$delay = 1;
+$delay = 500;
 
 CreateTestApp(
 );

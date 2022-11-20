@@ -1,8 +1,8 @@
-package Tk::AppWindow::Ext::Balloon;
+package Tk::AppWindow::Ext::Navigator;
 
 =head1 NAME
 
-Tk::AppWindow::Ext::Balloon - Adding ballon functionality
+Tk::AppWindow::Ext::Navigator - Navigate opened documents and files
 
 =cut
 
@@ -10,8 +10,6 @@ use strict;
 use warnings;
 use vars qw($VERSION);
 $VERSION="0.01";
-use Tk;
-require Tk::Balloon;
 
 use base qw( Tk::AppWindow::BaseClasses::Extension );
 
@@ -36,7 +34,13 @@ use base qw( Tk::AppWindow::BaseClasses::Extension );
 sub new {
 	my $class = shift;
 	my $self = $class->SUPER::new(@_);
-	$self->{BALLOON} = $self->GetAppWindow->Balloon;
+
+	$self->AddPreConfig(
+	);
+
+	$self->ConfigInit(
+	);
+
 	return $self;
 }
 
@@ -44,13 +48,5 @@ sub new {
 
 =cut
 
-sub Attach {
-	my $self = shift;
-	$self->{BALLOON}->attach(@_);
-}
-
-sub Balloon {
-	return $_[0]->{BALLOON}
-}
 
 1;

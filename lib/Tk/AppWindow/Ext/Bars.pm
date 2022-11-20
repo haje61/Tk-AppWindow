@@ -41,8 +41,8 @@ sub new {
 	my $fullbar = delete $args->{-fullsizebars};
 	$fullbar = 'vertical' unless defined $fullbar;
 
-	$self->AddPreConfig(
-		-barsizers => ['PASSIVE', undef, undef, [qw[LEFT RIGHT]]],
+	$self->ConfigInit(
+		-barsizers => ['BarSizers', $self, [qw[LEFT RIGHT]]],
 	);
 
 	my $app = $self->GetAppWindow;
@@ -134,6 +134,12 @@ sub new {
 
 =cut
 
+sub BarSizers {
+	my $self = shift;
+	if (@_) { $self->{BARSIZERS} = shift; }
+	return $self->{BARSIZERS}
+}
+
 sub Hide {
 	my ($self, $bar) = @_;
 	$self->Subwidget($bar)->packForget;
@@ -158,7 +164,8 @@ sub Show {
 
 	$b->pack(%$pi);
 	my $barsizers = $self->ConfigGet('-barsizers');
-	if (grep($bar, @$barsizers)) {
+	my @i = grep { $barsizers->[$_] eq $bar } (0 .. @$barsizers-1);
+	if (@i) {
 		my $side = lc($bar);
 		$side = 'top' unless defined $side;
 # 		if ($side eq 'left') {

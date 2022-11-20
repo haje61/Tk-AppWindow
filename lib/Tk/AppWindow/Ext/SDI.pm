@@ -25,7 +25,8 @@ sub new {
 		push @preconfig, $_, ['PASSIVE', undef, undef, '']
 	}
 
-	$self->{CURDOC} = undef;
+	$self->{CURRENT} = undef;
+	$self->{DOCS} = {};
 	$self->{HISTORY} = [];
 
 	$self->AddPreConfig(@preconfig,
@@ -51,37 +52,38 @@ sub new {
 
 sub CanQuit {
 	my $self = shift;
-	if ($self->CmdFileClose) {
-		$self->SaveHistory;
-		return 1;
-	}
-	return 0
-}
-
-sub CurDoc {
-	my $self = shift;
-	if (@_) { $self->{CURDOC} = shift }
-	return $self->{CURDOC}
-}
-
-sub CmdFileClose {
-	my $self = shift;
 	my $close = 1;
-	my $doc = $self->{CURDOC};
-	return 1 unless (defined $doc);
-	my $w = $self->GetAppWindow;
+	my $dochash = $self->{DOCS};
+	my @docs = sort keys %$dochash;
+	for (@docs) {
+		$close = 0 unless $self->CmdFileClose($_);
+	}
+	$self->SaveHistory if $close;
+	return $close
+}
+
+
+sub ClearCurrent {
+	my $self = shift;
+	$self->Current(undef);
+	$self->ConfigPut(-title => $self->ConfigGet('-appname'));
+}
+
+sub CloseDoc {
+	my ($self, $name) = @_;
+	my $doc = $self->GetDoc($name);
 	if ($doc->IsModified) {
 	#confirm save dialog comes here
-		my $q = $w->YAMessage(
+		my $q = $self->YAMessage(
 			-title => 'Warning, file modified',
 			-image => $self->GetArt('dialog-warning', 32),
 			-buttons => [qw(Yes No Cancel)],
 			-text => 
-				"Closing " . $doc->cget('-filename') .
+				"Closing " . basename($name) .
 				".\nText has been modified. Save it?",
 			-defaultbutton => 'Yes',
 		);
-		my $answer = $q->Show(-popover => $w);
+		my $answer = $q->Show(-popover => $self->GetAppWindow);
 		if ($answer eq 'Yes') {
 			unless ($self->CmdFileSave) {
 				return 0
@@ -90,36 +92,47 @@ sub CmdFileClose {
 			return 0
 		}
 	}
-	my $name = $doc->cget('-filename');
+	my $filename = $name;
 
 	if ($doc->Close) {
-
-		$self->ConfigPut('-title', $self->ConfigGet('-appname'));
 		#Add to history
-		if (defined($name) and (-e $name)) {
+		if (defined($filename) and (-e $filename)) {
 			my $hist = $self->{HISTORY};
-			unshift @$hist, $name;
+			unshift @$hist, $filename;
 
 			#Keep history list below maximum
 			my $siz = @$hist;
 			pop @$hist if ($siz > $self->ConfigGet('-maxhistory'));
 		}
+		delete $self->{DOCS}->{$name};
+		if ((defined $self->Current) and ($self->Current eq $name)) { 
+			$self->ClearCurrent;
+		}
+		return 1
+	}
+	return 0
+}
 
+sub CmdFileClose {
+	my $self =  shift;
+	my $doc = $self->CurDoc;
+	return 1 unless (defined $doc);
+	if ($self->CloseDoc($self->Current)) {
+		my $geosave = $self->geometry;
 		$doc->destroy;
-		$self->CurDoc(undef);
-		$self->update;
+		$self->geometry($geosave);
 		return 1;
 	}
 	return 0
 }
 
 sub CmdFileNew {
-	my $self = shift;
-	if ($self->CmdFileClose) {
-		my $cm = $self->CreateContentHandler->pack(-expand => 1, -fill => 'both');
-		$self->CurDoc($cm);
-		$self->update;
-		return 1
+	my ($self, $name) = @_;
+	$name = $self->GetUntitled unless defined $name; 
+	my $cm = $self->CreateContentHandler($name);
+	if (defined $cm) {
+		$self->SelectDoc($name);
+		return 1;
 	}
 	return 0
 }
@@ -132,54 +145,71 @@ sub CmdFileOpen {
 			-popover => 'mainwindow',
 		);
 	}
+	if ($self->DocExists($file)) {
+		$self->SelectDoc;
+		return
+	}
 	if (defined $file) {
-		if ($self->CmdFileNew) {
-			my $doc = $self->CurDoc;
-			$doc->configure(-filename, $file);
+		if ($self->CmdFileNew($file)) {
+			my $doc = $self->GetDoc($file);
 
 			#remove from history
 			my $h = $self->{HISTORY};
 			my ($index) = grep { $h->[$_] eq $file } (0 .. @$h-1);
-			if (defined $index) {
-				splice @$h, $index, 1
-			}
+			splice @$h, $index, 1 if defined $index;
 
-			if ($doc->Load) {
-				$self->ConfigPut(-title => $self->ConfigGet('-appname') . ' - ' . basename ($file, ''));
-				return 1
-			}
+			return 1 if $doc->Load($file);
 		}
 	}
  	return 0
 }
 
 sub CmdFileSave {
-	my $self = shift;
+	my ($self, $name) = @_;
 	return 0 if $self->ConfigGet('-readonly');
-	my $doc = $self->CurDoc;
+	
+	my $doc;
+	unless (defined $name) {
+		$doc = $self->CurDoc;
+		$name = $self->{CURRENT};
+	} else {
+		$doc = $self->GetDoc($name);
+	}
+
 	if (defined $doc) {
-		my $name = $doc->cget('-filename');
-		if ($name ne '' ) {
-			return $doc->Save
+		unless ($name =~ /^Untitled/) {
+			return $doc->Save($name);
 		} else {
-			return $self->CmdFileSaveAs;
+			return $self->CmdFileSaveAs($name);
 		}
 	}
 	return 1
 }
 
 sub CmdFileSaveAs {
-	my ($self, $file) = @_;
+	my ($self, $name) = @_;
 	return 0 if $self->ConfigGet('-readonly');
-	my $doc = $self->CurDoc;
+
+	my $doc;
+	unless (defined $name) {
+		$doc = $self->CurDoc;
+		$name = $self->{CURRENT};
+	} else {
+		$doc = $self->GetDoc($name);
+	}
+
 	if (defined $doc) {
 		my $file = $self->getSaveFile(
 	# 		-initialdir => $initdir,
 			-popover => 'mainwindow',
 		);
-		if ($file ne '') {
-			$doc->configure(-filename => $file);
-			return $doc->Save                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+		if ((defined $file) and ($file ne $name)) {
+			if ($doc->Save($file)) {
+				$self->RenameDoc($name, $file);
+				return 1
+			} else {
+				return 0
+			}
 		}
 	}
 	return 1
@@ -212,11 +242,56 @@ sub CmdPopulateHistoryMenu {
 }
 
 sub CreateContentHandler {
+	my ($self, $name) = @_;
+	if ($self->CmdFileClose) {
+		my $cmclass = $self->ConfigGet('-contentmanagerclass');
+		my $h = $self->WorkSpace->$cmclass(-extension => $self)->pack(-expand => 1, -fill => 'both');
+		$self->{DOCS}->{$name} = $h;
+		$self->update;
+		return $h;
+	}
+	return undef;
+}
+
+sub Current {
 	my $self = shift;
-	my $cmclass = $self->ConfigGet('-contentmanagerclass');
-	my $h = $self->WorkSpace->$cmclass(-plugin => $self);
-# 	$h->ConfigureCM;
-	return $h
+	if (@_) { $self->{CURRENT} = shift }
+	return $self->{CURRENT}
+}
+
+sub CurDoc {
+	my $self = shift;
+	my $current = $self->{CURRENT};
+	if (defined $current) {
+		return $self->{DOCS}->{$current}
+	}
+	return undef
+}
+
+sub DocExists {
+	my ($self, $name) = @_;
+	return exists $self->{DOCS}->{$name}
+}
+
+sub GetDoc {
+	my ($self, $name) = @_;
+	return $self->{DOCS}->{$name}
+}
+
+sub GetTitle {
+	my ($self, $name) = @_;
+	return basename($name, '');
+}
+
+sub GetUntitled {
+	my $self = shift;
+	my $name = 'Untitled';
+	if ($self->DocExists($name)) {
+		my $num = 2;
+		while ($self->DocExists("$name ($num)")) { $num ++ }
+		$name = "$name ($num)";
+	}
+	return $name
 }
 
 sub LoadHistory {
@@ -266,6 +341,20 @@ sub ReConfigure {
 	$doc->ConfigureCM if defined $doc;
 }
 
+sub RemoveContentHandler {
+	my ($self, $name) = @_;
+}
+
+sub RenameDoc {
+	my ($self, $old, $new) = @_;
+	my $doc = $self->{DOCS}->{$old};
+	$self->{DOCS}->{$new} = $doc;
+	delete $self->{DOCS}->{$old};
+	if ($self->Current eq $old) {
+		$self->SelectDoc($new)
+	}
+}
+
 sub SaveHistory {
 	my $self = shift;
 	my $hist = $self->{HISTORY};
@@ -280,6 +369,13 @@ sub SaveHistory {
 			warn "Cannot save document history"
 		}
 	}
+}
+
+sub SelectDoc {
+	my ($self, $name) = @_;
+	print "Selecting $name\n";
+	$self->{CURRENT} = $name;
+	$self->ConfigPut(-title => $self->ConfigGet('-appname') . ' - ' . $self->GetTitle($name));
 }
 
 sub ToolItems {

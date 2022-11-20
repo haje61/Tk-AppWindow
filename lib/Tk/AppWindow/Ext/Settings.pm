@@ -174,7 +174,7 @@ sub MenuItems {
 
 sub ReConfigureAll {
 	my $self = shift;
-	my @list = $self->PluginList;
+	my @list = $self->ExtensionList;
 	my %hash = ();
 	for (@list) {
 		$hash{$_->Name} = $_

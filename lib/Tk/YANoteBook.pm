@@ -33,6 +33,7 @@ sub Populate {
 	my $b;
 	if ($closebutton) {
 		$b = $self->Button(
+			-command => ['TabClose', $self],
 			-relief => 'flat',
 		)->pack(
 			-side => 'left',
@@ -42,15 +43,17 @@ sub Populate {
 		$b->bind('<Motion>', [$self, 'ItemMotion', $b, Ev('x'), Ev('y')]);
 	}
 	
-	$self->ConfigSpecs(
-		-command => [$b],
-		-image => [$b],
+	my @conf = ();
+	@conf = (-closeimg => [{-image => $b}, undef, undef, $self->Pixmap(-file => Tk->findINC('close_icon.xpm'))]) if defined $b;
+	
+	$self->ConfigSpecs(@conf,
 		-name => ['PASSIVE', undef, undef, ''],
 		-clickcall => ['CALLBACK', undef, undef, sub {}],
+		-closecall => ['CALLBACK', undef, undef, sub {}],
 		-motioncall => ['CALLBACK', undef, undef, sub {}],
 		-releasecall => ['CALLBACK', undef, undef, sub {}],
-		-title => [{-text => $l}, undef, undef, $title],
-		-titleimg => [{-image => $l}, undef, undef, undef],
+		-title => [{-text => $l}],
+		-titleimg => [{-image => $l}],
 		DEFAULT => ['SELF'],
 	);
 }
@@ -72,6 +75,11 @@ sub OnRelease {
 	my $self = shift;
 	my $name = $self->cget('-name');
 	$self->Callback('-releasecall', $name);
+}
+
+sub TabClose {
+	my $self = shift;
+	$self->Callback('-closecall', $self->cget('-name'));
 }
 
 sub TabMotion {
@@ -168,6 +176,7 @@ sub Populate {
 		-selectoptions => ['PASSIVE', undef, undef, [
 			-relief => 'flat',
 		]],
+		-selecttabcall => ['CALLBACK', undef, undef, sub {}],
 		-tabpack => ['PASSIVE', undef, undef, []], 
 		-unselectoptions => ['PASSIVE', undef, undef, [
 			-relief => 'sunken',
@@ -185,22 +194,14 @@ sub AddPage {
 	my $title = delete $opt{'-title'};
 	$title = $name unless defined $title;
 	
-	my $closeb = delete $opt{'-closebutton'};
-	$closeb = 0 unless defined $closeb;
 	my $uo = $self->cget('-unselectoptions');
-	my @bopt = (@$uo);
-	if ($closeb) {
-		push @bopt,
-			-closebutton => 1,
-			-command => ['DeletePage', $self, $name],
-			-image => $self->cget('-closeimage');
-	}
 	
 # 	$self->update;
-	my $tab = $self->Subwidget('TabFrame')->NameTab(@bopt,
+	my $tab = $self->Subwidget('TabFrame')->NameTab(%opt, @$uo,
 		-name => $name,
 		-title => $title,
 		-clickcall => ['ClickCall', $self],
+		-closecall => ['DeletePage', $self],
 		-motioncall => ['MotionCall', $self],
 		-releasecall => ['ReleaseCall', $self],
 		-borderwidth => 1,
@@ -226,10 +227,22 @@ sub DeletePage {
 	my ($self, $name) = @_;
 	unless ($self->PageExists($name)) {
 		warn "Page '$name' does not exist\n";
-		return
+		return 0
 	}
+	print "DeletePage $name\n";
 	if ($self->Callback('-closetabcall', $name)) {
-		$self->UnSelectPage;
+		my $newselect;
+		if ($self->Selected eq $name) {
+			if ($self->PageCount > 1) {
+				my $pos = $self->TabPosition($name);
+				if (defined $pos) {
+					my $dp = $self->{DISPLAYED};
+					$newselect = $dp->[$pos + 1];
+					$newselect = $dp->[$pos - 1] unless ((defined $newselect) and ($pos > 1));
+				}
+			}
+			$self->UnSelectPage;
+		}
 		if ($self->IsDisplayed($name)) {
 			my $dp = $self->{DISPLAYED};
 			my ($pos) = grep { $dp->[$_] eq $name } 0 .. @$dp - 1;
@@ -243,15 +256,24 @@ sub DeletePage {
 		$pg->[0]->destroy;
 		$pg->[1]->destroy;
 		$self->UpdateTabs;
+		$self->SelectPage($newselect) if defined $newselect;
+		return 1
 	}
+	return 0
 }
 
 sub FindTabPos {
 	my ($self, $name) = @_;
 	my $dp = $self->{DISPLAYED};
-	my $last = @$dp - 1;
+	my $last = @$dp;
 	my ($index) = grep { $dp->[$_] eq $name } 0 .. $last;
 	return $index
+}
+
+sub GetPage {
+	my ($self, $name) = @_;
+	return $self->{PAGES}->{$name}->[1] if defined $name;
+	return undef;
 }
 
 sub GetTab {
@@ -413,6 +435,14 @@ sub PackTab {
 	);
 }
 
+sub PageCount {
+	my $self = shift;
+	my $pg = $self->{PAGES};
+	my @keys = keys %$pg;
+	my $size = @keys;
+	return $size;
+}
+
 sub PageExists {
 	my ($self, $name) = @_;
 	return exists $self->{PAGES}->{$name};
@@ -437,6 +467,22 @@ sub ReleaseCall {
 	delete $self->{MOTION};
 }
 
+sub RenamePage {
+	my ($self, $old, $new) = @_;
+	my $page = $self->{PAGES}->{$old};
+	$self->{PAGES}->{$new} = $page;
+	delete $self->{PAGES}->{$old};
+	$self->{SELECTED} = $new if ($self->Selected eq $old);
+	if ($self->IsDisplayed($old)) {
+		my $pos = $self->TabPosition($old);
+		$self->{DISPLAYED}->[$pos] = $new
+	} else {
+		my $ud = $self->{UNDISPLAYED};
+		my ($index) = grep { $ud->[$_] eq $old } 0 .. @$ud;
+		$self->{UNDISPLAYED}->[$index] = $new
+	}
+}
+
 sub Select {
 	my $self = shift;
 	my $list = $self->Subwidget('Listbox');
@@ -444,6 +490,8 @@ sub Select {
 	$self->SelectPage($item);
 	$self->ListPopDown;
 }
+
+sub Selected {	return $_[0]->{SELECTED} }
 
 sub SelectPage {
 	my ($self, $name) = @_;
@@ -468,9 +516,17 @@ sub SelectPage {
 		$frame->pack(-expand => 1, -fill => 'both');
 # 		$frame->update;
 		$self->{SELECTED} = $name;
+		print "calling -selecttabcall for $name\n";
+		$self->Callback('-selecttabcall', $name);
 	} else {
 		warn "Page $name does not exist"
 	}
+}
+
+sub TabList {
+	my $self = shift;
+	my $p = $self->{PAGES};
+	return sort keys %$p
 }
 
 sub TabPosition {

@@ -39,7 +39,7 @@ sub Populate {
 
 sub ConfigureCM {
 	my $self = shift;
-	my $plug = $self->Plug;
+	my $plug = $self->Extension;
 	my $cmopt = $plug->ConfigGet('-contentmanageroptions');
 	for (@$cmopt) {
 		my $val = $plug->ConfigGet($_);
@@ -63,6 +63,7 @@ sub doLoad {
 	my $t = $self->CWidg;
 	$t->Load($file);
 	$t->editModified(0);
+	return 1
 }
 
 sub doSave {
@@ -70,6 +71,7 @@ sub doSave {
 	my $t = $self->CWidg;
 	$t->Save($file);
 	$t->editModified(0);
+	return 1
 }
 
 sub IsModified {

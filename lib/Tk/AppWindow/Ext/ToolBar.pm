@@ -37,12 +37,12 @@ sub new {
 	my $class = shift;
 	my $self = $class->SUPER::new(@_);
 
+	$self->Bar('TOP');
 	$self->AddPreConfig(
 		-autotool => ['PASSIVE', undef, undef, 1],
 		-tooliconsize => ['PASSIVE', 'ToolIconSize', 'toolIconSize', 16],
 		-toolitems => ['PASSIVE', undef, undef, []],
 		-tooltextposition => ['PASSIVE', undef, undef, 'right'],
-		-toolbarvisible => ['PASSIVE', undef, undef, 1],
 	);
 	$self->{TYPESTABLE} = {};
 	$self->{ITEMLIST} = [];
@@ -51,8 +51,6 @@ sub new {
 		tool_separator		=> ['ConfToolSeparator', $self],
 	);
 
-	$self->Bar($self->Subwidget('TOP'));
-	$self->Position('TOP');
 	$self->ConfigInit(
 		-toolbarvisible	=> ['BarVisible', $self, 1],
 	);
@@ -73,18 +71,19 @@ sub AddItem {
 		$position = @$list if $position > @$list;
 		$before = $list->[$position];
 	}
+	my $bar = $self->Subwidget($self->Bar);
 	if (defined $before) {
-		$item->pack(-side => 'left', -padx => 2, -in => $self->Bar, -fill => 'y');
+		$item->pack(-side => 'left', -padx => 2, -in => $bar, -fill => 'y');
 		splice @$list, $position, 0, $item;
 	} else {
-		$item->pack(-side => 'left', -padx => 2, -in => $self->Bar, -fill => 'y');
+		$item->pack(-side => 'left', -padx => 2, -in => $bar, -fill => 'y');
 		push @$list, $item;
 	}
 }
 
 sub AddSeparator {
 	my $self = shift;
-	$self->AddItem($self->Bar->Label(-text => '|'), @_);
+	$self->AddItem($self->Subwidget($self->Bar)->Label(-text => '|'), @_);
 }
 
 sub ClearTools {
@@ -129,7 +128,7 @@ sub ConfigureTypes {
 
 sub ConfToolButton {
 	my ($self, $label, $cmd, $icon, $help) = @_;
-	my $tb = $self->Bar;
+	my $tb = $self->Subwidget($self->Bar);
 
 	my $bmp;
 	if (defined $icon) {

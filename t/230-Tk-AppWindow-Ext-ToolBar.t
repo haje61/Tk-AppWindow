@@ -3,6 +3,7 @@ use strict;
 use warnings;
 use lib './t/lib';
 use AWTestSuite;
+$delay = 1500;
 
 use Test::More tests => 4;
 BEGIN { 
