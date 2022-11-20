@@ -229,7 +229,6 @@ sub DeletePage {
 		warn "Page '$name' does not exist\n";
 		return 0
 	}
-	print "DeletePage $name\n";
 	if ($self->Callback('-closetabcall', $name)) {
 		my $newselect;
 		if ($self->Selected eq $name) {
@@ -514,9 +513,7 @@ sub SelectPage {
 		my $o = $self->cget('-selectoptions');
 		$tab->configure(@$o);
 		$frame->pack(-expand => 1, -fill => 'both');
-# 		$frame->update;
 		$self->{SELECTED} = $name;
-		print "calling -selecttabcall for $name\n";
 		$self->Callback('-selecttabcall', $name);
 	} else {
 		warn "Page $name does not exist"

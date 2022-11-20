@@ -60,7 +60,6 @@ sub CmdFileClose {
 		$doc = $self->CurDoc;
 	}
 	return 1 unless (defined $doc);
-	print "Closing $name\n";
 	my $geosave = $self->geometry;
 	if ($self->Interface->DeletePage($name)) {
 		$self->geometry($geosave);
@@ -72,7 +71,6 @@ sub CmdFileClose {
 sub CmdFileNew {
 	my ($self, $name) = @_;
 	$name = $self->GetUntitled unless defined $name;
-	print "creating $name\n";
 	my $cm = $self->CreateContentHandler($name);
 	if (defined $cm) {
 		$self->Interface->SelectPage($name);
@@ -118,7 +116,6 @@ sub MenuItems {
 
 sub RenameDoc {
 	my ($self, $old, $new) = @_;
-	print "Renaming $old, $new\n";
 	$self->SUPER::RenameDoc($old, $new);
 	my $i = $self->Interface;
 	$i->RenamePage($old, $new);
