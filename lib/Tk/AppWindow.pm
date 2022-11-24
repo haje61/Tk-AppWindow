@@ -460,7 +460,7 @@ sub Verbose {
 
 sub WorkSpace {
 	my $self = shift;
-	$self->{WORKSPACE} = shift if @_;
+	$self->{WORKSPACE} = $self->Subwidget(shift) if @_;
 	return $self->{WORKSPACE}
 }
 

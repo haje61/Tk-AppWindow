@@ -1,8 +1,8 @@
-package Tk::AppWindow::BaseClasses::BarExtension;
+package Tk::AppWindow::BaseClasses::PanelExtension;
 
 =head1 NAME
 
-Tk::AppWindow::Plugins::Bars - Basic functionality for StatusBar and ToolBar
+Tk::AppWindow::Plugins::Bars - Basic functionality for esxtensions associated with a panel, like StatusBar and ToolBar
 
 =cut
 
@@ -36,7 +36,7 @@ sub new {
 	my $class = shift;
 	my $self = $class->SUPER::new(@_);
 
-	$self->Require('Bars');
+	$self->Require('Panels');
 	$self->{VISIBLE} = 1;
 	$self->{CONFIGMODE} = 1;
 
@@ -48,25 +48,24 @@ sub new {
 
 =cut
 
-sub Bar {
+sub Panel {
 	my $self = shift;
-	if (@_) { $self->{BAR} = shift; }
-	return $self->{BAR};
+	if (@_) { $self->{PANEL} = shift; }
+	return $self->{PANEL};
 }
 
-sub BarVisible {
+sub PanelVisible {
 	my $self = shift;
 	return $self->{VISIBLE} unless exists $self->{CONFIGMODE};
-	my $bars = $self->GetExt('Bars');
+	my $panels = $self->GetExt('Panels');
 	if (@_) {
 		my $status = shift;
+		my $panel = $self->{PANEL};
 		if ($status eq 1) {
-			my $bar = $self->Bar;
-			print "Bar $bar\n";
-			$bars->Show($self->Bar);
+			$panels->Show($panel);
 			$self->{VISIBLE} = 1;
 		} elsif ($status eq 0) {
-			$bars->Hide($self->Bar);
+			$panels->Hide($panel);
 			$self->{VISIBLE} = 0;
 		}
 	}

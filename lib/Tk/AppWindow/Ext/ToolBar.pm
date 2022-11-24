@@ -13,7 +13,7 @@ $VERSION="0.01";
 use Tk;
 require Tk::Compound;
 
-use base qw( Tk::AppWindow::BaseClasses::BarExtension );
+use base qw( Tk::AppWindow::BaseClasses::PanelExtension );
 
 =head1 SYNOPSIS
 
@@ -37,7 +37,6 @@ sub new {
 	my $class = shift;
 	my $self = $class->SUPER::new(@_);
 
-	$self->Bar('TOP');
 	$self->AddPreConfig(
 		-autotool => ['PASSIVE', undef, undef, 1],
 		-tooliconsize => ['PASSIVE', 'ToolIconSize', 'toolIconSize', 16],
@@ -52,7 +51,8 @@ sub new {
 	);
 
 	$self->ConfigInit(
-		-toolbarvisible	=> ['BarVisible', $self, 1],
+		-toolbarpanel => ['Panel', $self, 'TOP'],
+		-toolbarvisible	=> ['PanelVisible', $self, 1],
 	);
 
 	$self->AddPostConfig('CreateItems', $self);
@@ -71,7 +71,7 @@ sub AddItem {
 		$position = @$list if $position > @$list;
 		$before = $list->[$position];
 	}
-	my $bar = $self->Subwidget($self->Bar);
+	my $bar = $self->Subwidget($self->Panel);
 	if (defined $before) {
 		$item->pack(-side => 'left', -padx => 2, -in => $bar, -fill => 'y');
 		splice @$list, $position, 0, $item;
@@ -83,7 +83,7 @@ sub AddItem {
 
 sub AddSeparator {
 	my $self = shift;
-	$self->AddItem($self->Subwidget($self->Bar)->Label(-text => '|'), @_);
+	$self->AddItem($self->Subwidget($self->Panel)->Label(-text => '|'), @_);
 }
 
 sub ClearTools {
@@ -128,7 +128,7 @@ sub ConfigureTypes {
 
 sub ConfToolButton {
 	my ($self, $label, $cmd, $icon, $help) = @_;
-	my $tb = $self->Subwidget($self->Bar);
+	my $tb = $self->Subwidget($self->Panel);
 
 	my $bmp;
 	if (defined $icon) {

@@ -17,7 +17,7 @@ require Tk::AppWindow::Ext::StatusBar::SMessageItem;
 require Tk::AppWindow::Ext::StatusBar::SProgressItem;
 require Tk::AppWindow::Ext::StatusBar::STextItem;
 
-use base qw( Tk::AppWindow::BaseClasses::BarExtension );
+use base qw( Tk::AppWindow::BaseClasses::PanelExtension );
 
 my %types = (
 	image => {
@@ -61,7 +61,6 @@ sub new {
 	my $class = shift;
 
 	my $self = $class->SUPER::new(@_);
-	$self->Bar('BOTTOM');
 	$self->AddPreConfig(
 		-statusitemrelief => ['PASSIVE', undef, undef, 'groove'],
 		-statusitemborderwidth => ['PASSIVE', undef, undef, 2],
@@ -75,7 +74,8 @@ sub new {
 
 	
 	$self->ConfigInit(
-		-statusbarvisible	=> ['BarVisible', $self, 1],
+		-statusbarpanel => ['Panel', $self, 'BOTTOM'],
+		-statusbarvisible => ['PanelVisible', $self, 1],
 	);
 	$self->AddPostConfig('InitMsgItem', $self);
 	$self->AddPostConfig('Update', $self);
@@ -104,7 +104,7 @@ sub Add {
 		my $b = $items->[$pos];
 		push @$pack, (-before => $b) if defined $b;
 	}
-	my $i = $self->Subwidget($self->Bar)->$class(%params, 
+	my $i = $self->Subwidget($self->Panel)->$class(%params, 
 		-relief => $self->ConfigGet('-statusitemrelief'),
 		-borderwidth => $self->ConfigGet('-statusitemborderwidth'),
 	)->pack(@$pack, @$itempadding, -side => 'left');

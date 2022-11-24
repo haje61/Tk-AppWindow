@@ -4,34 +4,33 @@ use lib './t/lib';
 use AWTestSuite;
 
 use Test::More tests => 4;
-BEGIN { use_ok('Tk::AppWindow::Ext::Bars') };
+BEGIN { use_ok('Tk::AppWindow::Ext::Panels') };
 
 
 CreateTestApp(
-	-extensions => [qw[Bars]],
-	-barsizers => [qw[LEFT RIGHT TOP BOTTOM]],
+	-extensions => [qw[Panels]],
 # 	-barsizers => [qw[]],
 # 	-fullsizebars => 'horizontal',
 );
-my $ext = $app->GetExt('Bars');
+my $ext = $app->GetExt('Panels');
 
 my %visible = ();
 my $f = $app->Subwidget('WORK')->Frame(-relief => 'groove')->pack(-expand => 1, -fill => 'both');
 for (qw[LEFT RIGHT TOP BOTTOM]) {
-	my $bar = $_;
-	my $t = $app->Subwidget($bar)->Label(-relief => 'groove', -text => $bar)->pack(-expand => 1, -fill => 'both');
-	$ext->Show($bar);
+	my $panel = $_;
+	my $t = $app->Subwidget($panel)->Label(-relief => 'groove', -text => $panel)->pack(-expand => 1, -fill => 'both');
+	$ext->Show($panel);
 	my $var = 1;
 	$visible{$_} = \$var;
 	$f->Checkbutton(
 		-text => $_,
 		-variable => \$var,
 		-command => sub {
-			my $vis = $visible{$bar};
+			my $vis = $visible{$panel};
 			if ($$vis) {
-				$ext->Show($bar);
+				$ext->Show($panel);
 			} else {
-				$ext->Hide($bar);
+				$ext->Hide($panel);
 			}
 		}
 	)->pack(-anchor => 'w');
@@ -39,7 +38,7 @@ for (qw[LEFT RIGHT TOP BOTTOM]) {
 
 
 @tests = (
-	[sub { return $ext->Name eq 'Bars' }, 1, 'extension Bars loaded']
+	[sub { return $ext->Name eq 'Panels' }, 1, 'extension Panels loaded']
 );
 
 $app->MainLoop;
