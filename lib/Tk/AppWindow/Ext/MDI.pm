@@ -73,6 +73,10 @@ sub CmdFileNew {
 	$name = $self->GetUntitled unless defined $name;
 	my $cm = $self->CreateContentHandler($name);
 	if (defined $cm) {
+		#add to navigator
+		my $navigator = $self->GetExt('Navigator');
+		$navigator->Add($name) if defined $navigator;
+
 		$self->Interface->SelectPage($name);
 		return 1;
 	}
@@ -89,14 +93,13 @@ sub CreateContentHandler {
 	);
 	my $h = $page->$cmclass(-extension => $self)->pack(-expand => 1, -fill => 'both');
 	$self->{DOCS}->{$name} = $h;
-	$self->update;
 	return $h;
 }
 
 sub CreateInterface {
 	my $self = shift;
 	$self->{INTERFACE} = $self->WorkSpace->YANoteBook(
-		-selecttabcall => ['SelectDoc', $self],
+		-selecttabcall => ['Select', $self],
 		-closetabcall => ['CloseDoc', $self],
 	)->pack(-expand => 1, -fill => 'both');
 	
@@ -125,4 +128,11 @@ sub RenameDoc {
 		-title => $self->GetTitle($new),
 	);
 }
+
+sub Select {
+	my ($self, $name) = @_;
+	$self->Interface->SelectPage($name);
+	$self->SelectDoc($name);
+}
+
 1;

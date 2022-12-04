@@ -44,7 +44,16 @@ sub Populate {
 	}
 	
 	my @conf = ();
-	@conf = (-closeimg => [{-image => $b}, undef, undef, $self->Pixmap(-file => Tk->findINC('close_icon.xpm'))]) if defined $b;
+	if (defined $b) {
+		@conf = (
+			-closeimg => [{-image => $b}, undef, undef, $self->Pixmap(-file => Tk->findINC('close_icon.xpm'))],
+			-background => [[$self, $l, $b], 'background', 'Background',],
+		)
+	} else {
+		@conf = (
+			-background => [[$self, $l], 'background', 'Background',]
+		)
+	}
 	
 	$self->ConfigSpecs(@conf,
 		-name => ['PASSIVE', undef, undef, ''],
@@ -122,6 +131,8 @@ sub Populate {
 	$self->SUPER::Populate($args);
 	
 	my $barframe = $self->Frame(
+		-relief => 'sunken',
+		-borderwidth => 1,
 	)->pack(@barpack);
 
 	my $tabframe = $barframe->Frame(
@@ -129,15 +140,16 @@ sub Populate {
 	$self->Advertise('TabFrame' => $tabframe);
 
 	my $morebutton = $barframe->Button(
-		-text => 'More',
 		-relief => 'flat',
 		-command => ['ListPop', $self],
-	)->pack(
+	);
+	$self->Advertise('MoreButton' => $morebutton);
+	$self->{MOREBUTTONPACK} = [
 		-side => $buttonside,
 		-padx => 2,
 		-pady => 2,
-	);
-	$self->Advertise('MoreButton' => $morebutton);
+	];
+	$self->{MOREBUTTONISPACKED} = 0;
 
 	my $tp = $self->Toplevel(
 		-borderwidth => 0,
@@ -171,15 +183,18 @@ sub Populate {
 	$self->{POPPED} = 0;
 
 	$self->ConfigSpecs(
+		-backpagecolor => [{-background => $tabframe}, 'backPageColor', 'BackPageColor', '#8f8f8f'],
 		-closeimage => ['PASSIVE', undef, undef, $self->Pixmap(-file => Tk->findINC('close_icon.xpm'))],
 		-closetabcall => ['CALLBACK', undef, undef, sub { return 1 }],
+		-image => [$morebutton],
 		-selectoptions => ['PASSIVE', undef, undef, [
-			-relief => 'flat',
+			-relief => 'raised',
 		]],
 		-selecttabcall => ['CALLBACK', undef, undef, sub {}],
+		-text => [$morebutton, undef, undef, 'More'],
 		-tabpack => ['PASSIVE', undef, undef, []], 
 		-unselectoptions => ['PASSIVE', undef, undef, [
-			-relief => 'sunken',
+			-relief => 'flat',
 		]],
 		DEFAULT => [$self],
 	);
@@ -200,6 +215,7 @@ sub AddPage {
 	my $tab = $self->Subwidget('TabFrame')->NameTab(%opt, @$uo,
 		-name => $name,
 		-title => $title,
+		-background => $self->cget('-backpagecolor'),
 		-clickcall => ['ClickCall', $self],
 		-closecall => ['DeletePage', $self],
 		-motioncall => ['MotionCall', $self],
@@ -261,14 +277,6 @@ sub DeletePage {
 	return 0
 }
 
-sub FindTabPos {
-	my ($self, $name) = @_;
-	my $dp = $self->{DISPLAYED};
-	my $last = @$dp;
-	my ($index) = grep { $dp->[$_] eq $name } 0 .. $last;
-	return $index
-}
-
 sub GetPage {
 	my ($self, $name) = @_;
 	return $self->{PAGES}->{$name}->[1] if defined $name;
@@ -277,7 +285,8 @@ sub GetPage {
 
 sub GetTab {
 	my ($self, $name) = @_;
-	return $self->{PAGES}->{$name}->[0];
+	return $self->{PAGES}->{$name}->[0] if defined $name;
+	return undef;
 }
 
 sub IsDisplayed {
@@ -295,15 +304,21 @@ sub IsFull {
 	if (defined $last) {
 		my $tab = $self->GetTab($last);
 		if ($self->{TABSIDE} eq 'left') {
-			my $pos = $tab->x + $tab->width;
+			my $tabwidth = $tab->reqwidth;
+			$tabwidth = $tab->width unless defined $tabwidth;
+			my $pos = $tab->x + $tabwidth;
 			$pos = $pos + $newtab->reqwidth if defined $newtab;
-			my $tabwidth = $self->Subwidget('TabFrame')->width;
-			return $pos >= $tabwidth
+			my $tabbarwidth = $self->Subwidget('TabFrame')->width - 30;
+			$tabbarwidth = $tabbarwidth + $self->Subwidget('MoreButton')->width if (($self->{MOREBUTTONISPACKED}) and (defined $newtab));
+			return $pos >= $tabbarwidth
 		} else {
-			my $pos = $tab->y + $tab->height;
+			my $tabheight = $tab->reqheight;
+			$tabheight = $tab->height unless defined $tabheight;
+			my $pos = $tab->y + $tabheight;
 			$pos = $pos + $newtab->reqheight if defined $newtab;
-			my $tabheight = $self->Subwidget('TabFrame')->height;
-			return $pos >= $tabheight
+			my $tabbarheight = $self->Subwidget('TabFrame')->height - 30;
+			$tabbarheight = $tabbarheight + $self->Subwidget('MoreButton')->height if (($self->{MOREBUTTONISPACKED}) and (defined $newtab));
+			return $pos >= $tabbarheight
 		}
 	}
 	return 0;
@@ -365,7 +380,7 @@ sub ListPopDown {
 sub _MoveNext {
 	my ($self, $name) = @_;
 	my $tab = $self->GetTab($name);
-	my $pos = $self->FindTabPos($name);
+	my $pos = $self->TabPosition($name);
 	my $dp = $self->{DISPLAYED};
 	if ($pos < @$dp - 1) {
 		my $next = $self->GetTab($dp->[$pos + 1]);
@@ -378,7 +393,7 @@ sub _MoveNext {
 sub _MovePrevious {
 	my ($self, $name) = @_;
 	my $tab = $self->GetTab($name);
-	my $pos = $self->FindTabPos($name);
+	my $pos = $self->TabPosition($name);
 	my $dp = $self->{DISPLAYED};
 	if ($pos > 0) {
 		my $prev = $self->GetTab($dp->[$pos - 1]);
@@ -494,6 +509,9 @@ sub Selected {	return $_[0]->{SELECTED} }
 
 sub SelectPage {
 	my ($self, $name) = @_;
+	return unless defined $name;
+	my $sel = $self->Selected;
+	return if (defined $sel) and ($name eq $sel);
 	my $page = $self->{PAGES}->{$name};
 	if (defined $page) {
 		$self->UnSelectPage;
@@ -511,7 +529,9 @@ sub SelectPage {
 		}
 		my ($tab, $frame) = @$page;
 		my $o = $self->cget('-selectoptions');
-		$tab->configure(@$o);
+		$tab->configure(@$o,
+			-background => $self->cget('-background'),
+		);
 		$frame->pack(-expand => 1, -fill => 'both');
 		$self->{SELECTED} = $name;
 		$self->Callback('-selecttabcall', $name);
@@ -541,7 +561,9 @@ sub UnSelectPage {
 		my $page = $self->{PAGES}->{$name};
 		my ($tab, $frame) = @$page;
 		my $o = $self->cget('-unselectoptions');
-		$tab->configure(@$o);
+		$tab->configure(@$o,
+			-background => $self->cget('-backpagecolor'),
+		);
 		$frame->packForget;
 		$self->{SELECTED} = undef;
 	}
@@ -552,12 +574,13 @@ sub UpdateTabs {
 	my $ud = $self->{UNDISPLAYED};
 	my $dp = $self->{DISPLAYED};
 	my $notempty = @$dp;
+	$self->update;
 	while ($self->IsFull) {
 		my $last = pop @$dp;
 		my $tab = $self->GetTab($last);
 		$tab->packForget;
-		unshift @$ud, $last;
 		$self->update;
+		unshift @$ud, $last;
 	}
 	return unless @$ud;
 	my $name = $ud->[0];
@@ -567,6 +590,19 @@ sub UpdateTabs {
 		shift @$ud;
 		$name = $ud->[0];
 		$self->update;
+	}
+	my $b = $self->Subwidget('MoreButton');
+	if (@$ud) {
+		unless ($self->{MOREBUTTONISPACKED}) {
+			my $o = $self->{MOREBUTTONPACK};
+			$b->pack(@$o);
+			$self->{MOREBUTTONISPACKED} = 1;
+		}
+	} else {
+		if ($self->{MOREBUTTONISPACKED}) {
+			$b->packForget;
+			$self->{MOREBUTTONISPACKED} = 0;
+		}
 	}
 }
 

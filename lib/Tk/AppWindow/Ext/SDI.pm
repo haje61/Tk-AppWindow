@@ -6,6 +6,7 @@ use warnings;
 use vars qw($VERSION);
 $VERSION="0.01";
 use File::Basename;
+use File::Spec;
 require Tk::YAMessage;
 
 use base qw( Tk::AppWindow::BaseClasses::Extension );
@@ -104,7 +105,16 @@ sub CloseDoc {
 			my $siz = @$hist;
 			pop @$hist if ($siz > $self->ConfigGet('-maxhistory'));
 		}
+
+		#delete from document hash
 		delete $self->{DOCS}->{$name};
+
+		#delete from navigator
+		my $navigator = $self->GetExt('Navigator');
+		if (defined $navigator) {
+			$navigator->Delete($name) if defined $navigator;
+		}
+
 		if ((defined $self->Current) and ($self->Current eq $name)) { 
 			$self->ClearCurrent;
 		}
@@ -130,11 +140,14 @@ sub CmdFileNew {
 	my ($self, $name) = @_;
 	$name = $self->GetUntitled unless defined $name; 
 	my $cm = $self->CreateContentHandler($name);
-	if (defined $cm) {
-		$self->SelectDoc($name);
-		return 1;
-	}
-	return 0
+# 	return 0 unless defined $cm;
+
+	#add to navigator
+	my $navigator = $self->GetExt('Navigator');
+	$navigator->Add($name) if defined $navigator;
+
+	$self->SelectDoc($name);
+	return 1;
 }
 
 sub CmdFileOpen {
@@ -150,6 +163,7 @@ sub CmdFileOpen {
 		return
 	}
 	if (defined $file) {
+		my $file = File::Spec->rel2abs($file);
 		if ($self->CmdFileNew($file)) {
 			my $doc = $self->GetDoc($file);
 
@@ -203,7 +217,8 @@ sub CmdFileSaveAs {
 	# 		-initialdir => $initdir,
 			-popover => 'mainwindow',
 		);
-		if ((defined $file) and ($file ne $name)) {
+		if (defined $file) {
+			$file = File::Spec->rel2abs($file);
 			if ($doc->Save($file)) {
 				$self->RenameDoc($name, $file);
 				return 1
@@ -347,11 +362,22 @@ sub RemoveContentHandler {
 
 sub RenameDoc {
 	my ($self, $old, $new) = @_;
-	my $doc = $self->{DOCS}->{$old};
-	$self->{DOCS}->{$new} = $doc;
-	delete $self->{DOCS}->{$old};
-	if ($self->Current eq $old) {
-		$self->SelectDoc($new)
+
+	unless ($old eq $new) {
+		my $doc = delete $self->{DOCS}->{$old};
+		$self->{DOCS}->{$new} = $doc;
+
+		#rename in navigator
+		my $navigator = $self->GetExt('Navigator');
+		if (defined $navigator) {
+			$navigator->Delete($old);
+			$navigator->Add($new);
+		}
+
+		if ($self->Current eq $old) {
+			$self->SelectDoc($new)
+		}
+
 	}
 }
 
@@ -373,9 +399,10 @@ sub SaveHistory {
 
 sub SelectDoc {
 	my ($self, $name) = @_;
-	print "Selecting $name\n";
 	$self->{CURRENT} = $name;
 	$self->ConfigPut(-title => $self->ConfigGet('-appname') . ' - ' . $self->GetTitle($name));
+	my $navigator = $self->GetExt('Navigator');
+	$navigator->SelectEntry($name) if defined $navigator
 }
 
 sub ToolItems {

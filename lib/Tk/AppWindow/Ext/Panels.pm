@@ -183,7 +183,6 @@ sub Show {
 	if (exists $self->{ADJUSTERS}->{$name}) {
 		$self->{ADJUSTERS}->{$name}->pack(%$packinfo)
 	}
-	
 }
 
 1;
