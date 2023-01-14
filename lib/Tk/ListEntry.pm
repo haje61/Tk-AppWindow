@@ -1,16 +1,66 @@
 package Tk::ListEntry;
 
+=head1 NAME
+
+Tk::ListEntry - BrowseEntry like text widget
+
+=cut
+
 use strict;
 use warnings;
+use vars qw($VERSION);
+$VERSION = '0.01';
+
 use Tk;
 use base qw(Tk::Frame);
 Construct Tk::Widget 'ListEntry';
+
+=head1 SYNOPSIS
+
+=over 4
+
+ require Tk::ListEntry;
+ my $tree= $window->ListEntry(@options)->pack;
+
+=back
+
+=head1 DESCRIPTION
+
+=over 4
+
+B<Tk::ListEntry> is a variant of the B<Tk::BrowseEntry> widget except it does
+not have a button. Clicking the entry will pop the list.
+
+I tried to make the list look a bit more modern by reducing the border.
+
+You can use all config options and methods of the Entry widget.
+
+=back
+
+=head1 B<CONFIG VARIABLES>
+
+=over 4
+
+=item Switch: B<-values>
+
+=over 4
+
+You have to specify this option.
+Only available at create time.
+
+Specify a list of values for the popup list.
+
+=back
+
+=back
+
+=cut
 
 sub Populate {
 	my ($self,$args) = @_;
 
 	my $values = delete $args->{'-values'};
-	warn "You need to set the -values option" unless defined $values;
+	die "You need to set the -values option" unless defined $values;
 
 	$self->SUPER::Populate($args);
 
@@ -50,7 +100,16 @@ sub Populate {
 		-background => ['SELF', 'DESCENDANTS'],
 		DEFAULT => [$entry],
 	);
+	$self->Delegates(
+		DEFAULT => $entry,
+	);
 }
+
+=head1 METHODS
+
+=over 4
+
+=cut
 
 sub EntryFocusOut {
 	my ($self, $detail) = @_;
@@ -188,11 +247,57 @@ sub Select {
 	$self->PopDownList;
 }
 
+=item B<Validate>
+
+=over 4
+
+Returns a true if the value of the entry is in the values list.
+
+=back
+
+=cut
+
 sub Validate {
 	my $self = shift;
 	my $txt = $self->Subwidget('Entry')->get;
 	my $values = $self->{VALUES};
 	return grep(/^$txt$/, @$values)
 }
+
+=back
+
+=head1 AUTHOR
+
+=over 4
+
+=item Hans Jeuken (hanje at cpan dot org)
+
+=back
+
+=cut
+
+=head1 BUGS
+
+Unknown. If you find any, please contact the author.
+
+=cut
+
+=head1 TODO
+
+=over 4
+
+
+=back
+
+=cut
+
+=head1 SEE ALSO
+
+=over 4
+
+
+=back
+
+=cut
 
 1;

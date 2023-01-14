@@ -20,7 +20,7 @@ CreateTestApp(
 		[	'tool_button',		'Save',		'poptest',		'document-save',	'Save current document'], 
 		[	'tool_button',		'Close',		'poptest',		'document-close',	'Close current document'], 
 	],
-	-extensions => [qw[Art ToolBar]],
+	-extensions => [qw[ToolBar Art MenuBar ]],
 );
 
 my $plug = $app->GetExt('ToolBar');

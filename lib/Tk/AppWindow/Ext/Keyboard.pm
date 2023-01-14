@@ -2,7 +2,7 @@ package Tk::AppWindow::Ext::Keyboard;
 
 =head1 NAME
 
-Tk::AppWindow::Plugins::FileCommands - a plugin for opening, saving and closing files
+Tk::AppWindow::Ext::Keyboard - adding easy keyboard bindings
 
 =cut
 
@@ -18,6 +18,10 @@ use base qw( Tk::AppWindow::BaseClasses::Extension );
 
 =over 4
 
+ my $app = new Tk::AppWindow(@options,
+    -extensions => ['Keyboard'],
+ );
+ $app->MainLoop;
 
 =back
 
@@ -28,6 +32,17 @@ use base qw( Tk::AppWindow::BaseClasses::Extension );
 =head1 B<CONFIG VARIABLES>
 
 =over 4
+
+=item Switch: B<-keyboardboardbindings>
+
+=over 4
+
+Default value is an empty list
+
+Specify a paired list of keyboard bindings.
+
+
+=back
 
 =back
 
@@ -84,5 +99,41 @@ sub ReConfigure {
 	}
 	$self->ConfigureBindings
 }
+
+=back
+
+=head1 AUTHOR
+
+=over 4
+
+=item Hans Jeuken (hanje at cpan dot org)
+
+=back
+
+=cut
+
+=head1 BUGS
+
+Unknown. If you find any, please contact the author.
+
+=cut
+
+=head1 TODO
+
+=over 4
+
+
+=back
+
+=cut
+
+=head1 SEE ALSO
+
+=over 4
+
+
+=back
+
+=cut
 
 1;

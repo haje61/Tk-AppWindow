@@ -1,5 +1,6 @@
 [Icon Theme]
 Name=png_2
+Inherits=png_1
 
 [actions/22]
 Context=Actions

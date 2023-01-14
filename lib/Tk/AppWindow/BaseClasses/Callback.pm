@@ -17,8 +17,8 @@ $VERSION="0.01";
 
 =over 4
 
- my $cb = Wx::Perl::FrameWorks::BaseClasses::Callback->new('MethodName', $owner, @options);
- my $cb = Wx::Perl::FrameWorks::BaseClasses::Callback->new(sub { do whatever }, @options);
+ my $cb = Tk::AppWindow::BaseClasses::Callback->new('MethodName', $owner, @options);
+ my $cb = Tk::AppWindow::BaseClasses::Callback->new(sub { do whatever }, @options);
  $cb->Execute(@moreoptions);
 
 =back
@@ -60,7 +60,12 @@ sub new {
 
 =item B<Anonymous>
 
+=over 4
+
 returns the state of the Anonymous flag. 
+
+=back
+
 =cut
 
 sub Anonymous {
@@ -71,6 +76,8 @@ sub Anonymous {
 =item B<Call>($coderef)
 
 =item B<Call>('MethodName')
+
+=over 4
 
 Sets and returns the methodname or code reference.
 
@@ -84,6 +91,8 @@ sub Call {
 
 =item B<Execute>(@options)
 
+=over 4
+
 Executes the callback. It checks if the call is a code reference, if yes it invokes it.
 If the call is a method name, it looks for that method in owner and then invokes that
 method. 
@@ -93,6 +102,8 @@ B<Execute>, if any. Finally the list in B<Options> is passed on.
 
 If the B<Anonymous> flag is set it will pass all the options
 you specify at B<Execute> and then B<Owner> and B<Options>.
+
+=back
 
 =cut
 
@@ -109,7 +120,11 @@ sub Execute {
 
 =item B<Options>
 
+=over 4
+
 Sets and returns a reference to a list of options. You normally do not call this method yourself.
+
+=back
 
 =cut
 
@@ -121,7 +136,11 @@ sub Options {
 
 =item B<Owner>($owner)
 
+=over 4
+
 Returns a reference to the owner of the callback. 
+
+=back
 
 =cut
 
@@ -137,31 +156,16 @@ sub Owner {
 
 =over 4
 
-=item Hans Jeuken (hansjeuken@xs4all.nl)
+=item Hans Jeuken (hanje at cpan dot org)
 
 =back
 
-=cut
 
 =head1 BUGS
 
+=over 4
+
 Unknown. If you find any, please contact the author.
-
-=cut
-
-=head1 TODO
-
-=over 4
-
-
-=back
-
-=cut
-
-=head1 SEE ALSO
-
-=over 4
-
 
 =back
 

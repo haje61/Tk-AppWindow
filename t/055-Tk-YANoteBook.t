@@ -8,7 +8,7 @@ use Tk;
 use Test::More tests => 4;
 BEGIN { use_ok('Tk::YANoteBook') };
 
-$delay = 500;
+$delay = 1500;
 
 CreateTestApp(
 );
@@ -32,6 +32,7 @@ for (1 .. 12) {
 	[sub {  return defined $nb }, '1', 'Can create']
 );
 
+$app->geometry('300x200+100+100');
 $app->MainLoop;
 
 

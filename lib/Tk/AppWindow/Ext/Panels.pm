@@ -2,7 +2,7 @@ package Tk::AppWindow::Ext::Panels;
 
 =head1 NAME
 
-Tk::AppWindow::Plugins::Panels - Manage the layout of your application
+Tk::AppWindow::Ext::Panels - manage the layout of your application
 
 =cut
 
@@ -19,20 +19,111 @@ use base qw( Tk::AppWindow::BaseClasses::Extension );
 
 =over 4
 
+ my $app = new Tk::AppWindow(@options,
+    -extensions => ['Panels'],
+ );
+ $app->MainLoop;
 
 =back
 
 =head1 DESCRIPTION
 
-=cut
+=over 4
+
+	Adds a layout of B<Frame> objects to the main window.
+	You can specify which frames should have a slider.
+	Each Frame can be in a shown or hidden state.
+	
+=back
 
 =head1 B<CONFIG VARIABLES>
 
 =over 4
 
+=item B<-panellayout>
+
+=over 4
+
+Specify the structure of your layout. 
+
+The keys used below are all home to the pack geometry manager. Plus a
+few more. These are:
+
+over 4
+
+B<-canhide>
+
+Specify if a panel is capable of hiding and showing. By default 0.
+
+B<-adjuster>
+
+If specified the panel is adjustable. The value is transferred to the
+B<-side> option of the adjuster.
+
+=back
+
+Default value:
+
+[
+    CENTER => {
+       -in => 'MAIN',
+       -side => 'top',
+       -fill => 'both',
+       -expand => 1,
+    },
+    WORK => {
+       -in => 'CENTER',
+       -side => 'left',
+       -fill => 'both',
+       -expand => 1,
+    },
+    TOP => {
+       -in => 'MAIN',
+       -side => 'top',
+       -before => 'CENTER',
+       -fill => 'x',
+       -canhide => 1,
+    },
+    BOTTOM => {
+       -in => 'MAIN',
+       -after => 'CENTER',
+       -side => 'top',
+       -fill => 'x',
+       -canhide => 1,
+    },
+    LEFT => {
+       -in => 'CENTER',
+       -before => 'WORK',
+       -side => 'left',
+       -fill => 'y',
+       -canhide => 1,
+       -adjuster => 'left',
+    },
+    RIGHT => {
+       -in => 'CENTER',
+       -after => 'WORK',
+       -side => 'left',
+       -fill => 'y',
+       -canhide => 1,
+       -adjuster => 'right',
+    },
+ ]
+
+=back
+
+=item B<-workspace>
+
+=over 4
+
+Specifies the central workspace of your application.
+Default value is WORK.
+
+=back
+
 =back
 
 =cut
+
 sub new {
 	my $class = shift;
 	my $self = $class->SUPER::new(@_);
@@ -95,14 +186,42 @@ sub new {
 
 =head1 METHODS
 
+=over 4
+
+=item B<Hide>I<($panel)>
+
+=over 4
+
+Hide $panel and its adjuster if any.
+
+=back
+
 =cut
 
 sub Hide {
 	my ($self, $panel) = @_;
-	$self->Subwidget($panel)->packForget;
-	if (exists $self->{ADJUSTERS}->{$panel}) {
-		$self->{ADJUSTERS}->{$panel}->packForget;
+	unless ($self->IsHidden($panel)) {
+		$self->Subwidget($panel)->packForget;
+		if (exists $self->{ADJUSTERS}->{$panel}) {
+			$self->{ADJUSTERS}->{$panel}->packForget;
+		}
 	}
+}
+
+=item B<IsHidden>I<($panel)>
+
+=over 4
+
+Returns the state of $panel. 1 if hidden, 0 if not.
+
+=back
+
+=cut
+
+sub IsHidden {
+	my ($self, $panel) = @_;
+	my $mapped = $self->Subwidget($panel)->ismapped;
+	return not $mapped ;
 }
 
 sub MenuItems {
@@ -175,14 +294,62 @@ sub PanelLayOut {
 	}
 }
 
+=item B<Show>I<($panel)>
+
+=over 4
+
+Show $panel and its adjuster if any.
+
+=back
+
+=cut
+
 sub Show {
 	my ($self, $name) = @_;
-	my $panel = $self->Subwidget($name);
-	my $packinfo = $self->{PACKINFO}->{$name};
-	$panel->pack(%$packinfo);
-	if (exists $self->{ADJUSTERS}->{$name}) {
-		$self->{ADJUSTERS}->{$name}->pack(%$packinfo)
+	if ($self->IsHidden($name)) {
+		my $panel = $self->Subwidget($name);
+		my $packinfo = $self->{PACKINFO}->{$name};
+		$panel->pack(%$packinfo);
+		if (exists $self->{ADJUSTERS}->{$name}) {
+			$self->{ADJUSTERS}->{$name}->pack(%$packinfo)
+		}
 	}
 }
+
+=back
+
+=head1 AUTHOR
+
+=over 4
+
+=item Hans Jeuken (hanje at cpan dot org)
+
+=back
+
+=cut
+
+=head1 BUGS
+
+Unknown. If you find any, please contact the author.
+
+=cut
+
+=head1 TODO
+
+=over 4
+
+
+=back
+
+=cut
+
+=head1 SEE ALSO
+
+=over 4
+
+
+=back
+
+=cut
 
 1;

@@ -36,6 +36,7 @@ sub Populate {
 		-variable => ['PASSIVE', undef, undef, \$var],
 		DEFAULT => ['SELF'],
 	);
+	$self->after(1, ['Validate', $self]);
 }
 
 sub CreateHandler {
@@ -381,14 +382,294 @@ sub ValidUpdate {}
 
 package Tk::TabbedForm;
 
+=head1 NAME
+
+Tk::TabbedForm - NoteBook based form editor
+
+=cut
+
 use strict;
 use warnings;
+use vars qw($VERSION);
+$VERSION = '0.01';
+
 use Tk;
 use base qw(Tk::Frame);
 Construct Tk::Widget 'TabbedForm';
 
 require Tk::LabFrame;
 require Tk::NoteBook;
+
+=head1 SYNOPSIS
+
+=over 4
+
+ require Tk::TabbedForm;
+ my $tree= $window->TabbedForm(@options)->pack;
+ $tree->CreateForm;
+
+=back
+
+=head1 DESCRIPTION
+
+=over 4
+
+=back
+
+=head1 B<CONFIG VARIABLES>
+
+=over 4
+
+=item Switch: B<-acceptempty>
+
+=over 4
+
+Default value 0. If set the Validate method will not trigger on
+fields containing empty strings.
+
+=back
+
+=item B<-autovalidate>
+
+=over 4
+
+Validate the form whenever an entry changes value.
+
+=back
+
+=item B<-colorimage>
+
+=over 4
+
+Set an image object for I<color> items
+
+=back
+
+=item B<-fileimage>
+
+=over 4
+
+Set an image object for I<file> items
+
+=back
+
+=item B<-folderimage>
+
+=over 4
+
+Set an image object for I<folder> items
+
+=back
+
+
+=item B<-fontimage>
+
+=over 4
+
+Set an image object for I<folder> items
+
+=back
+
+
+=item B<-postvalidatecall>
+
+=over 4
+
+Set this callback if you want to take action on the validation result.
+
+=back
+
+
+=item B<-structure>
+
+=over 4
+
+You have to set this option. Only available at create time.
+Example:
+
+[
+    -set_boolean => ['boolean', 'Boolean test'],
+    '*page' => 'Page 1',
+    '*section' => 'Section 1',
+    -set_color => ['color', 'Color test'],
+    -set_list_command => ['list', 'List values test', sub { return @listvalues } ],
+    -set_file => ['file', 'File test'],
+    '*end',
+    -set_float => ['float', 'Float test'],
+    -set_folder => ['folder', 'Folder test'],
+    -set_font => ['font', 'Font test'],
+    -set_integer => ['integer', 'Integer test'],
+    -set_list_values => ['list', 'List values test', \@listvalues],
+    -set_radio_command => ['radio', 'Radio Command test', sub { return @radiovalues }],
+    -set_radio_values => ['radio', 'Radio values test', \@radiovalues],
+    -set_text => ['text', 'Text test'],
+ ]
+
+See below.
+
+=back
+
+=back
+
+=head1 THE STRUCTURE OPTION
+
+=over 4
+
+The I<-structure> option is a list that basically looks like:
+
+ [
+    $switch => $option,
+    $key => [$type, $label, @options],
+    ...
+ ]
+
+
+B<SWITCHES>
+
+$switch can have the following values:
+
+=item B<*page>
+
+=over 4
+
+Creates a new page with the name $option.
+
+=back
+
+=item B<*section>
+
+=over 4
+
+Creates a new section with the name $option.
+
+=back
+
+=item B<*section>
+
+=over 4
+
+Creates a new section with the name $option.
+You can create nested sections.
+
+=back
+
+=item B<*end>
+
+=over 4
+
+Ends current section.
+
+=back
+
+B<TYPES>
+
+$type can have the following values:
+
+=item B<boolean>
+
+=over 4
+
+ myswitch => ['boolean', 'My switch'],
+
+Creates a Checkbutton item.
+
+=back
+
+=item B<color>
+
+=over 4
+
+mycolor => ['color', 'My color'],
+
+Creates an Entry item with a color label and a button initiating a color dialog.
+
+=back
+
+=item B<file>
+
+=over 4
+
+ myfile => ['file', 'My file'],
+
+Creates an Entry item with a button initiating a file dialog.
+
+=back
+
+=item B<float>
+
+=over 4
+
+ myfloat => ['float', 'My float'],
+
+Creates an Entry item that validates a floating value.
+
+=back
+
+=item B<folder>
+
+=over 4
+
+ mydir => ['folder', 'My folder'],
+
+Creates an Entry item with a button initiating a folder dialog.
+
+=back
+
+=item B<font>
+
+=over 4
+
+ myfont => ['font', 'My font'],
+
+Creates an Entry item with a button initiating a font dialog.
+
+=back
+
+=item B<integer>
+
+=over 4
+
+ myinteger => ['integer', 'My integer'],
+
+Creates an Entry item that validates an integer value.
+
+=back
+
+=item B<list>
+
+=over 4
+
+ mylist => ['list', 'My list', \@values],
+ mylist => ['list', 'My list', sub { return @values }],
+
+Creates a ListEntry item.
+
+=back
+
+=item B<radio>
+
+=over 4
+
+ myradio => ['radio', 'My radio', \@values],
+ myradio => ['radio', 'My radio', sub { return @values }],
+
+Creates a line of radiobuttons.
+
+=back
+
+=item B<text>
+
+=over 4
+
+ mytext => ['text', 'My text'],
+
+Creates an Entry item.
+
+=back
+
+=back
+
+=cut
 
 sub Populate {
 	my ($self,$args) = @_;
@@ -411,20 +692,40 @@ sub Populate {
 
 	$self->gridColumnconfigure(1, -weight => 1);
 
+	my $col_icon = $self->Pixmap(-file => Tk->findINC('color_icon.xpm'));
+	my $fil_icon = $self->Pixmap(-file => Tk->findINC('file.xpm'));
+	my $dir_icon = $self->Pixmap(-file => Tk->findINC('folder.xpm'));
+	my $fon_icon = $self->Pixmap(-file => Tk->findINC('font_icon.xpm'));
+	
 	$self->ConfigSpecs(
 		-acceptempty => ['PASSIVE', undef, undef, 0],
 		-autovalidate => ['PASSIVE', undef, undef, 1],
 		-background => ['SELF', 'DESCENDANTS'],
-		-colorimage => ['PASSIVE', undef, undef, $self->Pixmap(-file => Tk::findINC('color_icon.xpm'))],
-		-fileimage => ['PASSIVE', undef, undef, $self->Pixmap(-file => Tk::findINC('file.xpm'))],
-		-folderimage => ['PASSIVE', undef, undef, $self->Pixmap(-file => Tk::findINC('folder.xpm'))],
-		-fontimage => ['PASSIVE', undef, undef, $self->Pixmap(-file => Tk::findINC('font_icon.xpm'))],
+		-colorimage => ['PASSIVE', undef, undef, $col_icon],
+		-fileimage => ['PASSIVE', undef, undef, $fil_icon],
+		-folderimage => ['PASSIVE', undef, undef, $dir_icon],
+		-fontimage => ['PASSIVE', undef, undef, $fon_icon],
 		-listcall => ['CALLBACK', undef, undef, sub {}],
 		-postvalidatecall => ['CALLBACK', undef, undef, sub {}],
 		-structure => ['PASSIVE', undef, undef, []],
 		DEFAULT => ['SELF'],
 	);
 }
+
+=head1 METHODS
+
+=over 4
+
+=item B<CreateForm>
+
+=over 4
+
+Call this method after you created the B<Tk::TabbedForm> widget.
+It will create all the pages, sections and entries.
+
+=back
+
+=cut
 
 sub CreateForm {
 	my $self = shift;
@@ -545,6 +846,17 @@ sub DefineTypes {
 	}
 }
 
+=item B<Get>I<(?$key?)>
+
+=over 4
+
+Returns the value of $key. $key is the name of the item in the form.
+Returns a hash with all values if $key is not specified.
+
+=back
+
+=cut
+
 sub Get {
 	my ($self, $key) = @_;
 	my $opt = $self->{OPTIONS};
@@ -556,6 +868,16 @@ sub Get {
 	}
 	return @get
 }
+
+=item B<Put>(%values)
+
+=over 4
+
+Sets the values in the tabbed form
+
+=back
+
+=cut
 
 sub Put {
 	my $self = shift;
@@ -571,6 +893,17 @@ sub Put {
 	}
 }
 
+=item B<Validate>
+
+=over 4
+
+Validates all entries in the form and returns true if
+all successfull.
+
+=back
+
+=cut
+
 sub Validate {
 	my ($self, $key) = @_;
 	my $opt = $self->{OPTIONS};
@@ -584,5 +917,41 @@ sub Validate {
 	$self->Callback('-postvalidatecall', $valid);
 	return $valid
 }
+
+=back
+
+=head1 AUTHOR
+
+=over 4
+
+=item Hans Jeuken (hanje at cpan dot org)
+
+=back
+
+=cut
+
+=head1 BUGS
+
+Unknown. If you find any, please contact the author.
+
+=cut
+
+=head1 TODO
+
+=over 4
+
+
+=back
+
+=cut
+
+=head1 SEE ALSO
+
+=over 4
+
+
+=back
+
+=cut
 
 1;

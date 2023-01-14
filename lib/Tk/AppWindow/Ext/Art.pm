@@ -2,7 +2,7 @@ package Tk::AppWindow::Ext::Art;
 
 =head1 NAME
 
-Tk::AppWindow::Plugins::Art - Use icon libraries quick & easy
+Tk::AppWindow::Ext::Art - Use icon libraries quick & easy
 
 =cut
 
@@ -17,7 +17,9 @@ use base qw( Tk::AppWindow::BaseClasses::Extension );
 use File::Basename;
 use Image::LibRSVG;
 use MIME::Base64;
+use Config;
 use Tk;
+require Tk::Compound;
 require Tk::Photo;
 use Tk::PNG;
 use Tk::JPEG;
@@ -29,7 +31,6 @@ my @extensions = (
 	'.gif',
 	'.xbm',
 	'.xpm',
-	'.svg',
 );
 
 my %photoext = (
@@ -39,12 +40,11 @@ my %photoext = (
 );
 
 my @defaulticonpath = ();
-if ($^O eq 'MSWin32') {
+if ($Config{osname} eq 'MSWin32') {
 	push @defaulticonpath, $ENV{ALLUSERSPROFILE} . '\Icons'
 } else {
-	push @defaulticonpath, $ENV{HOME} . '/.local/share/icons',
-	push @defaulticonpath, '/usr/share/icons',
-	push @defaulticonpath, '/usr/local/share/icons',
+	push @extensions, '.svg';
+	push @defaulticonpath, $ENV{HOME} . '/.local/share/icons', '/usr/share/icons','/usr/local/share/icons';
 }
 
 my @iconpath = ();
@@ -53,22 +53,19 @@ my @iconpath = ();
 
 =over 4
 
- my $depot = new Wx::Perl::IconDepot(\@pathnames);
- $depot->SetThemes($theme1, $theme2, $theme3);
- my $wxbitmap = $depot->GetBitmap($name, $size, $context)
- my $wxicon = $depot->GetIcon($name, $size, $context)
- my $wximage = $depot->GetImage($name, $size, $context)
+ my $app = new Tk::AppWindow(@options,
+    -extensions => ['Art'],
+ );
+ $app->MainLoop;
 
 =back
 
 =head1 DESCRIPTION
 
-This module allows B<Wx> easy access to icon libraries used in desktops
+This module allows B<Tk::AppWindow> easy access to icon libraries used in desktops
 like KDE and GNOME.
 
-It supports libraries containing scalable vector graphics like Breeze if
-B<Image::LibRSVG> is installed. If not you are confined to bitmapped libraries
-like Oxygen or Adwaita.
+if you are not on Windows, it supports libraries containing scalable vector graphics like Breeze.
 
 On Windows you have to install icon libraries yourself in C:\ProgramData\Icons.
 You will find plenty of them on Github. Extract an icon set and copy the main
@@ -79,10 +76,45 @@ in /usr/share/icons.
 The constructor takes a reference to a list of folders where it finds the icons
 libraries. If you specify nothing, it will assign default values for:
 
-Windows:  $ENV{ALLUSERSPROFILE} . '\Icons'. IconDepot will not create 
+Windows:  $ENV{ALLUSERSPROFILE} . '\Icons'. Art will not create 
 the folder if it does not exist.
 
 Others: $ENV{HOME} . '/.local/share/icons', '/usr/share/icons'
+
+=head1 B<CONFIG VARIABLES>
+
+=over 4
+
+=item Switch: B<-iconpath>
+
+=over 4
+
+For defaults see above.
+Only available at create time.
+
+=back
+
+=item Switch: B<-iconsize>
+
+=over 4
+
+Default is 16.
+
+=back
+
+=item Name  : B<iconTheme>
+
+=item Class : B<IconTheme>
+
+=item Switch: B<-icontheme>
+
+=over 4
+
+Default is Oxygen.
+
+=back
+
+=back
 
 =cut
 
@@ -101,8 +133,9 @@ sub new {
 	);
 
 	$self->AddPreConfig(
+		-compoundcolspace =>['PASSIVE', undef, undef, 3],
 		-iconsize => ['PASSIVE', 'iconSize', 'IconSize', 16],
-		-icontheme => ['PASSIVE', 'iconTheme', 'IconTheme', 'breeze'],
+		-icontheme => ['PASSIVE', 'iconTheme', 'IconTheme', 'Oxygen'],
 	);
 
 	my $ip = delete $args->{'-iconpath'};
@@ -113,9 +146,15 @@ sub new {
 	}
 	$self->CollectThemes(@iconpath);
 
+	$self->AddPostConfig('DoPostConfig', $self);
+	
 	return $self;
 }
 
+
+=head1 METHODS
+
+=over 4
 
 =item B<AvailableContexts>I<($theme, >[ I<$name, $size> ] I<);>
 
@@ -173,8 +212,15 @@ sub AvailableContexts {
 			my $si = $t->{$name};
 			if (exists $si->{$size}) {
 				my $ci = $si->{$size};
-				%found = %$ci
+				%found = %$ci;
 			}
+		}
+	}
+	my $parent = $self->ParentTheme($theme);
+	if (defined $parent) {
+		my @contexts = $self->AvailableContexts($parent, $name, $size);
+		for (@contexts) {
+			$found{$_} = 1
 		}
 	}
 	return sort keys %found
@@ -198,12 +244,12 @@ sub AvailableIcons {
 	my $t = $self->GetTheme($theme);
 
 	my @names = keys %$t;
-	my @matches = ();
+	my %matches = ();
 	if ((not defined $size) and (not defined $context)) {
-		@matches = @names
+		%matches = %$t
 	} elsif ((defined $size) and (not defined $context)) {
 		for (@names) {
-			if (exists $t->{$_}->{$size}) { push @matches, $_ }
+			if (exists $t->{$_}->{$size}) { $matches{$_} = 1 }
 		}
 	} elsif ((not defined $size) and (defined $context)) {
 		for (@names) {
@@ -211,7 +257,7 @@ sub AvailableIcons {
 			my $si = $t->{$name};
 			my @sizes = keys %$si;
 			for (@sizes) {
-				if (exists $t->{$name}->{$_}->{$context}) { push @matches, $name }
+				if (exists $t->{$name}->{$_}->{$context}) { $matches{$name} = 1 }
 			}
 		}
 	} else {
@@ -219,12 +265,19 @@ sub AvailableIcons {
 			if (exists $t->{$_}->{$size}) {
 				my $c = $t->{$_}->{$size};
 				if (exists $c->{$context}) {
-					push @matches, $_
+					 $matches{$_} = 1 
 				}
 			}
 		}
 	}
-	return sort @matches
+	my $parent = $self->ParentTheme($theme);
+	if (defined $parent) {
+		my @icons = $self->AvailableIcons($parent, $size, $context);
+		for (@icons) {
+			 $matches{$_} = 1
+		}
+	}
+	return sort keys %matches
 }
 
 =item B<AvailableThemes>
@@ -298,6 +351,14 @@ sub AvailableSizes {
 			}
 		}
 	}
+	my $parent = $self->ParentTheme($theme);
+	if (defined $parent) {
+		my @sizes = $self->AvailableSizes($parent, $name, $context);
+		for (@sizes) {
+			$found{$_} = 1
+		}
+	}
+	delete $found{'unknown'};
 	return sort {$a <=> $b} keys %found
 }
 
@@ -305,17 +366,6 @@ sub AvailableSizesCurrentTheme {
 	my $self = shift;
 	return $self->AvailableSizes($self->ConfigGet('-icontheme'));
 }
-
-=item B<CollectThemes>
-
-Called during initialization. It scans the folders the constructor receives for
-icon libraries. It loads their index files and stores the info.
-
-=over 4
-
-=back
-
-=cut
 
 sub CollectThemes {
 	my $self = shift;
@@ -329,8 +379,9 @@ sub CollectThemes {
 					if (-e "$fullname/index.theme") {
 						my $index = $self->LoadThemeFile($fullname);
 						my $main = delete $index->{general};
+						my $name = $main->{'Name'};
 						if (%$index) {
-							$themes{$entry} = {
+							$themes{$name} = {
 								path => $fullname,
 								general => $main,
 								folders => $index,
@@ -345,16 +396,36 @@ sub CollectThemes {
 	$self->{THEMES} = \%themes
 }
 
-=item B<CreateIndex>I<($themeindex)>
-
-=over 4
-
-Creates a searchable index from a loaded theme index file. Returns a reference
-to a hash.
-
-=back
-
-=cut
+sub CreateCompound {
+	my $self = shift;
+	my %args = (@_);
+	
+	my $side = delete $args{'-textside'};
+	$side = 'right' unless defined $side;
+	my $compound = $self->Compound;
+	if ($side eq 'left') {
+		$compound->Text(-text => $args{'-text'}, -anchor => 'c');
+		$compound->Space(-width => $self->ConfigGet('-compoundcolspace'));
+		$compound->Image(-image => $args{'-image'});
+	} elsif ($side eq 'right') {
+		$compound->Image(-image => $args{'-image'});
+		$compound->Space(-width => $self->ConfigGet('-compoundcolspace'));
+		$compound->Text(-text => $args{'-text'}, -anchor => 'c');
+	} elsif ($side eq 'top') {
+		$compound->Text(-text => $args{'-text'}, -anchor => 'c');
+		$compound->Line;
+		$compound->Image(-image => $args{'-image'});
+	} elsif ($side eq 'bottom') {
+		$compound->Image(-image => $args{'-image'});
+		$compound->Line;
+		$compound->Text(-text => $args{'-text'}, -anchor => 'c');
+	} elsif ($side eq 'none') {
+		$compound->Image(-image => $args{'-image'});
+	} else {
+		warn "illegal value $side for -textside. Should be 'left', 'right' 'top', bottom' or 'none'"
+	}
+	return $compound;
+}
 
 sub CreateIndex {
 	my ($self, $tindex) = @_;
@@ -387,6 +458,29 @@ sub CreateIndex {
 	return \%index;
 }
 
+sub DoPostConfig {
+	my $self = shift;
+	
+	#Fixing name problem. Gtk init files specify the used icon library
+	#as their folder name instead of the name in their index.
+	my $theme = $self->ConfigGet('-icontheme');
+	unless (exists $self->{THEMES}->{$theme}) {
+		for ($self->AvailableThemes) {
+			my $test = $self->{THEMES}->{$_};
+			if ($test->{'path'} =~ /$theme$/) {
+				$theme = $_;
+				$self->ConfigPut(-icontheme => $theme);
+				last;
+			}
+		}
+	}
+	#Fixing cases of specified iconsize not matching any of the
+	#available iconsizes.
+	my $size = $self->ConfigGet('-iconsize');
+	$size = $self->GetAlternateSize($size);
+	$self->ConfigPut(-iconsize => $size);
+}
+
 =item B<FindImage>I<($name, >[ I<$size, $context, \$resize> ] I<);>
 
 =over 4
@@ -408,18 +502,6 @@ sub FindImage {
 	return $self->FindLibImage($name, $size, $context, $resize);
 }
 
-=item B<FindImageC>I<($sizeindex, $context)>
-
-=over 4
-
-Looks for an icon in $context for a given size index (a portion of a searchable
-index). If it can not find it, it looks for another version in all other 
-contexts. Returns the first one it finds.
-
-=back
-
-=cut
-
 sub FindImageC {
 	my ($self, $si, $context) = @_;
 	if (exists $si->{$context}) {
@@ -432,18 +514,6 @@ sub FindImageC {
 	}
 	return undef
 }
-
-=item B<FindImageS>I<($nameindex, $size, $context, \$resize)>
-
-=over 4
-
-Looks for an icon of $size for a given name index (a portion of a searchable
-index). If it can not find it it looks for another version in all other sizes.
-In this case it returns the biggest one it finds and sets $resize to 1.
-
-=back
-
-=cut
 
 sub FindImageS {
 	my ($self, $nindex, $size, $context, $resize) = @_;
@@ -477,13 +547,18 @@ except $name are optional.
 =cut
 
 sub FindLibImage {
-	my ($self, $name, $size, $context, $resize) = @_;
-	unless (defined $size) { $size = 'unknown' }
-	unless (defined $context) { $context = 'unknown' }
-	my $index = $self->GetTheme($self->ConfigGet('-icontheme'));
-	if (exists $index->{$name}) {
-		return $self->FindImageS($index->{$name}, $size, $context, $resize);
-	}
+	my ($self, $name, $size, $context, $resize, $theme) = @_;
+
+	$size = 'unknown' unless (defined $size);
+	$context = 'unknown' unless (defined $context);
+	$theme = $self->ConfigGet('-icontheme') unless defined $theme;
+
+	my $index = $self->GetTheme($theme);
+	return $self->FindImageS($index->{$name}, $size, $context, $resize) if exists $index->{$name};
+
+	my $parent = $self->ParentTheme($theme);
+	return $self->FindLibImage($name, $size, $context, $resize, $parent) if defined $parent;
+
 	return undef;
 }
 
@@ -517,11 +592,39 @@ sub FindRawImage {
 	return undef
 }
 
+
+=item B<GetAlternateSize>I<($size>)>
+
+=over 4
+
+Tests if $size is available in the current itecontheme. Returns 
+the first size that is larger than $size if it is not.
+
+=back
+
+=cut
+
+sub GetAlternateSize {
+	my ($self,$size) = @_;
+	my $theme = $self->ConfigGet('-icontheme');
+	my @sizes = $self->AvailableSizes($theme);
+	my ($index) = grep { $sizes[$_] eq $size } 0..$#sizes;
+	unless (defined $index) {
+		for (@sizes) {
+			if ($size < $_) {
+				$size = $_;
+				last;
+			}
+		}
+	}
+	return $size
+}
+
 =item B<GetIcon>I<($name>, [ I<$size, $context, $force> ] I<);>
 
 =over 4
 
-Returns a Wx::Image object. If you do not specify I<$size> or the icon does
+Returns a Tk::Image. If you do not specify I<$size> or the icon does
 not exist in the specified size, it will find the largest possible icon and
 scale it to the requested size. I<$force> can be 0 or 1. It is 0 by default.
 If you set it to 1 a missing icon image is returned instead of undef when the
@@ -532,8 +635,8 @@ icon cannot be found.
 =cut
 
 sub GetIcon {
-   my ($self, $name, $size, $context) = @_;
-   unless (defined $size) { $size = $self->ConfigGet('-iconsize')}
+	my ($self, $name, $size, $context) = @_;
+	unless (defined $size) { $size = $self->ConfigGet('-iconsize')}
 	my $file = $self->FindImage($name, $size, $context);
 	if (defined $file) { 
 		return $self->LoadImage($file, $size);
@@ -553,18 +656,17 @@ be created first and stored in the index pool.
 =cut
 
 sub GetTheme {
-	my ($self, $theme) = @_;
+	my ($self, $name) = @_;
 	my $pool = $self->{THEMEPOOL};
-	if (exists $pool->{$theme}) {
-		return $pool->{$theme}
+	if (exists $pool->{$name}) {
+		return $pool->{$name}
 	} else {
-		my $themindex = $self->{THEMES}->{$theme};
+		my $themindex = $self->{THEMES}->{$name};
 		if (defined $themindex) {
 			my $index = $self->CreateIndex($themindex);
-			$pool->{$theme} = $index;
+			$pool->{$name} = $index;
 			return $index
 		} else {
-			warn "Accessing theme '$theme' failed";
 			return undef
 		}
 	}
@@ -588,12 +690,6 @@ sub GetThemePath {
 	} else {
 		warn "Icon theme $theme not found"
 	}
-}
-
-sub IconSize {
-	my $self = shift;
-	if (@_) { $self->{ICONSIZE} = shift }
-	return $self->{ICONSIZE}
 }
 
 =item B<IsImageFile>I<($file)>
@@ -638,6 +734,10 @@ sub LoadImage {
 				return $img
 			}
 		} elsif ($suffix eq '.svg') {
+			if ($Config{osname} eq 'Win32') {
+				warn "Svg images not supported on Windows";
+				return undef;
+			}
 			my $renderer = Image::LibRSVG->new;
 			$renderer->loadFromFileAtSize($file, $size, $size);
 			my $png = $renderer->getImageBitmap("png", 100);
@@ -704,5 +804,51 @@ sub LoadThemeFile {
 		warn "Cannot open theme index file: $file"
 	}
 }
+
+=item B<ParentTheme>I<($theme)>
+
+=over 4
+
+Returns the parent theme index that $theme inherits.
+Returns undef if there is not parent theme.
+
+=back
+
+=cut
+
+sub ParentTheme {
+	my ($self, $theme) = @_;
+	return $self->{THEMES}->{$theme}->{'general'}->{'Inherits'};
+}
+
+=back
+
+=head1 AUTHOR
+
+=over 4
+
+=item Hans Jeuken (hanje at cpan dot org)
+
+=back
+
+=head1 BUGS
+
+Unknown. If you find any, please contact the author.
+
+=head1 TODO
+
+=over 4
+
+
+=back
+
+=head1 SEE ALSO
+
+=over 4
+
+
+=back
+
+=cut
 
 1;

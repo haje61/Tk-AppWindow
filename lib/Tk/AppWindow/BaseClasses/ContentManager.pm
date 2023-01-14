@@ -75,6 +75,9 @@ sub Extension {
    return $self->{EXT};
 }
 
+sub Focus {
+}
+
 sub IsModified {
 	my $self = shift;
 	return 0

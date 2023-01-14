@@ -16,7 +16,7 @@ BEGIN {
 
 
 CreateTestApp(
-	-extensions => [qw[Art Balloon StatusBar]],
+	-extensions => [qw[Art Balloon StatusBar MenuBar]],
 );
 
 my $plug = $app->GetExt('StatusBar');
@@ -40,7 +40,11 @@ my $blue = $ws->Button(
 )->pack(@padding);
 
 my $boole = 1;
-$plug->AddImageItem(
+$plug->AddImageItem('image',
+	-valueimages => {
+		0 => 'network-disconnect',
+		1 => 'network-connect',
+	},
 	-label => 'Image',
 	-updatecommand => sub {
 		if ($boole) { $boole = 0 } else { $boole = 1 }
@@ -49,7 +53,7 @@ $plug->AddImageItem(
 );
 
 my $num = 0;
-$plug->AddTextItem(
+$plug->AddTextItem('text',
 	-label => 'Text',
 	-updatecommand => sub {
 		my $old = $num;
@@ -60,7 +64,7 @@ $plug->AddTextItem(
 );
 
 my $prog = 0;
-$plug->AddProgressItem(
+$plug->AddProgressItem('progress',
 	-label => 'Progress',
 	-updatecommand => sub {
 		my $old = $prog;
@@ -70,17 +74,12 @@ $plug->AddProgressItem(
 	}
 );
 
-print "0: ", ref $plug->{ITEMS}->[0], "\n";
-print "1: ", ref $plug->{ITEMS}->[1], "\n";
-print "2: ", ref $plug->{ITEMS}->[2], "\n";
-print "3: ", ref $plug->{ITEMS}->[3], "\n";
-
 @tests = (
 	[sub { return $plug->Name eq 'StatusBar' }, 1, 'plugin StatusBar loaded'],
 	[sub { return ref $plug->{MI} }, 'Tk::AppWindow::Ext::StatusBar::SMessageItem', 'message item loaded'],
-	[sub { return ref $plug->{ITEMS}->[1] }, 'Tk::AppWindow::Ext::StatusBar::SImageItem', 'image item loaded'],
-	[sub { return ref $plug->{ITEMS}->[2] }, 'Tk::AppWindow::Ext::StatusBar::STextItem', 'text item loaded'],
-	[sub { return ref $plug->{ITEMS}->[3] }, 'Tk::AppWindow::Ext::StatusBar::SProgressItem', 'progress item loaded'],
+	[sub { return ref $plug->Item('image') }, 'Tk::AppWindow::Ext::StatusBar::SImageItem', 'image item loaded'],
+	[sub { return ref $plug->Item('text') }, 'Tk::AppWindow::Ext::StatusBar::STextItem', 'text item loaded'],
+	[sub { return ref $plug->Item('progress') }, 'Tk::AppWindow::Ext::StatusBar::SProgressItem', 'progress item loaded'],
 );
 
 $app->MainLoop;

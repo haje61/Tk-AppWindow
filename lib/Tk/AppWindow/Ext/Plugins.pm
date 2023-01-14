@@ -1,0 +1,178 @@
+package Tk::AppWindow::Ext::Plugins;
+
+=head1 NAME
+
+Tk::AppWindow::Ext::Plugins - load and unload plugins
+
+=cut
+
+use strict;
+use warnings;
+use vars qw($VERSION);
+$VERSION="0.01";
+
+use base qw( Tk::AppWindow::BaseClasses::Extension );
+
+=head1 SYNOPSIS
+
+=over 4
+
+ my $app = new Tk::AppWindow(@options,
+    -extensions => ['Plugins'],
+ );
+ $app->MainLoop;
+
+=back
+
+=head1 DESCRIPTION
+
+=cut
+
+=head1 B<CONFIG VARIABLES>
+
+=over 4
+
+=back
+
+=cut
+
+sub new {
+	my $class = shift;
+	my $self = $class->SUPER::new(@_);
+	$self->{PLUGINS} = {};
+
+	return $self;
+}
+
+=head1 METHODS
+
+=cut
+
+=item B<CanQuit>
+
+Tests all plugins if they successfully unload.
+returns 1 if succesful 
+
+=cut
+
+sub CanQuit {
+	my $self = shift;
+	my @plugs = $self->PluginList;
+	my $close = 1;
+	for (@plugs) {
+		$close = 0 unless $self->PluginUnload($_)
+	}
+	return $close
+}
+
+=item B<GetPlugin>(I<$name>)
+
+returns the requested plugin object.
+
+=cut
+
+
+sub GetPlugin {
+	my ($self, $plug) = @_;
+	return $self->{PLUGINS}->{$plug}
+}
+
+=item B<PluginList>
+
+returns a sorted list of loaded plugins.
+
+=cut
+
+sub PluginList {
+	my $plugs = $_[0]->{PLUGINS};
+	return sort keys %$plugs
+}
+
+=item B<PluginLoad>(I<$name>)
+
+Loads the plugin; returns 1 if succesfull;
+
+=cut
+
+sub PluginLoad {
+	my ($self, $plug) = @_;
+	my $obj;
+	my $modname = "Tk::AppWindow::Plugins::$plug";
+	my $app $self->GetAppWindow;
+	eval "use $modname; \$obj = new $modname(\$app);";
+	die $@ if $@;
+	if (defined $obj) {
+		$self->{PLUGINS}->{$plug} = $obj;
+		return 1
+	}
+	warn "Plugin $plug not loaded";
+	return 0
+}
+
+=item B<PluginLoad>(I<$name>)
+
+Loads the plugin; returns 1 if succesfull;
+
+=cut
+
+sub PluginUnload {
+	my ($self, $plug) = @_;
+	my $obj = $self->GetPlugin($plug);
+	if ($obj->Unload) {
+		delete $self->{PLUGINS}->{$plug}
+		return 1
+	}
+	return 0;
+}
+
+=item B<Reconfigure>
+
+Calls Reconfigure on all loaded plugins 1 if all succesfull;
+
+=cut
+
+sub Reconfigure {
+	my $self = shift;
+	my @plugs = $self->PluginList;
+	my $succes = 1;
+	for (@plugs) {
+		$succes = 0 unless $self->GetPlugin($_)->Reconfigure
+	}
+	return $succes
+}
+
+=back
+
+=head1 AUTHOR
+
+=over 4
+
+=item Hans Jeuken (hanje at cpan dot org)
+
+=back
+
+=head1 BUGS
+
+=over 4 
+
+Unknown. Probably plenty. If you find any, please contact the author.
+
+=back
+
+=head1 TODO
+
+=over 4
+
+
+=back
+
+=head1 SEE ALSO
+
+=over 4
+
+
+=back
+
+=cut
+
+1;

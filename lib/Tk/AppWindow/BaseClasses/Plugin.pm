@@ -2,13 +2,12 @@ package Tk::AppWindow::BaseClasses::Plugin;
 
 =head1 NAME
 
-Tk::AppWindow::BaseClasses::Plugin - Baseclass for all plugins in this framework
+Tk::AppWindow::BaseClasses::Plugin - Baseclass for all plugins.
 
 =cut
 
 use strict;
 use warnings;
-use Carp;
 use vars '$AUTOLOAD';
 
 =head1 SYNOPSIS
@@ -19,10 +18,11 @@ use vars '$AUTOLOAD';
  my $plug = Tk::AppWindow::BaseClasses::Plugin->new($frame);
 
  #This is what you should do
+ package Tk::AppWindow::Plugins::MyPlugin
  use base(Tk::AppWindow::BaseClasses::Plugin);
  sub new {
     my $class = shift;
-    my $self = $class->SUPER::new(@_); #$frame should be the first in @_
+    my $self = $class->SUPER::new(@_); #$mainwindow should be the first in @_
     ...
     return $self
  }
@@ -31,23 +31,26 @@ use vars '$AUTOLOAD';
 
 =head1 DESCRIPTION
 
-Tk::AppWindow::BaseClasses::Plugin is the base object for all plugins in Wx::Perl::FrameWorks. All plugins inherit
-this class. It has all the methods needed for the Broadcast/Listen system. It has access to the Wx::Perl::FrameWorks object.
-It has the core mechanism in place if your plugins need to reconfigure or veto a close command.
+A plugin is different from an extension in a couple of ways:
+ - A plugin can be loaded and unloaded by the end user.
+   If they do not desire the functionality they can simply 
+   unload it.
+ - A plugin can not define config variables
 
 =back
 
 =cut
 
 sub new {
-	my ($proto, $window, $args) = (@_);
+	my ($proto, $window, @required) = (@_);
 	my $class = ref($proto) || $proto;
 	my $self = {
 		APPWINDOW => $window,
-		ARGS => $args,
 	};
 	bless ($self, $class);
-
+	for (@required) {
+		return undef unless defined $self->GetExt($_);
+	}
 	return $self;
 }
 
@@ -62,49 +65,40 @@ sub AUTOLOAD {
 
 =over 4
 
-=cut
-
-sub BalloonAttach {
-	my $self = shift;
-	my $b = $self->GetPlugin('Balloon');
-	$b->Attach(@_) if defined $b;
-}
-
 =item B<CanQuit>
+
+=over 4
 
 Returns 1. It is there for you to overwrite. It is called when you attempt to close the window or execute the quit command.
 Overwrite it to check for unsaved data and possibly veto these commands by returning a 0.
+
+=back
 
 =cut
 
 sub CanQuit { return 1 }
 
-sub CleanUp { delete $_[0]->{ARGS} }
-
-sub ConfVirtEvent {
-	my $self = shift;
-	while (@_) {
-		my $event = shift;
-		my $accel = shift;
-		$self->eventAdd($event, $accel);
-# 		$self->eventAdd($event, $accel) unless defined $self->eventInfo($event);
-	}
-}
 
 =item B<GetAppWindow>
 
-Returns a reference to the toplevel frame that created it. The toplevel frame should be a Wx::Perl::FrameWorks class.
+=over 4
+
+Returns a reference to the toplevel frame. The toplevel frame should be a Tk::AppWindow class.
+
+=back
 
 =cut
 
 sub GetAppWindow { return $_[0]->{APPWINDOW} }
 
-sub GetArgsRef { return $_[0]->{ARGS} }
-
 =item B<MenuItems>
 
-Returns and empty list. It is there for you to overwrite. It is called by the B<MenuBar> plugin. You can return a list
-with menu items here. For details on the format see B<Wx::Perl::FrameWorks::Plugins::MenuBar>
+=over 4
+
+Returns and empty list. It is there for you to overwrite. It is called by the B<Plugins> extension. You can return a list
+with menu items here. For details on the format see B<Tk::AppWindow::Ext::MenuBar>
+
+=back
 
 =cut
 
@@ -114,7 +108,11 @@ sub MenuItems {
 
 =item B<Name>
 
+=over 4
+
 returns the module name of $self, without the path. So, if left uninherited, it returns 'Plugin'.
+
+=back
 
 =cut
 
@@ -127,48 +125,46 @@ sub Name {
 
 =item B<ReConfigure>
 
+=over 4
+
 Does nothing. It is called when the user clicks the Apply button in the settings dialog. Overwrite it to act on 
 modified settings.
 
-=cut
-
-sub ReConfigure {}
-
-=item B<Require>
+=back
 
 =cut
 
-sub Require {
-	my $self = shift;
-	my $f = $self->GetAppWindow;
-	my $args = $self->GetArgsRef;
-	while (@_) {
-		my $m = shift;
-		unless (defined($f->GetPlugin($m))) {
-			$f->LoadPlugin($m, $args);
-		}
-	}
-}
-
-sub StatusItems {
-	return ();
-}
-
-sub StatusMessage {
-	my $self = shift;
-	my $sb = $self->GetPlugin('StatusBar');
-	$sb->Message(@_) if defined $sb;
+sub ReConfigure {
+	return 1
 }
 
 =item B<ToolItems>
 
-Returns and empty list. It is there for you to overwrite. It is called by the B<ToolBar> plugin. You can return a list
-with menu items here. For details on the format see B<Wx::Perl::FrameWorks::Plugins::MenuBar>
+=over 4
+
+Returns and empty list. It is there for you to overwrite. It is called by the B<Plugins> extension. You can return a list
+with menu items here. For details on the format see B<Tk::AppWindow::Ext::MenuBar>
+
+=back
 
 =cut
 
 sub ToolItems {
 	return ();
+}
+
+=item B<UnLoad>
+
+=over 4
+
+Returns 1. For you to overwrite. Doe here what needs to be done to safely destroy the plugin.
+
+=back
+
+=cut
+
+sub UnLoad {
+	return 1;
 }
 
 =back
@@ -177,7 +173,7 @@ sub ToolItems {
 
 =over 4
 
-=item Hans Jeuken (hansjeuken@xs4all.nl)
+=item Hans Jeuken (hanje at cpan dot org)
 
 =back
 

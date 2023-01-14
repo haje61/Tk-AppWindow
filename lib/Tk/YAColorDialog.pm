@@ -1,12 +1,21 @@
 package Tk::YAColorDialog;
 
+=head1 NAME
+
+Tk::YAColorDialog - Yet another color dialog
+
+=cut
+
 use strict;
 use warnings;
+use vars qw($VERSION);
+$VERSION = '0.01';
 
 use Tk;
+require Tk::NoteBook;
+
 use base qw(Tk::Derived Tk::YADialog);
 Construct Tk::Widget 'YAColorDialog';
-require Tk::NoteBook;
 
 my @colspaces = (
 	[qw[RGB Red Green Blue]],
@@ -22,6 +31,43 @@ my %updates = (
 	Yellow => 'Blue',
 );
 
+=head1 SYNOPSIS
+
+=over 4
+
+ require Tk::YAColorDialog;
+ my $dialog = $window->YAColorDialog;
+ my $but = $dialog->Show;
+ if ($but eq 'Select') {
+	$color = $dialog->Get;
+ }
+
+=back
+
+=head1 DESCRIPTION
+
+=over 4
+
+Provides a basic color dialog. Less noisy than Tk::ColorDialog.
+Inherits L<Tk::YADialog>.
+
+=back
+
+=head1 B<CONFIG VARIABLES>
+
+=over 4
+
+=item Switch: B<-initialcolor>
+
+=over 4
+
+Set the initial color for the dialog.
+
+=back
+
+=back
+
+=cut
 
 sub Populate {
 	my ($self,$args) = @_;
@@ -112,6 +158,12 @@ sub Populate {
 	}
 }
 
+=head1 METHODS
+
+=over 4
+
+=cut
+
 sub AutoUpdate {
 	my $self = shift;
 	my $var = $self->Subwidget('Entry')->cget('-textvariable');
@@ -168,6 +220,16 @@ sub ChannelUpdate {
 	$self->EntryUpdate;
 }
 
+=item B<ColorDepth>I<($color)>
+
+=over 4
+
+Returns the color depth of $color.
+
+=back
+
+=cut
+
 sub ColorDepth {
 	my ($self, $color) = @_;
 	$color =~ s/^\#//;
@@ -210,10 +272,30 @@ sub EntryUpdate {
 	}
 }
 
+=item B<Get>
+
+=over 4
+
+Returns the current value.
+
+=back
+
+=cut
+
 sub Get {
 	my $var = $_[0]->Subwidget('Entry')->cget('-textvariable');
 	return $$var
 }
+
+=item B<Hex2RGB>I<($hex)>
+
+=over 4
+
+Returns rgb list $hex value.
+
+=back
+
+=cut
 
 sub Hex2RGB {
 	my ($self, $hex) = @_;
@@ -249,5 +331,41 @@ sub Validate {
 	return $$var =~ /^#(?:[0-9a-fA-F]{3}){$repeat}$/
 }
 
+
+=back
+
+=head1 AUTHOR
+
+=over 4
+
+=item Hans Jeuken (hanje at cpan dot org)
+
+=back
+
+=cut
+
+=head1 BUGS
+
+Unknown. If you find any, please contact the author.
+
+=cut
+
+=head1 TODO
+
+=over 4
+
+
+=back
+
+=cut
+
+=head1 SEE ALSO
+
+=over 4
+
+
+=back
+
+=cut
 
 1;

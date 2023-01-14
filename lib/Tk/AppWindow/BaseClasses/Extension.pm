@@ -2,7 +2,7 @@ package Tk::AppWindow::BaseClasses::Extension;
 
 =head1 NAME
 
-Tk::AppWindow::BaseClasses::Extensions - Baseclass for all extensions in this framework
+Tk::AppWindow::BaseClasses::Extension - Baseclass for all extensions in this framework
 
 =cut
 
@@ -16,10 +16,11 @@ use vars '$AUTOLOAD';
 =over 4
 
  #This is useless
- my $plug = Tk::AppWindow::BaseClasses::Exteension->new($frame);
+ my $ext = Tk::AppWindow::BaseClasses::Extension->new($frame);
 
  #This is what you should do
- use base(Tk::AppWindow::BaseClasses::Plugin);
+ package Tk::AppWindow::Ext::MyExtension
+ use base(Tk::AppWindow::BaseClasses::Extension);
  sub new {
     my $class = shift;
     my $self = $class->SUPER::new(@_); #$mainwindow should be the first in @_
@@ -31,20 +32,21 @@ use vars '$AUTOLOAD';
 
 =head1 DESCRIPTION
 
-Tk::AppWindow::BaseClasses::Extension is the base object for all extenstions in Tk::AppWindow framework. All extensions inherit
+Tk::AppWindow::BaseClasses::Extension is the base object for all extenstions in this Tk::AppWindow framework. All extensions inherit
 this class. It has access to the Tk::AppWindow object and autoloads its methods.
-It has the core mechanism in place if your extensions need to reconfigure or veto a close command.
+It has the core mechanisms in place if your extensions need to reconfigure or veto a close command.
+
+Use this class as a basis to define your own extension.
 
 =back
 
 =cut
 
 sub new {
-	my ($proto, $window, $args) = (@_);
+	my ($proto, $window) = (@_);
 	my $class = ref($proto) || $proto;
 	my $self = {
 		APPWINDOW => $window,
-		ARGS => $args,
 	};
 	bless ($self, $class);
 
@@ -62,6 +64,14 @@ sub AUTOLOAD {
 
 =over 4
 
+=item B<BalloonAttach>I<@options>
+
+=over 4
+
+Calls the Attach method of the Balloon widget if the extens Balloon is loaded
+
+=back
+
 =cut
 
 sub BalloonAttach {
@@ -72,29 +82,33 @@ sub BalloonAttach {
 
 =item B<CanQuit>
 
+=over 4
+
 Returns 1. It is there for you to overwrite. It is called when you attempt to close the window or execute the quit command.
 Overwrite it to check for unsaved data and possibly veto these commands by returning a 0.
+
+=back
 
 =cut
 
 sub CanQuit { return 1 }
 
-sub CleanUp { delete $_[0]->{ARGS} }
-
 =item B<GetAppWindow>
 
-Returns a reference to the toplevel frame that created it. The toplevel frame should be a Wx::Perl::FrameWorks class.
+Returns a reference to the MainWindow widget.
 
 =cut
 
 sub GetAppWindow { return $_[0]->{APPWINDOW} }
 
-sub GetArgsRef { return $_[0]->{ARGS} }
-
 =item B<MenuItems>
 
-Returns and empty list. It is there for you to overwrite. It is called by the B<MenuBar> plugin. You can return a list
-with menu items here. For details on the format see B<Wx::Perl::FrameWorks::Plugins::MenuBar>
+=over 4
+
+Returns an empty list. It is there for you to overwrite. It is called by the B<MenuBar> plugin. You can return a list
+with menu items here. For details on the format see L<Tk::AppWindow::Ext::MenuBar>
+
+=back
 
 =cut
 
@@ -104,7 +118,11 @@ sub MenuItems {
 
 =item B<Name>
 
-returns the module name of $self, without the path. So, if left uninherited, it returns 'Plugin'.
+=over 4
+
+returns the module name of $self, without the path. So, if left uninherited, it returns 'Extension'.
+
+=back
 
 =cut
 
@@ -117,14 +135,25 @@ sub Name {
 
 =item B<ReConfigure>
 
+=over 4
+
 Does nothing. It is called when the user clicks the Apply button in the settings dialog. Overwrite it to act on 
 modified settings.
+
+=back
 
 =cut
 
 sub ReConfigure {}
 
-=item B<Require>
+=item B<Require>I<($extension)>
+
+=over 4
+
+Only call this during extension construction.
+Loads $extension if it isn't already.
+
+=back
 
 =cut
 
@@ -140,9 +169,15 @@ sub Require {
 	}
 }
 
-sub StatusItems {
-	return ();
-}
+=item B<StatusMessage>I<($text>)>
+
+=over 4
+
+Sends a message to the status bar if it is loaded. See L<Tk::AppWindow::Ext::StatusBar>
+
+=back
+
+=cut
 
 sub StatusMessage {
 	my $self = shift;
@@ -152,8 +187,12 @@ sub StatusMessage {
 
 =item B<ToolItems>
 
-Returns and empty list. It is there for you to overwrite. It is called by the B<ToolBar> plugin. You can return a list
-with menu items here. For details on the format see B<Wx::Perl::FrameWorks::Plugins::MenuBar>
+=over 4
+
+Returns and empty list. It is there for you to overwrite. It is called by the B<ToolBar> extension. You can return a list
+with menu items here. For details on the format see L<Tk::AppWindow::Ext::ToolBar>
+
+=back
 
 =cut
 
@@ -167,7 +206,7 @@ sub ToolItems {
 
 =over 4
 
-=item Hans Jeuken (hansjeuken@xs4all.nl)
+=item Hans Jeuken (hanje at cpan dot org)
 
 =back
 

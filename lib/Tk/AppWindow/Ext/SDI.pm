@@ -1,5 +1,11 @@
 package Tk::AppWindow::Ext::SDI;
 
+=head1 NAME
+
+Tk::AppWindow::Ext::SDI - single document interface
+
+=cut
+
 use strict;
 use warnings;
 
@@ -11,6 +17,133 @@ require Tk::YAMessage;
 
 use base qw( Tk::AppWindow::BaseClasses::Extension );
 
+=head1 SYNOPSIS
+
+=over 4
+
+ my $app = new Tk::AppWindow(@options,
+    -contentmanagerclass => 'Tk::MyContentHandler',
+    -extensions => ['SDI'],
+ );
+ $app->MainLoop;
+
+=back
+
+=head1 DESCRIPTION
+
+Provides a single document interface to your application.
+It is written as a multiple document interface with a maximum of one document.
+This makes it easy for L<Tk::AppWindow::Ext::MDI> to inherit SDI.
+
+When L<Tk::AppWindow::Ext::MenuBar> is loaded it creates menu 
+entries for creating, opening, saving and closing files. It also
+maintaines a history of recentrly closed files.
+
+When L<Tk::AppWindow::Ext::ToolBar> is loaded it creates toolbuttons
+for creating, opening, saving and closing files.
+
+You should define a content handler based on the abstract
+baseclass L<Tk::AppWindow::BaseClasses::ContentManager>. See also there.
+
+=head1 B<CONFIG VARIABLES>
+
+=over 4
+
+=item B<-contentmanagerclass>
+
+=over 4
+
+This one should always be specified and you should always define a 
+content manager class inheriting L<Tk::AppWindow::BaseClasses::ContentManager>.
+This base class is a valid Tk widget.
+
+=back
+
+=item B<-contentmanageroptions>
+
+=over 4
+
+The possible options to pass on to the contentmanager.
+These will also become options to the main application.
+
+=back
+
+
+=item B<-maxhistory>
+
+=over 4
+
+Default value is 12.
+
+=back
+
+
+=item B<-filetypes>
+
+=over 4
+
+Default value is "All files|*"
+
+=back
+
+
+=item B<-historymenupath>
+
+=over 4
+
+Specifies the default location in the main menu of the history menu.
+Default value is File::Open recent. See also L<Tk::AppWindow::Ext::MenuBar>.
+
+=back
+
+
+=item B<-readonly>
+
+=over 4
+
+Default value 0. 
+
+=back
+
+=back
+
+=head1 B<COMMANDS>
+
+=over 4
+
+=item B<file_close>
+
+=over 4
+
+=back
+
+=item B<file_new>
+
+=over 4
+
+=back
+
+=item B<file_open>
+
+=over 4
+
+=back
+
+=item B<file_save>
+
+=over 4
+
+=back
+
+=item B<file_save_as>
+
+=over 4
+
+=back
+
+=back
+
+=cut
 
 sub new {
 	my $class = shift;
@@ -51,11 +184,16 @@ sub new {
 	return $self;
 }
 
+=head1 B<METHODS>
+
+=over 4
+
+=cut
+
 sub CanQuit {
 	my $self = shift;
 	my $close = 1;
-	my $dochash = $self->{DOCS};
-	my @docs = sort keys %$dochash;
+	my @docs = $self->DocList;
 	for (@docs) {
 		$close = 0 unless $self->CmdFileClose($_);
 	}
@@ -123,6 +261,16 @@ sub CloseDoc {
 	return 0
 }
 
+=item B<CmdFileClose>
+
+=over 4
+
+=back
+
+Closes the current document
+
+=cut
+
 sub CmdFileClose {
 	my $self =  shift;
 	my $doc = $self->CurDoc;
@@ -135,6 +283,17 @@ sub CmdFileClose {
 	}
 	return 0
 }
+
+=item B<CmdFileNew>
+
+=over 4
+
+=back
+
+Creates a new document. In and SDI environment it closes
+the currently existing one first.
+
+=cut
 
 sub CmdFileNew {
 	my ($self, $name) = @_;
@@ -149,6 +308,19 @@ sub CmdFileNew {
 	$self->SelectDoc($name);
 	return 1;
 }
+
+=item B<CmdFileOpen>I(?$file?);
+
+=over 4
+
+=back
+
+Creates a new document. In and SDI environment it closes
+the currently existing one first.
+
+If $file is not specified it launches a file dialog.
+
+=cut
 
 sub CmdFileOpen {
 	my ($self, $file) = @_;
@@ -178,6 +350,21 @@ sub CmdFileOpen {
  	return 0
 }
 
+=item B<CmdFileSave>I(?$file?);
+
+=over 4
+
+=back
+
+Saves a document.
+
+If $file is not specified it saves the current document.
+
+For a new document it will call I<CmdFileSaveAs>.
+
+
+=cut
+
 sub CmdFileSave {
 	my ($self, $name) = @_;
 	return 0 if $self->ConfigGet('-readonly');
@@ -199,6 +386,20 @@ sub CmdFileSave {
 	}
 	return 1
 }
+
+=item B<CmdFileSaveAs>I(?$file?);
+
+=over 4
+
+Saves a document under a new name. Launches a file dialog.
+
+If $file is not specified it saves the current document.
+
+For a new document it will call I<CmdFileSaveAs>.
+
+=back
+
+=cut
 
 sub CmdFileSaveAs {
 	my ($self, $name) = @_;
@@ -274,6 +475,16 @@ sub Current {
 	return $self->{CURRENT}
 }
 
+=item B<CurDoc>
+
+=over 4
+
+Returns the currently selected document object.
+
+=back
+
+=cut
+
 sub CurDoc {
 	my $self = shift;
 	my $current = $self->{CURRENT};
@@ -283,15 +494,61 @@ sub CurDoc {
 	return undef
 }
 
+=item B<DocExists>I<($name)
+
+=over 4
+
+Returns 1 if $name exists in the document pool. Else returns 0.
+
+=back
+
+=cut
+
 sub DocExists {
 	my ($self, $name) = @_;
 	return exists $self->{DOCS}->{$name}
 }
 
+=item B<DocList>
+
+=over 4
+
+Returns a list of all open documents.
+
+=back
+
+=cut
+
+sub DocList {
+	my $self = shift;
+	my $dochash = $self->{DOCS};
+	return keys %$dochash;
+}
+
+=item B<GetDoc>I<($name)
+
+=over 4
+
+Returns document object for $name.
+
+=back
+
+=cut
+
 sub GetDoc {
 	my ($self, $name) = @_;
 	return $self->{DOCS}->{$name}
 }
+
+=item B<GetTitle>I<($name)
+
+=over 4
+
+Strips the path from $name for the title bar.
+
+=back
+
+=cut
 
 sub GetTitle {
 	my ($self, $name) = @_;
@@ -328,20 +585,26 @@ sub LoadHistory {
 
 sub MenuItems {
 	my $self = shift;
+	my $readonly = $self->ConfigGet('-readonly');
+
 	my @items = (
 #This table is best viewed with tabsize 3.
 #			 type					menupath			label						cmd						icon					keyb			config variable
  		[	'menu', 				undef,			"~File" 	], 
+	);
+	push @items,
 		[	'menu_normal',		'File::',		"~New",					'file_new',				'document-new',	'Control-n'			], 
 		[	'menu_separator',	'File::', 		'f1'], 
+	unless $readonly;
+	push @items,
 		[	'menu_normal',		'File::',		"~Open",					'file_open',			'document-open',	'Control-o'			], 
  		[	'menu', 				'File::',		"Open ~recent", 		'pop_hist_menu', 	],
-	);
+	;
 	push @items,
 		[	'menu_separator',	'File::', 		'f2' ], 
 		[	'menu_normal',		'File::',		"~Save",					'file_save',			'document-save',	'Control-s'			], 
 		[	'menu_normal',		'File::',		"~Save as",				'file_save_as',		'document-save-as',],
-	unless $self->ConfigGet('-readonly');
+	unless $readonly;
 	push @items,
 		[	'menu_separator',	'File::', 		'f3' ], 
 		[	'menu_normal',		'File::',		"~Close",				'file_close',			'document-close',	'Control-O'	], 
@@ -351,14 +614,21 @@ sub MenuItems {
 
 sub ReConfigure {
 	my $self = shift;
-	print "reconfigure called\n";
-	my $doc = $self->CurDoc;
-	$doc->ConfigureCM if defined $doc;
+	my @docs = $self->DocList;
+	for (@docs) {
+		$self->GetDoc($_)->ConfigureCM;
+	}
 }
 
-sub RemoveContentHandler {
-	my ($self, $name) = @_;
-}
+=item B<RenameDoc>I<($old, $new)
+
+=over 4
+
+Renames a loaded document.
+
+=back
+
+=cut
 
 sub RenameDoc {
 	my ($self, $old, $new) = @_;
@@ -402,22 +672,68 @@ sub SelectDoc {
 	$self->{CURRENT} = $name;
 	$self->ConfigPut(-title => $self->ConfigGet('-appname') . ' - ' . $self->GetTitle($name));
 	my $navigator = $self->GetExt('Navigator');
-	$navigator->SelectEntry($name) if defined $navigator
+	$navigator->SelectEntry($name) if defined $navigator;
 }
 
 sub ToolItems {
 	my $self = shift;
-	my @items = (
+	my $readonly = $self->ConfigGet('-readonly');
+	my @items = ();
+
+	push @items,
 		#	 type					label			cmd					icon					help		
-		[	'tool_button',		'New',		'file_new',			'document-new',	'Create a new document'], 
+		[	'tool_button',		'New',		'file_new',			'document-new',	'Create a new document'],
+	unless $readonly;
+
+	push @items,
 		[	'tool_button',		'Open',		'file_open',		'document-open',	'Open a document'], 
-	);
+	;
+
 	push @items,
 		[	'tool_button',		'Save',		'file_save',		'document-save',	'Save current document'], 
+	unless $readonly;
+
+	push @items,
 		[	'tool_button',		'Close',		'file_close',		'document-close',	'Close current document'], 
-	unless $self->ConfigGet('-readonly');
+	; 
 	return @items
 }
+
+=back
+
+=head1 AUTHOR
+
+=over 4
+
+=item Hans Jeuken (hanje at cpan dot org)
+
+=back
+
+=cut
+
+=head1 BUGS
+
+Unknown. If you find any, please contact the author.
+
+=cut
+
+=head1 TODO
+
+=over 4
+
+
+=back
+
+=cut
+
+=head1 SEE ALSO
+
+=over 4
+
+
+=back
+
+=cut
 
 1;
 

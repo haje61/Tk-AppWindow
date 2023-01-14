@@ -1,18 +1,88 @@
 package Tk::DocumentTree;
 
+=head1 NAME
+
+Tk::DocumentTree - ITree based document list
+
+=cut
+
 use strict;
 use vars qw($VERSION);
 $VERSION = '0.01';
 
 use base qw(Tk::Derived Tk::Frame);
 
+require Tk::ITree;
 use File::Basename;
 use Tk;
 use Config;
-require Tk::Tree;
 #use File::MimeInfo::Magic;
 
 Construct Tk::Widget 'DocumentTree';
+
+=head1 SYNOPSIS
+
+=over 4
+
+ require Tk::DocumentTree;
+ my $tree= $window->DocumentTree(@options)->pack;
+
+=back
+
+=head1 DESCRIPTION
+
+=over 4
+
+B<Tk::DocumentTree> is a Tree like megawidget. It consists of a Label and an ITree Widget.
+
+You can use all of the options of an ITree widget except for I<-itemtype>, I<-browsecmd>,
+I<-separator>, I<-selectmode> and I<-exportselection>.
+
+The Label on top displays the path all added entries have in commom.
+It automatically creates a folder tree as entries are added.
+
+Entries can have the status I<file> or I<untracked>
+An entry is untracked when it does not exist as a file.
+
+=back
+
+=cut
+
+=head1 B<CONFIG VARIABLES>
+
+=over 4
+
+=item Switch: B<-diriconcall>
+
+=over 4
+
+Callback for obtaining the dir icon. By default it is set
+to a call that returns the default folder.xpm in the Perl/Tk
+distribution.
+
+=back
+
+=item Switch: B<-entryselect>
+
+=over 4
+
+Callback to execute when the user clicks (selects) and entry.
+
+=back
+
+=item Switch: B<-fileiconcall>
+
+=over 4
+
+Callback for obtaining the file icon. By default it is set
+to a call that returns the default file.xpm in the Perl/Tk
+distribution.
+
+=back
+
+=back
+
+=cut
 
 sub Populate {
 	my ($self,$args) = @_;
@@ -29,7 +99,7 @@ sub Populate {
 
 	my $topbar = $self->CreatePathBar;
 	$self->Advertise(PATH => $topbar);
-	my $tree = $self->Scrolled('Tree',
+	my $tree = $self->Scrolled('ITree',
 	)->pack(
 		-padx => 2, 
 		-pady => 2,
@@ -38,18 +108,23 @@ sub Populate {
 	);
 
 	$self->ConfigSpecs(
-		-basedir => ['PASSIVE', undef, undef, '.'],
+		-background => ['SELF', 'DESCENDANTS'],
 		-diriconcall => ['CALLBACK', undef, undef, ['DefaultDirIcon', $self]],
-		-fileiconcall => ['CALLBACK', undef, undef, ['DefaultFileIcon', $self]],
 		-entryselect => ['CALLBACK', undef, undef, sub {}],
-# 		-background => ['SELF', 'DESCENDANTS'],
-# 		-foreground => ['SELF', 'DESCENDANTS'],
+		-fileiconcall => ['CALLBACK', undef, undef, ['DefaultFileIcon', $self]],
+		-foreground => ['SELF', 'DESCENDANTS'],
 		DEFAULT => [$tree],
 	);
 	$self->Delegates(
 		'DEFAULT' => $tree,
 	);
 }
+
+=head1 B<METHODS>
+
+=over 4
+
+=cut
 
 sub Add {
 	my ($self, $new, $type) = @_;
@@ -158,6 +233,31 @@ sub Delete {
 	}
 }
 
+sub DirList {
+	my ($self, $path, $list) = @_;
+	$list = [] unless defined $list;
+	$path = '' unless defined $path;
+	my @children = $self->infoChildren($path);
+	for (@children) {
+		if ($self->IsDir($_)) {
+			push @$list, $_;
+			$self->ItemList($_, $list);
+		}
+	}
+	return @$list;
+}
+
+=item B<EntryAdd>I<($filename)>
+
+=over 4
+
+Addss the entry $filename.
+$filename can also be an untracked entry.
+
+=back
+
+=cut
+
 sub EntryAdd {
 	my ($self, $new) = @_;
 
@@ -187,6 +287,17 @@ sub EntryClick {
 	$self->Callback('-entryselect', $entry);
 }
 
+=item B<EntryDelete>I<($filename)>
+
+=over 4
+
+Deletes the entry $filename.
+$filename can also be an untracked entry.
+
+=back
+
+=cut
+
 sub EntryDelete {
 	my ($self, $entry) = @_;
 	my $sep = $self->cget('-separator');
@@ -207,6 +318,14 @@ sub EntryDelete {
 	}
 }
 
+=item B<EntrySelect>I<($filename)>
+
+=over 4
+
+=back
+
+=cut
+
 sub EntrySelect {
 	my ($self, $entry) = @_;
 
@@ -217,6 +336,17 @@ sub EntrySelect {
 	$self->anchorClear;
 	$self->selectionSet($entry);
 }
+
+=item B<FileList>
+
+=over 4
+
+Returns a list of all files in the document tree.
+Untracked items are not included.
+
+=back
+
+=cut
 
 sub FileList {
 	my $self = shift;
@@ -417,6 +547,16 @@ sub StripPath {
 	return $name;
 }
 
+=item B<UntrackedList>
+
+=over 4
+
+Returns a list of all untracked items.
+
+=back
+
+=cut
+
 sub UntrackedList {
 	my $self = shift;
 	my @top = $self->infoChildren('');
@@ -426,5 +566,41 @@ sub UntrackedList {
 	}
 	return @untracked
 }
+
+=back
+
+=head1 AUTHOR
+
+=over 4
+
+=item Hans Jeuken (hanje at cpan dot org)
+
+=back
+
+=cut
+
+=head1 BUGS
+
+Unknown. If you find any, please contact the author.
+
+=cut
+
+=head1 TODO
+
+=over 4
+
+
+=back
+
+=cut
+
+=head1 SEE ALSO
+
+=over 4
+
+
+=back
+
+=cut
 
 1;

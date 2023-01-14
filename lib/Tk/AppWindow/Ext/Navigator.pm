@@ -20,10 +20,19 @@ require Tk::DocumentTree;
 
 =over 4
 
+ my $app = new Tk::AppWindow(@options,
+    -extensions => ['MDI', 'Navigator'],
+ );
+ $app->MainLoop;
 
 =back
 
 =head1 DESCRIPTION
+
+Adds a navigation panel with a document list to your application.
+
+Appends an item to the View menu to toggle visibility
+
 
 =cut
 
@@ -31,9 +40,36 @@ require Tk::DocumentTree;
 
 =over 4
 
+=item B<-documentinterface>
+
+=over 4
+
+Default value 'MDI'. Sets the extension with witch B<Navigator> communicates.
+
+=back
+
+=back
+
+=item B<-navigatorpanel>
+
+=over 4
+
+Default value 'LEFT'. Sets the name of the panel home to B<Navigator>.
+
+=back
+
+=item B<-navigatorvisible>
+
+=over 4
+
+Default value 1. Show or hide navigator panel.
+
+=back
+
 =back
 
 =cut
+
 sub new {
 	my $class = shift;
 	my $self = $class->SUPER::new(@_);
@@ -49,11 +85,16 @@ sub new {
 	
 	my $nb = $self->Subwidget($self->Panel)->YANoteBook(
 	)->pack(-expand => 1, -fill=> 'both');
+	$self->Advertise('NAVNB', $nb);
+
 	my $page = $nb->AddPage('Documents');
 	my $dt = $page->DocumentTree(
 		-entryselect => ['SelectDocument', $self],
+		-diriconcall => ['GetDirIcon', $self],
+		-fileiconcall => ['GetFileIcon', $self],
 	)->pack(-expand => 1, -fill => 'both');
-	$self->Advertise('TREE', $dt);
+	$self->Advertise('NAVTREE', $dt);
+	$self->update;
 
 	return $self;
 }
@@ -64,24 +105,81 @@ sub new {
 
 sub Add {
 	my ($self, $name) = @_;
-	$self->Subwidget('TREE')->EntryAdd($name);
+	$self->Subwidget('NAVTREE')->EntryAdd($name);
 }
 
 sub Delete {
 	my ($self, $name) = @_;
-	$self->Subwidget('TREE')->EntryDelete($name);
+	$self->Subwidget('NAVTREE')->EntryDelete($name);
+}
+
+sub GetDirIcon {
+	my ($self, $name) = @_;
+	my $icon = $self->GetArt('folder', 16);
+	return $icon if defined $icon;
+	return $self->SubWidget('NAVTREE')->DefaultDirIcon;
+}
+
+sub GetFileIcon {
+	my ($self, $name) = @_;
+	my $icon = $self->GetArt('text-x-plain', 16);
+	return $icon if defined $icon;
+	return $self->SubWidget('NAVTREE')->DefaultDirIcon;
+}
+
+sub MenuItems {
+	my $self = shift;
+	return (
+#This table is best viewed with tabsize 3.
+#			 type					menupath			label			Icon		config variable	off on
+		[	'menu_check',		'View::',		"Show ~navigation panel",	undef,	'-navigatorvisible',	0,   1], 
+	)
 }
 
 sub SelectDocument {
 	my ($self, $name) = @_;
-	my $di = $self->ConfigGet('-documentinterface');
-	my $interface = $self->GetExt($di);
-	$interface->Select($name);
+	$self->GetExt($self->ConfigGet('-documentinterface'))->Select($name);
 }
 
 sub SelectEntry {
 	my ($self, $name) = @_;
-	$self->Subwidget('TREE')->EntrySelect($name);
+	$self->Subwidget('NAVTREE')->EntrySelect($name);
 }
+
+=back
+
+=head1 AUTHOR
+
+=over 4
+
+=item Hans Jeuken (hanje at cpan dot org)
+
+=back
+
+=cut
+
+=head1 BUGS
+
+Unknown. If you find any, please contact the author.
+
+=cut
+
+=head1 TODO
+
+=over 4
+
+
+=back
+
+=cut
+
+=head1 SEE ALSO
+
+=over 4
+
+
+=back
+
+=cut
 
 1;

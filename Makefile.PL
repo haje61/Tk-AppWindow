@@ -10,7 +10,6 @@ WriteMakefile(
 		'Image::LibRSVG'					=> 0,
 # 		'Image::Resize'					=> 0,
 		'MIME::Base64'						=> 0,
-		'Module::Load::Conditional'	=> 0,
 		'Scalar::Util::Numeric'			=> '0.40',
 		'Tk::FontDialog'					=> '0.18',
 		'Tk'									=> 0,
@@ -20,5 +19,16 @@ WriteMakefile(
 	ABSTRACT_FROM		=> 'lib/Tk/AppWindow.pm',
 	AUTHOR				=> 'Hans Jeuken <hanje@cpan.org>',
 	LICENSE				=> 'perl',
+    (eval { ExtUtils::MakeMaker->VERSION(6.46) } ? (META_MERGE => {
+      'meta-spec' => { version => 2 },
+          resources => {
+              repository => {
+                 type => 'git',
+		 url  => 'git://github.com/haje61/Tk-AppWindow.git',
+                 web  => 'https://github.com/haje61/Tk-AppWindow',
+              },
+          }})
+      : ()
+    ),
 );
 

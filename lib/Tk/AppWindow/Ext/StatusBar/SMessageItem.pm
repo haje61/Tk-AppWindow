@@ -3,7 +3,7 @@ package Tk::AppWindow::Ext::StatusBar::SMessageItem;
 use strict;
 use warnings;
 use Tk;
-use base qw(Tk::AppWindow::Ext::StatusBar::STextItem);
+use base qw(Tk::AppWindow::Ext::StatusBar::SBaseItem);
 Construct Tk::Widget 'SMessageItem';
 
 sub Populate {
@@ -11,9 +11,20 @@ sub Populate {
 
 	$self->SUPER::Populate($args);
 
-	$self->{COLORBCK} = $self->cget('-foreground');
+	my $e = $self->Label(
+		-anchor => 'w',
+	)->pack(-side => 'left', -expand => 1, -fill => 'x');
+	$self->{COLORBCK} = $e->cget('-foreground');
 	$self->toplevel->bind('<Any-KeyPress>', sub { $self->Clear });
 	$self->toplevel->bind('<Button-1>', sub { $self->Clear });
+	$self->ConfigSpecs(
+		-borderwidth => ['SELF'],
+		-relief => ['SELF'],
+		DEFAULT => [$e],
+	);
+	$self->Delegates(
+		'DEFAULT' => $e,
+	);
 }
 
 =head1 METHODS

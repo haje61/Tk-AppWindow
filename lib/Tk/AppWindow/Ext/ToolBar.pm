@@ -2,7 +2,7 @@ package Tk::AppWindow::Ext::ToolBar;
 
 =head1 NAME
 
-Tk::AppWindow::Plugins::ToolBar - a toolbar plugin
+Tk::AppWindow::Ext::ToolBar - add a tool bar
 
 =cut
 
@@ -19,23 +19,95 @@ use base qw( Tk::AppWindow::BaseClasses::PanelExtension );
 
 =over 4
 
+ my $app = new Tk::AppWindow(@options,
+    -extensions => ['ToolBar'],
+ );
+ $app->MainLoop;
 
 =back
 
 =head1 DESCRIPTION
 
-=cut
+=over 4
+
+Add a toolbar to your application.
+
+=back
 
 =head1 B<CONFIG VARIABLES>
 
 =over 4
 
+=item B<-autotool>
+
+=over 4
+
+Default value 1.
+
+Specifies if the toolbar items of all extensions should be loaded automatically.
+
+=back
+
+=item B<-toolbarpanel>
+
+=over 4
+
+Default value 'TOP'. Sets the name of the panel home to B<ToolBar>.
+
+=back
+
+=item B<-toolbarvisible>
+
+=over 4
+
+Default value 1. Show or hide tool bar.
+
+=back
+
+=item B<-tooliconsize>
+
+=over 4
+
+Default value 16
+
+=back
+
+=item B<-toolitems>
+
+=over 4
+
+Default value [].
+
+Configure your tool bar here. Example:
+
+ [    #type             #label   #command     #icon             #help
+    [	'tool_button',   'New',   'file_new',   'document-new',   'Create a new document'],
+    [	'tool_separator' ],
+ ]
+
+=back
+
+=item B<-tooltextposition>
+
+=over 4
+
+Default value I<right>. Can be I<top>, I<left>, I<bottom>, I<right> or I<none>.
+
+=back
+
 =back
 
 =cut
+
 sub new {
 	my $class = shift;
 	my $self = $class->SUPER::new(@_);
+
+	$self->Require('Art');
+	$self->ConfigInit(
+		-toolbarpanel => ['Panel', $self, 'TOP'],
+		-toolbarvisible => ['PanelVisible', $self, 1],
+	);
 
 	$self->AddPreConfig(
 		-autotool => ['PASSIVE', undef, undef, 1],
@@ -50,16 +122,22 @@ sub new {
 		tool_separator		=> ['ConfToolSeparator', $self],
 	);
 
-	$self->ConfigInit(
-		-toolbarpanel => ['Panel', $self, 'TOP'],
-		-toolbarvisible	=> ['PanelVisible', $self, 1],
-	);
-
-	$self->AddPostConfig('CreateItems', $self);
+	$self->AddPostConfig('DoPostConfig', $self);
 	return $self;
 }
 
 =head1 METHODS
+
+=over 4
+
+=item B<AddItem>I<$item, ?$position?);
+
+=over 4
+
+Adds an item to the toolbar. The item must be a valid tk widget.
+Your addition will be lost after a call to B<ReConfigure>.
+
+=back
 
 =cut
 
@@ -72,14 +150,26 @@ sub AddItem {
 		$before = $list->[$position];
 	}
 	my $bar = $self->Subwidget($self->Panel);
+	my @pack = (-side => 'left', -padx => 2, -in => $bar, -fill => 'y');
 	if (defined $before) {
-		$item->pack(-side => 'left', -padx => 2, -in => $bar, -fill => 'y');
+		$item->pack(@pack, -before => $before);
 		splice @$list, $position, 0, $item;
 	} else {
-		$item->pack(-side => 'left', -padx => 2, -in => $bar, -fill => 'y');
+		$item->pack(@pack);
 		push @$list, $item;
 	}
 }
+
+=item B<AddSeparator>I<?$position?);
+
+=over 4
+
+Adds a separator to the toolbar.
+Your addition will be lost after a call to B<ReConfigure>.
+
+=back
+
+=cut
 
 sub AddSeparator {
 	my $self = shift;
@@ -116,6 +206,20 @@ sub Configure {
 	}
 }
 
+=item B<ConfigureTypes>I<($type => $call, ...);
+
+=over 4
+
+Call this method before MainLoop runs.
+Configure additional types for your toolbar.
+Already defined types are i<tool_button> and I<-tool_separator>.
+I<$call> can be any valid Tk callback. Just make sure the callback
+returns a valid Tk widget.
+
+=back
+
+=cut
+
 sub ConfigureTypes {
 	my $self = shift;
 	my $tab = $self->{TYPESTABLE};
@@ -142,34 +246,15 @@ sub ConfToolButton {
 
 	if (defined $bmp) {
 		if ($textpos eq 'none') {
-			$but = $tb->Button(-image => $bmp);
 			push @balloon, -balloonmsg => $label;
-		} else {
-			my $compound = $tb->Compound;
-			if ($textpos eq 'left') {
-				$compound->Text(-text => $label, -anchor => 'c');
-				$compound->Space(-width => 2);
-				$compound->Image(-image => $bmp);
-			} elsif ($textpos eq 'right') {
-				$compound->Image(-image => $bmp);
-				$compound->Space(-width => 2);
-				$compound->Text(-text => $label, -anchor => 'c');
-			} elsif ($textpos eq 'top') {
-				$compound->Text(-text => $label, -anchor => 'c');
-				$compound->Line;
-				$compound->Image(-image => $bmp);
-			} elsif ($textpos eq 'bottom') {
-				$compound->Image(-image => $bmp);
-				$compound->Line;
-				$compound->Text(-text => $label, -anchor => 'c');
-			} else {
-				$compound->Text(-text => $label);
-				$compound->Space(-width => 2);
-				$compound->Image(-image => $bmp);
-				warn "illegal value for -tooltextposition. should be: none, left, right, top or bottom"
-			}
-			$but = $tb->Button(-image => $compound);
 		}
+		my $art = $self->GetExt('Art');
+		my $compound = $art->CreateCompound(
+			-text => $label,
+			-image => $bmp,
+			-textside => $textpos,
+		);
+		$but = $tb->Button(-image => $compound);
 	} else {
 		$but = $tb->Button(-text => 'Label');
 	}
@@ -197,7 +282,7 @@ sub CreateItems {
 	my @u = ();
 	my $w = $self->GetAppWindow;
 	if ($self->ConfigGet('-autotool')) {
-		my @p = $w->GetExtLoadOrder;
+		my @p = $self->ExtensionList;
 		my @l = ($w);
 		for (@p) { push @l, $w->GetExt($_) }
 		for (@l) {
@@ -215,12 +300,24 @@ sub DeleteAll {
 	for (@removed) { $_->destroy };
 }
 
+sub DoPostConfig {
+	my $self = shift;
+
+	#fixing possible mismatch of iconsize at launch
+	my $art = $self->GetExt('Art');
+	my $size = $self->ConfigGet('-tooliconsize');
+	$size = $art->GetAlternateSize($size);
+	$self->ConfigPut(-tooliconsize => $size);
+
+	$self->CreateItems;
+}
+
 sub MenuItems {
 	my $self = shift;
 	return (
 #This table is best viewed with tabsize 3.
-#			 type					menupath			label			Icon		config variable	keyb
-		[	'menu_check',		'View::',		"~Toolbar",	undef,	'-toolbarvisible',	0, 1], 
+#			 type					menupath			label					Icon		config variable	   off  on
+		[	'menu_check',		'View::',		"Show ~toolbar",	undef,	'-toolbarvisible',	0,   1], 
 	)
 }
 
@@ -229,6 +326,18 @@ sub ReConfigure {
 	$self->DeleteAll;
 	$self->CreateItems;
 }
+
+=item B<RemoveItem>I<$position);
+
+=over 4
+
+Removes the item at $position from the tool bar.
+The item will re-appear after a call to B<ReConfigure> if the item is included in the B<-toolitems> option.
+Returns the removed item.
+
+=back
+
+=cut
 
 sub RemoveItem {
 	my ($self, $position) = @_;
@@ -240,5 +349,41 @@ sub RemoveItem {
 		return $item;
 	}
 }
+
+=back
+
+=head1 AUTHOR
+
+=over 4
+
+=item Hans Jeuken (hanje at cpan dot org)
+
+=back
+
+=cut
+
+=head1 BUGS
+
+Unknown. If you find any, please contact the author.
+
+=cut
+
+=head1 TODO
+
+=over 4
+
+
+=back
+
+=cut
+
+=head1 SEE ALSO
+
+=over 4
+
+
+=back
+
+=cut
 
 1;

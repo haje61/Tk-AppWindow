@@ -2,7 +2,7 @@ package Tk::AppWindow::Ext::MenuBar;
 
 =head1 NAME
 
-Tk::AppWindow::Plugins::MenuBar - a plugin for handling menu's and stuff.
+Tk::AppWindow::Ext::MenuBar - handling menu's and stuff.
 
 =cut
 
@@ -18,16 +18,62 @@ use base qw( Tk::AppWindow::BaseClasses::Extension );
 
 =over 4
 
+ my $app = new Tk::AppWindow(@options,
+    -extensions => ['MenuBar'],
+ );
+ $app->MainLoop;
 
 =back
 
 =head1 DESCRIPTION
 
-=cut
+=over 4
+
+Adds a menu to your application.
+
+=back
 
 =head1 B<CONFIG VARIABLES>
 
 =over 4
+
+=item Switch: B<-automenu>
+
+=over 4
+
+Default value 1.
+
+Specifies if the menu items of all extensions should be loaded automatically.
+
+=back
+
+=item Switch: B<-mainmenuitems>
+
+=over 4
+
+Default value [].
+
+Configure your menu here. See the section B<CONFIGURING MENUS> below.
+
+=back
+
+=item Switch: B<-menucolspace>
+
+=over 4
+
+Default value 3
+
+Space between the colums in a menu item.
+
+=back
+
+=item Switch: B<-menuiconsize>
+
+=over 4
+
+Default value 16
+
+=back
 
 =back
 
@@ -46,11 +92,13 @@ sub new {
 		-menuiconsize =>['PASSIVE', undef, undef, 16],
 	);
 
-	$self->AddPostConfig('CreateMenu', $self);
+	$self->AddPostConfig('DoPostConfig', $self);
 	return $self;
 }
 
 =head1 METHODS
+
+=over 4
 
 =cut
 
@@ -91,7 +139,7 @@ sub ConfDoConfig {
 	if (defined $config) {
 		my $val = '';
 		$self->MenuPostAdd(sub { $val = $self->ConfigGet($config) });
-		push @$item, -variable => \$val, -command => sub { $self->ConfigPut($config, $val) }
+		push @$item, -variable => \$val, -command => sub {	$self->ConfigPut($config, $val) }
 	}
 }
 
@@ -116,10 +164,6 @@ sub ConfDoKeyb {
 		push @$item, -accelerator => $keyb;
 	}
 }
-
-=item B<Configure>;
-
-=cut
 
 my %types = (
 	menu => \&ConfMenu,
@@ -163,10 +207,6 @@ sub Configure {
 	$w->configure(-menu => $menu);
 }
 
-=item B<ConfMenu>($location, $label, $cmd, $icon, $keyb);
-
-=cut
-
 sub ConfMenu {
 	my ($self, $stack, $path, $label, $cmd, $icon) = @_;
 	my ($menu, $insertpos) = $self->DecodeMenuPath($stack, $path);
@@ -186,10 +226,6 @@ sub ConfMenu {
 	}
 	return 1
 }
-
-=item B<ConfMenuNormal>($location, $label, $cmd, $icon, $keyb);
-
-=cut
 
 sub ConfMenuNormal {
 	my ($self, $stack, $path, $label, $cmd, $icon, $keyb) = @_;
@@ -214,10 +250,6 @@ sub ConfMenuNormal {
 	}
 	return 1
 }
-
-=item B<ConfMenuCheck>($location, $label, $cmd, $icon, $keyb, $config);
-
-=cut
 
 sub ConfMenuCheck {
 	my ($self, $stack, $path, $label, $icon, $config, $offvalue, $onvalue) = @_;
@@ -261,10 +293,6 @@ sub ConfMenuRadio {
 	return 1
 }
 
-=item B<ConfMenuRadio>($location, $label, $cmd, $icon, $keyb, $config);
-
-=cut
-
 sub ConfMenuRadioGroup {
 	my ($self, $stack, $path, $label, $values, $icon, $config) = @_;
 	my ($menu, $insertpos) = $self->DecodeMenuPath($stack, $path);
@@ -291,10 +319,6 @@ sub ConfMenuRadioGroup {
 	}
 	return 1
 }
-
-=item B<ConfMenuSeparator>($location, $label, $cmd, $icon, $keyb, $config);
-
-=cut
 
 sub ConfMenuSeparator {
 	my ($self, $stack, $path, $label) = @_;
@@ -346,18 +370,14 @@ static char * new_xpm[] = {
 	return $self->Pixmap(-data => $empty);
 }
 
-=item B<CreateMenu>
-
-=cut
-
 sub CreateMenu {
 	my $self = shift;
 	my $w = $self->GetAppWindow;
 	my @u = ();
 	if ($w->ConfigGet('-automenu')) {
-		my @p = $w->GetExtLoadOrder;
+		my @p = $self->ExtensionList;
 		my @l = ($w);
-		for (@p) { push @l, $w->GetExt($_) }
+		for (@p) { push @l, $self->GetExt($_) }
 		for (@l) {
 			push @u, $_->MenuItems;
 		}
@@ -366,10 +386,6 @@ sub CreateMenu {
 	push @u, @$m;
 	$self->Configure(@u);
 }
-
-=item B<DecodeMenuPath>($path);
-
-=cut
 
 sub DecodeMenuPath {
 	my ($self, $stack, $path) = @_;
@@ -420,6 +436,17 @@ sub DecodeMenuPath {
 	return ($stack, undef)
 }
 
+sub DoPostConfig {
+	my $self = shift;
+	my $art = $self->GetExt('Art');
+	if (defined $art) {
+		my $size = $self->ConfigGet('-menuiconsize');
+		$size = $art->GetAlternateSize($size);
+		$self->ConfigPut(-menuiconsize => $size)
+	}
+	$self->CreateMenu;
+}
+
 sub FindMenuEntry {
 	my ($self, $path) = @_;
 	my $menu = $self->ConfigGet('-menu');
@@ -463,10 +490,6 @@ sub MenuPostAdd {
 	push @$calls, $cmd
 }
 
-=item B<Reconfigure>;
-
-=cut
-
 sub ReConfigure {
 	my $self = shift;
 	$self->{MENUPOST} = [];
@@ -475,5 +498,58 @@ sub ReConfigure {
 	return 0;
 }
 
+=back
+
+=head1 CONFIGURING MENUS
+
+=over 4
+
+Feeding the B<-menuitems> switch and the B<MenuItems> methods of extensions is
+done with a two dimensional list. In Perl:
+
+ my $app = new Tk::AppWindow(@options,
+    -extensions => ['MenuBar'],
+    -menuitems => [
+       [ $type, $path,  
+    ],
+ );
+ $app->MainLoop;
+
+
+=back
+
+=head1 AUTHOR
+
+=over 4
+
+=item Hans Jeuken (hanje at cpan dot org)
+
+=back
+
+=cut
+
+=head1 BUGS
+
+Unknown. If you find any, please contact the author.
+
+=cut
+
+=head1 TODO
+
+=over 4
+
+
+=back
+
+=cut
+
+=head1 SEE ALSO
+
+=over 4
+
+
+=back
+
+=cut
 
 1;

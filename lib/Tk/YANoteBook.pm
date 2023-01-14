@@ -12,6 +12,12 @@ sub Populate {
 	my $closebutton = delete $args->{'-closebutton'};
 	$closebutton = 0 unless defined $closebutton;
 
+	my $closeimage;
+	if ($closebutton) {
+		$closeimage = delete $args->{'-closeimage'};
+		$closeimage = $self->Pixmap(-file => Tk->findINC('close_icon.xpm')) unless defined $closeimage;
+	}
+
 	$self->SUPER::Populate($args);
 	my $l = $self->Label(
 	)->pack(
@@ -33,6 +39,7 @@ sub Populate {
 	my $b;
 	if ($closebutton) {
 		$b = $self->Button(
+			-image => $closeimage,
 			-command => ['TabClose', $self],
 			-relief => 'flat',
 		)->pack(
@@ -46,7 +53,6 @@ sub Populate {
 	my @conf = ();
 	if (defined $b) {
 		@conf = (
-			-closeimg => [{-image => $b}, undef, undef, $self->Pixmap(-file => Tk->findINC('close_icon.xpm'))],
 			-background => [[$self, $l, $b], 'background', 'Background',],
 		)
 	} else {
@@ -99,11 +105,134 @@ sub TabMotion {
 
 package Tk::YANoteBook;
 
+=head1 NAME
+
+Tk::YANoteBook - Yet another notebook widget
+
+=cut
+
 use strict;
 use warnings;
+use vars qw($VERSION);
+$VERSION = '0.01';
+
 use Tk;
+
 use base qw(Tk::Derived Tk::Frame);
 Construct Tk::Widget 'YANoteBook';
+
+=head1 SYNOPSIS
+
+=over 4
+
+ require Tk::YANoteBook;
+ my $nb = $window->YANoteBook(@options)->pack;
+
+=back
+
+=head1 DESCRIPTION
+
+=over 4
+
+A more flexible notebook widget. It does well in a multi document environment.
+
+You can select any side where the tabs will be placed.
+
+It has an overload if tabs won't fit any more.
+
+You can specify a close button for a tab.
+
+=back
+
+=head1 B<CONFIG VARIABLES>
+
+=over 4
+
+=item Name: B<-backPageColor>
+
+=item Class: B<-BackPageColor>
+
+=item Switch: B<-backpagecolor>
+
+=over 4
+
+Background color for the tab frame.
+
+=back
+
+=item Switch: B<-closeimage>
+
+=over 4
+
+Image for the close button on each tab.
+Default value is the I<close_icon.xpm> in this distribution.
+
+=back
+
+=item Switch: B<-closetabcall>
+
+=over 4
+
+Calback, called before a tab is closed. Shoud return a boolean value.
+
+=back
+
+=item Switch: B<-image>
+
+=over 4
+
+Image to be used for the more button.
+Default value none.
+
+=back
+
+=item Switch: B<-selectoptions>
+
+=over 4
+
+Configuring the selected tab.
+Default value [ -relief => 'raised' ].
+
+=back
+
+=item Switch: B<-selecttabcall>
+
+=over 4
+
+Calback, called when a tab is selected with the mouse.
+
+=back
+
+=item Switch: B<-tabside>
+
+=over 4
+
+Default value 'top'. Only available at create time.
+Can be I<top>, I<left>, I<bottom> or I<right>.
+
+=back
+
+=item Switch: B<-text>
+
+=over 4
+
+Text for the more button.
+Default value 'More'.
+
+=back
+
+=item Switch: B<-unselectoptions>
+
+=over 4
+
+Configuring the unselected tab.
+Default value [ -relief => 'flat'].
+
+=back
+
+=back
+
+=cut
 
 sub Populate {
 	my ($self,$args) = @_;
@@ -201,6 +330,32 @@ sub Populate {
 	$self->after(1, ['PostInit', $self]);
 }
 
+=head1 METHODS
+
+=over 4
+
+=item B<AddPage>I<($name, @options)>
+
+=over 4
+
+Adds a tab. You can specify following options:
+
+B<-closebutton>
+
+Default is 0. If set a close button will be added to the tab.
+
+B<-title>
+
+Text on the tab. If not set, it will be equal to $name.
+
+B<-titleimg>
+
+Display an image instead of a text.
+
+=back
+
+=cut
+
 sub AddPage {
 	my $self = shift;
 	my $name  = shift;
@@ -238,6 +393,18 @@ sub ClickCall {
 	$self->{ACTIVE} = 1;
 	$self->SelectPage($name);
 }
+
+=item B<DeletePage>I<($name)>
+
+=over 4
+
+Deletes $name. I<-closetabcall> will be called
+in advance. That call should return 1 for the tab
+to be closed.
+
+=back
+
+=cut
 
 sub DeletePage {
 	my ($self, $name) = @_;
@@ -277,17 +444,47 @@ sub DeletePage {
 	return 0
 }
 
+=item B<GetPage>I<($name)>
+
+=over 4
+
+Returns the page frame object for $name.
+
+=back
+
+=cut
+
 sub GetPage {
 	my ($self, $name) = @_;
 	return $self->{PAGES}->{$name}->[1] if defined $name;
 	return undef;
 }
 
+=item B<GetTab>I<($name)>
+
+=over 4
+
+Returns the tab object for $name.
+
+=back
+
+=cut
+
 sub GetTab {
 	my ($self, $name) = @_;
 	return $self->{PAGES}->{$name}->[0] if defined $name;
 	return undef;
 }
+
+=item B<IsDisplayed>I<($name)>
+
+=over 4
+
+Returns true if $name is currently on display
+
+=back
+
+=cut
 
 sub IsDisplayed {
 	my ($self, $name) = @_;
@@ -323,6 +520,16 @@ sub IsFull {
 	}
 	return 0;
 }
+
+=item B<LastDisplayed>
+
+=over 4
+
+Returns the name of the last displayed tab.
+
+=back
+
+=cut
 
 sub LastDisplayed {
 	my $self = shift;
@@ -449,6 +656,16 @@ sub PackTab {
 	);
 }
 
+=item B<PageCount>
+
+=over 4
+
+Returns the number of pages
+
+=back
+
+=cut
+
 sub PageCount {
 	my $self = shift;
 	my $pg = $self->{PAGES};
@@ -456,6 +673,16 @@ sub PageCount {
 	my $size = @keys;
 	return $size;
 }
+
+=item B<PageExists>I<($name)>
+
+=over 4
+
+Returns true if $name exists
+
+=back
+
+=cut
 
 sub PageExists {
 	my ($self, $name) = @_;
@@ -480,6 +707,16 @@ sub ReleaseCall {
 	}
 	delete $self->{MOTION};
 }
+
+=item B<RenamePage>I<($old, $new)
+
+=over 4
+
+Rename a page.
+
+=back
+
+=cut
 
 sub RenamePage {
 	my ($self, $old, $new) = @_;
@@ -506,6 +743,19 @@ sub Select {
 }
 
 sub Selected {	return $_[0]->{SELECTED} }
+
+=item B<SelectPage>I<($name)>
+
+=over 4
+
+Select page $name.
+
+If $name is not displayed it is moved to the
+front of the displayed items.
+
+=back
+
+=cut
 
 sub SelectPage {
 	my ($self, $name) = @_;
@@ -540,11 +790,32 @@ sub SelectPage {
 	}
 }
 
+=item B<TabList>
+
+=over 4
+
+Returns a sorted list of all page names.
+
+=back
+
+=cut
+
 sub TabList {
 	my $self = shift;
 	my $p = $self->{PAGES};
 	return sort keys %$p
 }
+
+=item B<TabPosition>I<($name)>
+
+=over 4
+
+Returns the position on the tab frame of $name.
+Returns undef for undisplayed pages.
+
+=back
+
+=cut
 
 sub TabPosition {
 	my ($self, $name) = @_;
@@ -605,5 +876,41 @@ sub UpdateTabs {
 		}
 	}
 }
+
+=back
+
+=head1 AUTHOR
+
+=over 4
+
+=item Hans Jeuken (hanje at cpan dot org)
+
+=back
+
+=cut
+
+=head1 BUGS
+
+Unknown. If you find any, please contact the author.
+
+=cut
+
+=head1 TODO
+
+=over 4
+
+
+=back
+
+=cut
+
+=head1 SEE ALSO
+
+=over 4
+
+
+=back
+
+=cut
 
 1;

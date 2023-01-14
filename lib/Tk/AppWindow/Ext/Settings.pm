@@ -2,7 +2,7 @@ package Tk::AppWindow::Ext::Settings;
 
 =head1 NAME
 
-Tk::AppWindow::Plugins::FileCommands - a plugin for opening, saving and closing files
+Tk::AppWindow::Ext::Settings - allow your user to configure settings
 
 =cut
 
@@ -22,16 +22,91 @@ require Tk::TabbedForm;
 
 =over 4
 
+=over 4
+
+ my $app = new Tk::AppWindow(@options,
+    -extensions => ['Settings'],
+ );
+ $app->MainLoop;
 
 =back
 
 =head1 DESCRIPTION
 
-=cut
+=over 4
+
+Add a settings feature to your application and allow the end user to configure the application.
+
+Creates a menu item in the main menu.
+
+Loads settings file at startup.
+
+=back
 
 =head1 CONFIG VARIABLES
 
 =over 4
+
+=item B<-settingsfile>
+
+=over 4
+
+Name of the settings file. Default is I<settingsrc>.
+
+=back
+
+=over 4
+
+=item B<-useroptions>
+
+=over 4
+
+Name of the settings file. Default is I<settingsrc>. A typical setup might look
+like this:
+
+ -useroptions => [
+    '*page' => 'Editing',
+    '*section' => 'User interface',
+    -contentforeground => ['color', 'Foreground'],
+    -contentbackground => ['color', 'Background'],
+    -contentfont => ['font', 'Font'],
+    '*end',
+    '*section' => 'Editor settings',
+    -contenttabs => ['text', 'Tab size'],
+    -contentwrap => ['radio', 'Wrap', [qw[none char word]]],
+    '*end',
+    '*page' => 'Icons',
+    -icontheme => ['list', 'Icon theme', 'available_icon_themes'],
+    -iconsize => ['list', 'Icon size', 'available_icon_sizes'],
+    '*page' => 'Bars',
+    '*section' => 'Menubar',
+    -menuiconsize => ['list', 'Icon size', 'available_icon_sizes'],
+    '*end',
+    '*section' => 'Toolbar',
+    -toolbarvisible => ['boolean', 'Visible at launch'],
+    -tooliconsize => ['list', 'Icon size', 'available_icon_sizes'],
+    -tooltextposition => ['radio', 'Text position', [qw[none left right top bottom]]],
+    '*end',
+    '*section' => 'Statusbar',
+    -statusbarvisible => ['boolean', 'Visible at launch'],
+    '*end',
+ ],
+
+It uses L<Tk::TabbedForm> in the popup. See there for details of this option.
+
+=back
+
+=back
+
+=head1 B<COMMANDS>
+
+=over 4
+
+=item B<settings>
+
+=over 4
+
+=back
 
 =back
 
@@ -61,6 +136,8 @@ sub new {
 
 =head1 METHODS
 
+=over 4
+
 =cut
 
 sub CmdSettings {
@@ -76,15 +153,20 @@ sub CmdSettings {
 		-command => sub {
 			my %options = $f->Get;
 			my @opts = sort keys %options;
+			my @save = ();
 			for (@opts) {
 				my $val = $options{$_};
-				$self->ConfigPut($_, $val) if $val ne '';
+				if ($val ne '') {
+					$self->ConfigPut($_, $val);
+					push @save, $_;
+				}
 			}
 			$self->ReConfigureAll;
-			$self->SaveSettings(@opts);
+			$self->SaveSettings(@save);
 		}
 	);
 	$f = $m->TabbedForm(
+		-acceptempty => 1,
 		-listcall => ['CommandExecute', $self],
 		-structure => $self->ConfigGet('-useroptions'),
 		-postvalidatecall => sub {
@@ -177,7 +259,7 @@ sub ReConfigureAll {
 	my @list = $self->ExtensionList;
 	my %hash = ();
 	for (@list) {
-		$hash{$_->Name} = $_
+		$hash{$_} = $self->GetExt($_);
 	}
 	my $kb = delete $hash{'Keyboard'};
 	$kb->ReConfigure if defined $kb;
@@ -213,5 +295,41 @@ sub UserOptions {
 	if (@_) { $self->{USEROPTIONS} = shift }
 	return $self->{USEROPTIONS}
 }
+
+=back
+
+=head1 AUTHOR
+
+=over 4
+
+=item Hans Jeuken (hanje at cpan dot org)
+
+=back
+
+=cut
+
+=head1 BUGS
+
+Unknown. If you find any, please contact the author.
+
+=cut
+
+=head1 TODO
+
+=over 4
+
+
+=back
+
+=cut
+
+=head1 SEE ALSO
+
+=over 4
+
+
+=back
+
+=cut
 
 1;

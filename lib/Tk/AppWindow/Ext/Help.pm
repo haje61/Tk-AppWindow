@@ -2,7 +2,7 @@ package Tk::AppWindow::Ext::Help;
 
 =head1 NAME
 
-Tk::AppWindow::Plugins::Help - a plugin with an about box and help facilities
+Tk::AppWindow::Ext::Help - about box and help facilities
 
 =cut
 
@@ -24,16 +24,80 @@ require Tk::Pod::Text;
 
 =over 4
 
+ my $app = new Tk::AppWindow(@options,
+    -extensions => ['Help'],
+ );
+ $app->MainLoop;
+
 
 =back
 
 =head1 DESCRIPTION
+
+=over 4
+
+Adds a help facility and an about box to your application. Initiates
+menu entries for them.
+
+=back
 
 =cut
 
 =head1 B<CONFIG VARIABLES>
 
 =over 4
+
+=item Switch: B<-aboutinfo>
+
+=over 4
+
+Specify the link to a hash. Possible keys
+
+ version
+ license
+ author
+ http
+ email
+
+=back
+
+=item Switch: B<-helpfile>
+
+=over 4
+
+Point to your help file.
+
+=back
+
+=item Switch: B<-helptype>
+
+=over 4
+
+Can be B<pod> or B<html>. Default value is B<pod>.
+
+=back
+
+=back
+
+=head1 B<COMMANDS>
+
+=over 4
+
+=item B<about>
+
+=over 4
+
+Pops the about box.
+
+=back
+
+=item B<help>
+
+=over 4
+
+Pops the help dialog.
+
+=back
 
 =back
 
@@ -153,6 +217,17 @@ sub CmdHelp {
 	}
 }
 
+=item B<MenuItems>
+
+=over 4
+
+Returns the about and help menu items for the main menu.
+Called by the b<MenuBar> extension.
+
+=back
+
+=cut
+
 sub MenuItems {
 	my $self = shift;
 	return (
@@ -164,6 +239,42 @@ sub MenuItems {
 
 	)
 }
+
+=back
+
+=head1 AUTHOR
+
+=over 4
+
+=item Hans Jeuken (hanje at cpan dot org)
+
+=back
+
+=cut
+
+=head1 BUGS
+
+Unknown. If you find any, please contact the author.
+
+=cut
+
+=head1 TODO
+
+=over 4
+
+
+=back
+
+=cut
+
+=head1 SEE ALSO
+
+=over 4
+
+
+=back
+
+=cut
 
 
 1;

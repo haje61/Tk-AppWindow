@@ -4,7 +4,7 @@ use warnings;
 use lib './t/lib';
 use AWTestSuite;
 
-use Test::More tests => 89;
+use Test::More tests => 155;
 BEGIN { use_ok('Tk::AppWindow::Ext::Art') };
 
 use Tk::AppWindow;
@@ -16,55 +16,55 @@ my @tests = (
 		name => 'Available themes',
 		args => [],
 		method => 'AvailableThemes',
-		expected => [ 'PNG1', 'PNG2', 'SVG1' ]
+		expected => [ 'png_1', 'png_2', 'svg_1' ]
 	},
 
 	# Testing available contexts
 	{
 		name => 'All available contexts',
-		args => ['PNG1' ],
+		args => ['png_1' ],
 		method => 'AvailableContexts',
 		expected => [ 'Actions', 'Applications', ]
 	},
 	{
 		name => 'Available contexts in name',
-		args => ['PNG1', 'edit-cut' ],
+		args => ['png_1', 'edit-cut' ],
 		method => 'AvailableContexts',
 		expected => [ 'Actions', ]
 	},
 	{
 		name => 'No available contexts in name',
-		args => ['PNG1', 'does-not-exist' ],
+		args => ['png_1', 'does-not-exist' ],
 		method => 'AvailableContexts',
 		expected => [ ]
 	},
 	{
 		name => 'Available contexts in name and size',
-		args => ['PNG1', 'edit-cut', 32 ],
+		args => ['png_1', 'edit-cut', 32 ],
 		method => 'AvailableContexts',
 		expected => [ 'Actions', ]
 	},
 	{
 		name => 'No available contexts in name and size 1',
-		args => ['PNG1', 'does-not-exist', 32 ],
+		args => ['png_1', 'does-not-exist', 32 ],
 		method => 'AvailableContexts',
 		expected => [ ]
 	},
 	{
 		name => 'No available contexts in name and size 2',
-		args => ['PNG1', 'edit-cut', 45 ],
+		args => ['png_1', 'edit-cut', 45 ],
 		method => 'AvailableContexts',
 		expected => [ ]
 	},
 	{
 		name => 'Available contexts in size',
-		args => ['PNG1', undef, 22 ],
+		args => ['png_1', undef, 22 ],
 		method => 'AvailableContexts',
 		expected => [ 'Actions', 'Applications', ]
 	},
 	{
 		name => 'No available contexts in size',
-		args => ['PNG1', undef, 46 ],
+		args => ['png_1', undef, 46 ],
 		method => 'AvailableContexts',
 		expected => [ ]
 	},
@@ -72,50 +72,50 @@ my @tests = (
 	# Testing available icons
 	{
 		name => 'All available icons',
-		args => ['PNG1' ],
+		args => ['png_1' ],
 		method => 'AvailableIcons',
 		expected => [ 'accessories-text-editor', 'document-new', 'document-save', 'edit-cut', 'edit-find',
 			'help-browser', 'multimedia-volume-control', 'system-file-manager' ]
 	},
 	{
 		name => 'Available icons in size',
-		args => ['PNG1', 32 ],
+		args => ['png_1', 32 ],
 		method => 'AvailableIcons',
 		expected => [ 'accessories-text-editor', 'edit-cut', 'edit-find', 'help-browser' ]
 	},
 	{
 		name => 'No available icons in size',
-		args => ['PNG1', 47 ],
+		args => ['png_1', 47 ],
 		method => 'AvailableIcons',
 		expected => [ ]
 	},
 	{
 		name => 'Available icons in size and context',
-		args => ['PNG1', 32, 'Actions' ],
+		args => ['png_1', 32, 'Actions' ],
 		method => 'AvailableIcons',
 		expected => [ 'edit-cut', 'edit-find', ]
 	},
 	{
 		name => 'No available icons in size and context 1',
-		args => ['PNG1', 48, 'Actions' ],
+		args => ['png_1', 48, 'Actions' ],
 		method => 'AvailableIcons',
 		expected => [ ]
 	},
 	{
 		name => 'No available icons in size and context 2',
-		args => ['PNG1', 32, 'Blobber' ],
+		args => ['png_1', 32, 'Blobber' ],
 		method => 'AvailableIcons',
 		expected => [ ]
 	},
 	{
 		name => 'Available icons in context',
-		args => ['PNG1', undef, 'Actions' ],
+		args => ['png_1', undef, 'Actions' ],
 		method => 'AvailableIcons',
 		expected => [ 'document-new', 'document-save', 'edit-cut', 'edit-find' ]
 	},
 	{
 		name => 'No available icons in context',
-		args => ['PNG1', undef, 'Blobber' ],
+		args => ['png_1', undef, 'Blobber' ],
 		method => 'AvailableIcons',
 		expected => [ ]
 	},
@@ -123,49 +123,49 @@ my @tests = (
 	# Testing available sizes
 	{
 		name => 'All available sizes',
-		args => ['PNG1' ],
+		args => ['png_1' ],
 		method => 'AvailableSizes',
 		expected => [ 22, 32 ]
 	},
 	{
 		name => 'Available sizes in name',
-		args => ['PNG1', 'edit-cut'],
+		args => ['png_1', 'edit-cut'],
 		method => 'AvailableSizes',
 		expected => [ 32 ]
 	},
 	{
 		name => 'No available sizes in name',
-		args => ['PNG1', 'does-not-exist'],
+		args => ['png_1', 'does-not-exist'],
 		method => 'AvailableSizes',
 		expected => [ ]
 	},
 	{
 		name => 'Available sizes in name and context',
-		args => ['PNG1', 'edit-cut', 'Actions'],
+		args => ['png_1', 'edit-cut', 'Actions'],
 		method => 'AvailableSizes',
 		expected => [ 32 ]
 	},
 	{
 		name => 'No available sizes in name and context 1',
-		args => ['PNG1', 'does-not-exist', 'Actions' ],
+		args => ['png_1', 'does-not-exist', 'Actions' ],
 		method => 'AvailableSizes',
 		expected => [ ]
 	},
 	{
 		name => 'No available sizes in name and context 2',
-		args => ['PNG1', 'edit-cut', 'Blobber' ],
+		args => ['png_1', 'edit-cut', 'Blobber' ],
 		method => 'AvailableSizes',
 		expected => [ ]
 	},
 	{
 		name => 'Available sizes in context',
-		args => ['PNG1', undef, 'Actions'],
+		args => ['png_1', undef, 'Actions'],
 		method => 'AvailableSizes',
 		expected => [ 22, 32 ]
 	},
 	{
 		name => 'No available sizes in context',
-		args => ['PNG1', undef, 'Blobber'],
+		args => ['png_1', undef, 'Blobber'],
 		method => 'AvailableSizes',
 		expected => [ ]
 	},
@@ -201,39 +201,44 @@ my @tests = (
 
 
 
-my $app = new Tk::AppWindow(
+CreateTestApp(
 	-extensions => ['Art'],
 	-iconpath => \@iconpath,
-	-icontheme =>  'PNG1',
+	-icontheme =>  'png_1',
 );
 ok(defined $app, "can create");
-$app->after(10, \&DoTesting);
 
 my $art = $app->GetExt('Art');
 
-# More tests for loading bitmapped icons
-my @names = $art->AvailableIcons('PNG1');
-my @sizes = $art->AvailableSizes('PNG1');
-&CreateImageTests(\@names, \@sizes, {
-	theme => 'PNG1',
-	validate => 'image',
-});
-
-# Tests for loading svg icons
-my @svgnames = $art->AvailableIcons('SVG1');
-use Data::Dumper; print Dumper \@svgnames;
-my @svgsizes = $art->AvailableSizes('SVG1');
-&CreateImageTests(\@svgnames, \@svgsizes, {
-	theme => 'SVG1',
-	validate => 'image',
-	is_svg => 1,
-});
+$app->after(10, \&DoTesting);
 
 $app->MainLoop;
 
 sub DoTesting {
 	ok(1, "main loop runs");
+
 	ok(($art->Name eq 'Art'), 'plugin Art loaded');
+
+
+	# More tests for loading bitmapped icons
+	for ('png_1', 'png_2') {
+		my @names = $art->AvailableIcons($_);
+		my @sizes = $art->AvailableSizes($_);
+		&CreateImageTests(\@names, \@sizes, {
+			theme => $_,
+			validate => 'image',
+		});
+	}
+
+	# Tests for loading svg icons
+	my @svgnames = $art->AvailableIcons('svg_1');
+	my @svgsizes = $art->AvailableSizes('svg_1');
+	&CreateImageTests(\@svgnames, \@svgsizes, {
+		theme => 'svg_1',
+		validate => 'image',
+		is_svg => 1,
+	});
+
 	for (@tests) {
 		if (exists $_->{theme}) {
 			$art->ConfigPut(-icontheme => $_->{theme})
@@ -272,7 +277,7 @@ sub DoTesting {
 			ok(&$validate($expected, \@result), $name);
 		}
 	}
-	if  ($show) {
+	if ($show) {
 		my @icons = ();
 		my $th = $app->ConfigGet('-iconthemes');
 		for (@$th) {

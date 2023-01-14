@@ -18,6 +18,9 @@ sub Populate {
 		-relief => ['SELF'],
 		DEFAULT => [$t],
 	);
+	$self->Delegates(
+		'DEFAULT' => $t,
+	);
 }
 
 sub Update {

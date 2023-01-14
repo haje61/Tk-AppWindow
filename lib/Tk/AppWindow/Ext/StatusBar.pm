@@ -2,7 +2,7 @@ package Tk::AppWindow::Ext::StatusBar;
 
 =head1 NAME
 
-Tk::AppWindow::Ext::FileCommands - a plugin for opening, saving and closing files
+Tk::AppWindow::Ext::StatusBar - adding a status bar
 
 =cut
 
@@ -42,16 +42,82 @@ my %types = (
 
 =over 4
 
+=over 4
+
+ my $app = new Tk::AppWindow(@options,
+    -extensions => ['StatusBar'],
+ );
+ $app->MainLoop;
 
 =back
 
 =head1 DESCRIPTION
 
-=cut
+=over 4
+
+Add a status bar to your application.
+
+=back
 
 =head1 B<CONFIG VARIABLES>
 
 =over 4
+
+=item B<-statusbarpanel>
+
+=over 4
+
+Default value 'BOTTOM'. Sets the name of the panel home to B<StatusBar>.
+
+=back
+
+=item B<-statusbarvisible>
+
+=over 4
+
+Default value 1. Show or hide status bar.
+
+=back
+
+=item B<-statusitemborderwidth>
+
+=over 4
+
+Default value 2.
+
+=back
+
+=item B<-statusitempadding>
+
+=over 4
+
+Default value 2.
+
+=back
+
+=item B<-statusitemrelief>
+
+=over 4
+
+Default value 'groove'.
+
+=back
+
+=item B<-statusmsgitemoninit>
+
+=over 4
+
+Default value 1.
+
+=back
+
+=item B<-statusupdatecycle>
+
+=over 4
+
+Default value 500. Repeat time for updating the items on the status bar.
+
+=back
 
 =back
 
@@ -64,13 +130,12 @@ sub new {
 	$self->AddPreConfig(
 		-statusitemrelief => ['PASSIVE', undef, undef, 'groove'],
 		-statusitemborderwidth => ['PASSIVE', undef, undef, 2],
-		-statusitempadding => ['PASSIVE', undef, undef, [-padx =>2, -pady => 2]],
+		-statusitempadding => ['PASSIVE', undef, undef, 2],
 		-statusupdatecycle =>['PASSIVE', undef, undef, 500],
 		-statusmsgitemoninit =>['PASSIVE', undef, undef, 1],
 	);
 
-	$self->{MI} = undef;
-	$self->{ITEMS} = [];
+	$self->{ITEMS} = {};
 
 	
 	$self->ConfigInit(
@@ -78,18 +143,65 @@ sub new {
 		-statusbarvisible => ['PanelVisible', $self, 1],
 	);
 	$self->AddPostConfig('InitMsgItem', $self);
-	$self->AddPostConfig('Update', $self);
+	$self->AddPostConfig('Cycle', $self);
 	return $self;
 }
 
 =head1 METHODS
 
-=cut
+=over 4
 
+=item B<Add>I<($type, $name, @options)>
+
+=over 4
+
+Adds an item to the status bar.
+$type can have the values I<image>, I<message>, I<progress>, I<text>
+
+@options is a paired (switch => value) list.
+General options are listed here. See type methods below for type specific options.
+
+=item B<-label>
+
+=over 4
+
+Specify the text of the label.
+If this option is set it will create a label next to the item on the statusbar.
+
+=back
+
+=item B<-itempack>
+
+=over 4
+
+Default value [-side=> 'left', -padx => 2, -pady => 2].
+
+=back
+
+=item B<-position>
+
+=over 4
+
+Specify the numerical position the item should be placed.
+
+=back
+
+=item B<-updatecommand>
+
+=over 4
+
+Specify a callback that returns the value for this item.
+
+=back
+
+=back
+
+=cut
 
 sub Add {
 	my $self = shift;
 	my $type = shift;
+	my $name = shift;
 	unless (exists $types{$type}) {
 		warn "undefined statusbar type: $type";
 		return
@@ -99,25 +211,48 @@ sub Add {
 	my $class = $types{$type}->{class};
 	my $pack = $types{$type}->{pack};
 	my $itempadding = $self->ConfigGet('-statusitempadding');
-	my $items = $self->{ITEMS};
 	if (defined $pos) {
-		my $b = $items->[$pos];
-		push @$pack, (-before => $b) if defined $b;
+		my @items = $self->Subwidget($self->Panel)->children;
+		my $b = $items[$pos];
+		push @$pack, -before => $b if defined $b;
 	}
 	my $i = $self->Subwidget($self->Panel)->$class(%params, 
 		-relief => $self->ConfigGet('-statusitemrelief'),
 		-borderwidth => $self->ConfigGet('-statusitemborderwidth'),
-	)->pack(@$pack, @$itempadding, -side => 'left');
-	if (defined $pos) {
-		splice @$items, $pos, 0, $i;
-	} else {
-		push @$items, $i
-	}
+	)->pack(@$pack, -padx => $itempadding, -pady => $itempadding, -side => 'left');
+	$self->{ITEMS}->{$name} = $i;
 	return $i
 }
 
+=item B<AddImageItem>I<($name, @options)>
+
+=over 4
+
+Almost the same as Add('image', $name, @options).
+In the options B<-valueimages> you specify icon names.
+Extension B<Art> must be loaded for this.
+You can specify all the options for a Tk::Label and the following:
+
+=item B<-valueimages>
+
+=over 4
+
+Specify a hash ref. Example;
+
+    {
+       0 => $w->Bitmap('error'),
+       1 -> $w->Bitmap('transparent')
+    }
+
+=back
+
+=back
+
+=cut
+
 sub AddImageItem {
 	my $self = shift;
+	my $name = shift;
 	my %options = (@_);
 	my $img = $options{'-valueimages'};
 	if (defined $img) {
@@ -125,41 +260,148 @@ sub AddImageItem {
 			$img->{$_} = $self->GetArt($img->{$_})
 		}
 	}
-	return $self->Add('image', %options);
+	return $self->Add('image', $name, %options);
 }
+
+=item B<AddMessageItem>I<($name, @options)>
+
+=over 4
+
+Same as Add('message', $name, @options)
+You can specify all the options for a Tk::Label.
+
+=back
+
+=cut
 
 sub AddMessageItem {
 	my $self = shift;
-	my $mi = $self->Add('message', @_);
-	$self->{MI} = $mi;
-	my $bl = $self->GetExt('Balloon');
-	$bl->Balloon->configure(-statusbar => $mi) if defined $bl;
-	return $mi;
+	return $self->Add('message', @_);
 }
+
+=item B<AddProgressItem>I<($name, @options)>
+
+=over 4
+
+Same as Add('progress', $name, @options)
+You can specify all the options for a Tk::ProgressBar.
+
+=back
+
+=cut
 
 sub AddProgressItem {
 	my $self = shift;
 	return $self->Add('progress', @_);
 }
 
+=item B<AddTextItem>I<($name, @options)>
+
+=over 4
+
+Same as Add('text', $name, @options)
+You can specify all the options for a Tk::Label.
+
+=back
+
+=cut
+
 sub AddTextItem {
 	my $self = shift;
 	return $self->Add('text', @_);
 }
 
+sub Cycle {
+	my $self = shift;
+	my $time = $self->ConfigGet('-statusupdatecycle');
+	$self->after($time, ['Update', $self]) unless $time eq 0;
+}
+
+=item B<DeleteI<($name)>
+
+=over 4
+
+Removes $name from the status bar and destroys the item object.
+
+=back
+
+=cut
+
+sub Delete {
+	my ($self, $name) = @_;
+	unless ($name eq 'msg') {
+		if ($self->ItemExists($name)) {
+			my $it = $self->Item($name);
+			$it->Remove;
+			$it->destroy;
+			my $ih = $self->{ITEMS};
+			delete $ih->{$name}
+		}
+	}
+}
+
 sub InitMsgItem {
 	my $self = shift;
-	$self->AddMessageItem(-position => 0) if ($self->ConfigGet('-statusmsgitemoninit'));
+	if ($self->ConfigGet('-statusmsgitemoninit')) {
+		unless (exists $self->{MI}) {
+			my $mi = $self->AddMessageItem('msg', -position => 0);
+			$self->{MI} = $mi;
+			my $bl = $self->GetExt('Balloon');
+			$bl->Balloon->configure(-statusbar => $mi) if defined $bl;
+			return $mi;
+		}
+	}
+}
+
+=item B<Item>I<($name)>
+
+=over 4
+
+Returnes the item object for $name.
+
+=back
+
+=cut
+
+sub Item {
+	my ($self, $name) = @_;
+	return $self->{ITEMS}->{$name}
+}
+
+=item B<ItemExists>I<($name)>
+
+=over 4
+
+Returnes true if $name exists.
+
+=back
+
+=cut
+
+sub ItemExists {
+	my ($self, $name) = @_;
+	return exists $self->{ITEMS}->{$name}
 }
 
 sub MenuItems {
 	my $self = shift;
 	return (
 #This table is best viewed with tabsize 3.
-#			 type					menupath			label			Icon		config variable	keyb
-		[	'menu_check',		'View::',		"~Statusbar",	undef,	'-statusbarvisible',	0, 1], 
+#			 type					menupath			label						Icon		config variable
+		[	'menu_check',		'View::',		"Show ~statusbar",	undef,	'-statusbarvisible',	0,   1], 
 	)
 }
+
+=item B<Message>I<($text)>
+
+=over 4
+
+Display $text on the message item in the status bar if it exists.
+The message will be deleted upon the first key stroke or mouse click.
+
+=back
+
+=cut
 
 sub Message {
 	my $self = shift;
@@ -170,11 +412,46 @@ sub Message {
 sub Update {
 	my $self = shift;
 	my $items = $self->{ITEMS};
-	for (@$items) {
-		$_->Update 
+	for (keys %$items) {
+		$self->Item($_)->Update 
 	}
-	my $time = $self->ConfigGet('-statusupdatecycle');
-	$self->after($time, ['Update', $self]);
+	$self->Cycle;
 }
+
+=back
+
+=head1 AUTHOR
+
+=over 4
+
+=item Hans Jeuken (hanje at cpan dot org)
+
+=back
+
+=cut
+
+=head1 BUGS
+
+Unknown. If you find any, please contact the author.
+
+=cut
+
+=head1 TODO
+
+=over 4
+
+
+=back
+
+=cut
+
+=head1 SEE ALSO
+
+=over 4
+
+
+=back
+
+=cut
 
 1;

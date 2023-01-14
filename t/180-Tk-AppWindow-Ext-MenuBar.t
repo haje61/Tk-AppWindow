@@ -15,7 +15,7 @@ CreateTestApp(
 		[	'menu_normal',		'File::',		"~New",					'file_new',				'document-new',	'Control-n'			], 
 		[	'menu_separator',	'File::',		'f1' ], 
 		[	'menu_normal',		'File::',		"~Open",					'file_open',			'document-open',	'Control-o'			], 
- 		[	'menu', 				'File::',		"Open ~recent", 		'pop_hist_menu', 	], 
+#  		[	'menu', 				'File::',		"Open ~recent", 		'pop_hist_menu', 	], 
 		[	'menu_separator',	'File::', 		'f2'], 
 		[	'menu_normal',		'File::',		"~Save",					'file_save',			'document-save',	'Control-s'			], 
 		[	'menu_normal',		'File::',		"Save ~as",				'document-save-as',	'file_save_as',	undef				], 
