@@ -1,13 +1,15 @@
 
 use strict;
 use warnings;
-use lib './t/lib';
-use AWTestSuite;
+use lib 't/lib';
 
+use Test::Tk;
+$mwclass = 'Tk::AppWindow';
 use Test::More tests => 4;
 BEGIN { use_ok('Tk::AppWindow::Ext::MenuBar') };
 
-CreateTestApp(
+
+createapp(
 	-extensions => [qw[Art MenuBar TestPlugin]],
 	-mainmenuitems => [
 		[	'menu_check',		'Icons::Check 2',	"Check 1",		'edit-cut',	'-check_1', 'Rotterdam', 'Amsterdam'],
@@ -34,26 +36,29 @@ CreateTestApp(
 	]
 );
 
+
 my @configs = qw(-check_1 -check_2 -check_3 -radio_1 -radio_2 -radio_3);
 my %showitems = ();
 my $row = 0;
-for (@configs) {
-	my $var = '';
-	$showitems{$_} = \$var;
-	$app->Label(-text => $_, -width => 8)->grid(-row => $row, -column => 0, -padx => 3, -pady => 3);
-	$app->Label(-width => 10, -textvariable => \$var)->grid(-row => $row, -column => 1, -padx => 3, -pady => 3);
-	$row ++
+my $ext;
+if (defined $app) {
+	for (@configs) {
+		my $var = '';
+		$showitems{$_} = \$var;
+		$app->Label(-text => $_, -width => 8)->grid(-row => $row, -column => 0, -padx => 3, -pady => 3);
+		$app->Label(-width => 10, -textvariable => \$var)->grid(-row => $row, -column => 1, -padx => 3, -pady => 3);
+		$row ++
+	}
+	$ext = $app->GetExt('MenuBar');
+	&Update;
 }
 
-
-my $plug = $app->GetExt('MenuBar');
-
 @tests = (
-	[sub { return $plug->Name eq 'MenuBar' }, 1, 'plugin MenuBar loaded']
+	[sub { return $ext->Name }, 'MenuBar', 'extension MenuBar loaded']
 );
 
-&Update;
-$app->MainLoop;
+
+starttesting;
 
 sub Update {
 	for (@configs) {

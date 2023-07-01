@@ -1,24 +1,25 @@
 
 use strict;
 use warnings;
-use lib './t/lib';
-use AWTestSuite;
+
+use Test::Tk;
+$mwclass = 'Tk::AppWindow';
 
 use Test::More tests => 4;
 BEGIN { use_ok('Tk::AppWindow::Ext::Balloon') };
 
-my $settingsfolder = 't/settings';
 
-
-CreateTestApp(
+createapp(
 	-extensions => [qw[Balloon]],
 );
 
-my $plug = $app->GetExt('Balloon');
+my $ext;
+if (defined $app) {
+	$ext = $app->GetExt('Balloon');
+}
 
 @tests = (
-	[sub { return $plug->Name eq 'Balloon' }, 1, 'plugin Balloon loaded']
+	[sub { return $ext->Name }, 'Balloon', 'extension Balloon loaded']
 );
 
-$app->MainLoop;
-
+starttesting;

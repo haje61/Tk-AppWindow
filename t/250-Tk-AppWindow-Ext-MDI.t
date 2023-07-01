@@ -2,7 +2,9 @@
 use strict;
 use warnings;
 use lib './t/lib';
-use AWTestSuite;
+
+use Test::Tk;
+$mwclass = 'Tk::AppWindow';
 $delay = 500;
 
 use Test::More tests => 5;
@@ -12,19 +14,22 @@ BEGIN {
 
 require TestTextManager;
 
-CreateTestApp(
+createapp(
 	-extensions => [qw[Art MenuBar MDI ToolBar]],
-	-configfolder => $settingsfolder,
+	-configfolder => 't/settings',
 	-contentmanagerclass => 'TestTextManager',
 );
 
-my $ext = $app->GetExt('MDI');
+my $ext;
+if (defined $app) {
+	$ext = $app->GetExt('MDI');
+}
 
 @tests = (
 	[sub { return defined $ext }, 1, 'Extension defined'],
-	[sub { return $ext->Name eq 'MDI' }, 1, 'Extension MDI loaded'],
+	[sub { return $ext->Name  }, 'MDI', 'Extension MDI loaded'],
 );
 
 # $app->CommandExecute('file_new');
-$app->MainLoop;
+starttesting;
 

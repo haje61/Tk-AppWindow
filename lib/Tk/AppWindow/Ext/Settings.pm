@@ -15,7 +15,7 @@ $VERSION="0.01";
 use base qw( Tk::AppWindow::BaseClasses::Extension );
 
 require Tk::YADialog;
-require Tk::TabbedForm;
+require Tk::QuickForm;
 
 
 =head1 SYNOPSIS
@@ -151,7 +151,7 @@ sub CmdSettings {
 	my $b = $m->Subwidget('buttonframe')->Button(
 		-text => 'Apply',
 		-command => sub {
-			my %options = $f->Get;
+			my %options = $f->get;
 			my @opts = sort keys %options;
 			my @save = ();
 			for (@opts) {
@@ -165,9 +165,9 @@ sub CmdSettings {
 			$self->SaveSettings(@save);
 		}
 	);
-	$f = $m->TabbedForm(
+	$f = $m->QuickForm(
 		-acceptempty => 1,
-		-listcall => ['CommandExecute', $self],
+# 		-listcall => ['CommandExecute', $self],
 		-structure => $self->ConfigGet('-useroptions'),
 		-postvalidatecall => sub {
 			my $flag = shift;
@@ -178,8 +178,8 @@ sub CmdSettings {
 			}
 		},
 	)->pack(-expand => 1, -fill => 'both');
-	$f->CreateForm;
-	$f->Put($self->GetUserOptions);
+	$f->createForm;
+	$f->put($self->GetUserOptions);
 	
 	$m->ButtonPack($b);
 	$m->Show(-popover => $self->GetAppWindow);

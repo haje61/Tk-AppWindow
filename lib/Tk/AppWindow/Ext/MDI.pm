@@ -92,7 +92,7 @@ sub CmdFileClose {
 	}
 	return 1 unless (defined $doc);
 	my $geosave = $self->geometry;
-	if ($self->Interface->DeletePage($name)) {
+	if ($self->Interface->deletePage($name)) {
 		$self->geometry($geosave);
 		return 1;
 	}
@@ -119,7 +119,7 @@ sub CmdFileNew {
 		my $navigator = $self->GetExt('Navigator');
 		$navigator->Add($name) if defined $navigator;
 
-		$self->Interface->SelectPage($name);
+		$self->Interface->selectPage($name);
 		return 1;
 	}
 	return 0
@@ -142,7 +142,7 @@ sub CreateContentHandler {
 	my @op = ();
 	my $cti = $self->GetArt('tab-close', 16);
 	push @op, -closeimage => $cti if defined $cti;
-	my $page = $self->Interface->AddPage($name, @op,
+	my $page = $self->Interface->addPage($name, @op,
 		-title => $self->GetTitle($name),
 		-closebutton => 1,
 	);
@@ -206,7 +206,7 @@ sub RenameDoc {
 	my ($self, $old, $new) = @_;
 	$self->SUPER::RenameDoc($old, $new);
 	my $i = $self->Interface;
-	$i->RenamePage($old, $new);
+	$i->renamePage($old, $new);
 	my $tab = $i->GetTab($new);
 	$tab->configure(
 		-name => $new,
@@ -216,7 +216,7 @@ sub RenameDoc {
 
 sub Select {
 	my ($self, $name) = @_;
-	$self->Interface->SelectPage($name);
+	$self->Interface->selectPage($name);
 	$self->SelectDoc($name);
 	$self->{DOCS}->{$name}->Focus;
 }

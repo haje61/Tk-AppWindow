@@ -87,7 +87,7 @@ sub new {
 	)->pack(-expand => 1, -fill=> 'both');
 	$self->Advertise('NAVNB', $nb);
 
-	my $page = $nb->AddPage('Documents');
+	my $page = $nb->addPage('Documents');
 	my $dt = $page->DocumentTree(
 		-entryselect => ['SelectDocument', $self],
 		-diriconcall => ['GetDirIcon', $self],
@@ -105,12 +105,12 @@ sub new {
 
 sub Add {
 	my ($self, $name) = @_;
-	$self->Subwidget('NAVTREE')->EntryAdd($name);
+	$self->Subwidget('NAVTREE')->entryAdd($name);
 }
 
 sub Delete {
 	my ($self, $name) = @_;
-	$self->Subwidget('NAVTREE')->EntryDelete($name);
+	$self->Subwidget('NAVTREE')->entryDelete($name);
 }
 
 sub GetDirIcon {
@@ -124,7 +124,7 @@ sub GetFileIcon {
 	my ($self, $name) = @_;
 	my $icon = $self->GetArt('text-x-plain', 16);
 	return $icon if defined $icon;
-	return $self->SubWidget('NAVTREE')->DefaultDirIcon;
+	return $self->SubWidget('NAVTREE')->DefaultFileIcon;
 }
 
 sub MenuItems {
@@ -143,7 +143,7 @@ sub SelectDocument {
 
 sub SelectEntry {
 	my ($self, $name) = @_;
-	$self->Subwidget('NAVTREE')->EntrySelect($name);
+	$self->Subwidget('NAVTREE')->entrySelect($name);
 }
 
 =back

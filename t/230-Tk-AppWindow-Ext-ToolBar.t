@@ -1,17 +1,15 @@
 
 use strict;
 use warnings;
-use lib './t/lib';
-use AWTestSuite;
-$delay = 1500;
+
+use Test::Tk;
+$mwclass = 'Tk::AppWindow';
 
 use Test::More tests => 4;
-BEGIN { 
-	use_ok('Tk::AppWindow::Ext::ToolBar'),
-};
+BEGIN { use_ok('Tk::AppWindow::Ext::ToolBar') };
 
 
-CreateTestApp(
+createapp(
 	-tooliconsize => 32,
 	-toolitems => [
 		[	'tool_button',		'New',		'poptest',		'document-new',	'Create a new document'], 
@@ -23,11 +21,13 @@ CreateTestApp(
 	-extensions => [qw[ToolBar Art MenuBar ]],
 );
 
-my $plug = $app->GetExt('ToolBar');
+my $ext;
+if (defined $app) {
+	$ext = $app->GetExt('ToolBar');
+}
 
 @tests = (
-	[sub { return $plug->Name eq 'ToolBar' }, 1, 'plugin ToolBar loaded']
+	[sub { return $ext->Name }, 'ToolBar', 'extension ToolBar loaded']
 );
 
-$app->MainLoop;
-
+starttesting;

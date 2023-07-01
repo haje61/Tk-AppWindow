@@ -1,22 +1,25 @@
 
 use strict;
 use warnings;
-use lib './t/lib';
-use AWTestSuite;
+
+use Test::Tk;
+$mwclass = 'Tk::AppWindow';
 
 use Test::More tests => 4;
 BEGIN { use_ok('Tk::AppWindow::Ext::Help') };
 
 
-CreateTestApp(
+createapp(
 	-extensions => [qw[Art MenuBar Help]],
 );
 
-my $plug = $app->GetExt('Help');
+my $ext;
+if (defined $app) {
+	$ext = $app->GetExt('Help');
+}
 
 @tests = (
-	[sub { return $plug->Name eq 'Help' }, 1, 'plugin Help loaded']
+	[sub { return $ext->Name }, 'Help', 'extension Help loaded']
 );
 
-$app->MainLoop;
-
+starttesting;

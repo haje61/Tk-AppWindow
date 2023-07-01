@@ -2,10 +2,12 @@
 use strict;
 use warnings;
 use lib './t/lib';
-use AWTestSuite;
 use Tk;
 
+use Test::Tk;
 use Test::More tests => 15;
+$mwclass = 'Tk::AppWindow';
+
 BEGIN { use_ok('Tk::AppWindow') };
 
 {
@@ -32,7 +34,7 @@ BEGIN { use_ok('Tk::AppWindow') };
 
 my $blobber = Blobber->new;
 
-CreateTestApp(
+createapp(
 	-commands => [
 		test1 => [\&Blabber, 12],
 		test2 => ['Get', $blobber, 35],
@@ -55,10 +57,10 @@ CreateTestApp(
 		$app->ConfigPut(-plugoption => 'Vulcan');
 		return $app->ConfigGet('-plugoption') }, 'Vulcan', 'plugin option modified'],
 	[sub { $app->CommandExecute('quit'); return 1 }, 1, 'still running'],
-	[sub { $app->ConfigPut(-'quitter', 1); return 1 }, 1, 'terminated unless show option'], 
+	[sub { $app->ConfigPut('-quitter', 1); return 1 }, 1, 'terminated unless show option'], 
 );
 
-$app->MainLoop;
+starttesting;
 
 sub Blabber {
 	my $par = shift;

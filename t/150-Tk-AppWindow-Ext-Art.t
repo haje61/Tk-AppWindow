@@ -2,12 +2,14 @@
 use strict;
 use warnings;
 use lib './t/lib';
-use AWTestSuite;
 
-use Test::More tests => 155;
+use Test::Tk;
+$mwclass = 'Tk::AppWindow';
+
+use Test::More tests => 153;
+use Test::Deep;
 BEGIN { use_ok('Tk::AppWindow::Ext::Art') };
 
-use Tk::AppWindow;
 
 my @iconpath = ('t/Themes');
 
@@ -199,25 +201,23 @@ my @tests = (
 
 );
 
-
-
-CreateTestApp(
+createapp(
 	-extensions => ['Art'],
 	-iconpath => \@iconpath,
 	-icontheme =>  'png_1',
 );
-ok(defined $app, "can create");
 
-my $art = $app->GetExt('Art');
-
-$app->after(10, \&DoTesting);
-
-$app->MainLoop;
+my $art;
+if (defined $app) {
+	$art = $app->GetExt('Art');
+	$app->after(10, \&DoTesting);
+	$app->MainLoop;
+}
 
 sub DoTesting {
 	ok(1, "main loop runs");
 
-	ok(($art->Name eq 'Art'), 'plugin Art loaded');
+	ok(($art->Name eq 'Art'), 'extension Art loaded');
 
 
 	# More tests for loading bitmapped icons
@@ -261,7 +261,7 @@ sub DoTesting {
 		}
 		my @result = &$method($art, @$args);
 		if ($validate eq 'list') {
-			ok(ListCompare($expected, \@result), $name);
+			cmp_deeply($expected, \@result, $name);
 		} elsif ($validate eq 'image') {
 			my $img = $result[0];
 			my $outcome = 0;

@@ -2,7 +2,10 @@
 use strict;
 use warnings;
 use lib './t/lib';
-use AWTestSuite;
+
+use Test::Tk;
+$mwclass = 'Tk::AppWindow';
+
 use Test::More tests => 4;
 BEGIN { use_ok('Tk::AppWindow::Ext::SDI') };
 
@@ -11,18 +14,20 @@ require TestTextManager;
 my $settingsfolder = 't/settings';
 
 
-CreateTestApp(
+createapp(
 	-configfolder => $settingsfolder,
 	-extensions => [qw[Art ToolBar SDI]],
 	-contentmanagerclass => 'TestTextManager',
 );
 
-my $plug = $app->GetExt('SDI');
+my $ext;
+if (defined $app) {
+	$ext = $app->GetExt('SDI');
+}
 
 @tests = (
-	[sub { return $plug->Name eq 'SDI' }, 1, 'plugin SDI loaded']
+	[sub { return $ext->Name }, 'SDI', 'extension SDI loaded']
 );
 
-$app->CommandExecute('file_new');
-$app->MainLoop;
+starttesting;
 

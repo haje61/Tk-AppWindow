@@ -25,10 +25,10 @@ sub new {
 		-set_float => ['PASSIVE', undef, undef, 0],
 		-set_folder => ['PASSIVE', undef, undef, '~/Documents'],
 		-set_font => ['PASSIVE', undef, undef, 'Hack 10'],
-		-set_list_command => ['PASSIVE', undef, undef, 'Breeze'],
+# 		-set_list_command => ['PASSIVE', undef, undef, 'Breeze'],
 		-set_list_values => ['PASSIVE', undef, undef, 'Up'],
 		-set_integer => ['PASSIVE', undef, undef, 0],
-		-set_radio_command => ['PASSIVE', undef, undef, 22],
+# 		-set_radio_command => ['PASSIVE', undef, undef, 22],
 		-set_radio_values => ['PASSIVE', undef, undef, 'Medium'],
 		-set_text => ['PASSIVE', undef, undef, 'This is a text'],
 	);

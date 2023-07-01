@@ -2,27 +2,31 @@
 use strict;
 use warnings;
 use lib './t/lib';
-use AWTestSuite;
+
+use Test::Tk;
+$mwclass = 'Tk::AppWindow';
+$delay = 1500;
 
 use Test::More tests => 4;
 BEGIN { 
 	use_ok('Tk::AppWindow::Ext::Navigator');
 };
 
-$delay = 1500;
 require TestTextManager;
 
-CreateTestApp(
+createapp(
 	-extensions => [qw[Art Balloon MenuBar ToolBar StatusBar MDI Navigator]],
-	-configfolder => $settingsfolder,
+	-configfolder => 't/settings',
 	-contentmanagerclass => 'TestTextManager',
 );
 
-my $ext = $app->GetExt('Navigator');
+my $ext;
+if (defined $app) {
+	$ext = $app->GetExt('Navigator');
+}
 
 @tests = (
-	[sub { return $ext->Name eq 'Navigator' }, 1, 'plugin Navigator loaded']
+	[sub { return $ext->Name }, 'Navigator', 'extension Navigator loaded']
 );
 
-$app->MainLoop;
-
+starttesting;

@@ -1,16 +1,14 @@
 
 use strict;
 use warnings;
-use lib './t/lib';
-use AWTestSuite;
 
+use Test::Tk;
+$mwclass = 'Tk::AppWindow';
 use Test::More tests => 4;
 BEGIN { use_ok('Tk::AppWindow::Ext::Keyboard') };
 
-my $settingsfolder = 't/settings';
 
-
-CreateTestApp(
+createapp(
 	-extensions => [qw[Keyboard]],
 	-commands => [
 		'on_press_o' => [sub { print "o-key pressed\n" }],
@@ -20,11 +18,14 @@ CreateTestApp(
 	],
 );
 
-my $plug = $app->GetExt('Keyboard');
+my $ext;
+if (defined $app) {
+	$ext = $app->GetExt('Keyboard');
+}
 
 @tests = (
-	[sub { return $plug->Name eq 'Keyboard' }, 1, 'plugin Keyboard loaded']
+	[sub { return $ext->Name }, 'Keyboard', 'extension Keyboard loaded']
 );
 
-$app->MainLoop;
+starttesting;
 

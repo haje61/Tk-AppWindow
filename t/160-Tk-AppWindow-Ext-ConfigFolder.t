@@ -1,23 +1,26 @@
 
 use strict;
 use warnings;
-use lib './t/lib';
-use AWTestSuite;
 
+use Test::Tk;
+$mwclass = 'Tk::AppWindow';
 use Test::More tests => 4;
 BEGIN { use_ok('Tk::AppWindow::Ext::ConfigFolder') };
 
 
-CreateTestApp(
-	-configfolder => $settingsfolder,
+createapp(
+	-configfolder => 't/settings',
 	-extensions => [qw[ConfigFolder]],
 );
 
-my $plug = $app->GetExt('ConfigFolder');
+my $ext;
+if (defined $app) {
+	$ext = $app->GetExt('ConfigFolder');
+}
 
 @tests = (
-	[sub { return $plug->Name eq 'ConfigFolder' }, 1, 'plugin ConfigFolder loaded']
+	[sub { return $ext->Name }, 'ConfigFolder', 'extension ConfigFolder loaded']
 );
 
-$app->MainLoop;
+starttesting;
 
