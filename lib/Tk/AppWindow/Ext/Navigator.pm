@@ -18,14 +18,10 @@ require Tk::DocumentTree;
 
 =head1 SYNOPSIS
 
-=over 4
-
  my $app = new Tk::AppWindow(@options,
     -extensions => ['MDI', 'Navigator'],
  );
  $app->MainLoop;
-
-=back
 
 =head1 DESCRIPTION
 
@@ -33,38 +29,21 @@ Adds a navigation panel with a document list to your application.
 
 Appends an item to the View menu to toggle visibility
 
-
-=cut
-
-=head1 B<CONFIG VARIABLES>
+=head1 CONFIG VARIABLES
 
 =over 4
 
 =item B<-documentinterface>
 
-=over 4
-
 Default value 'MDI'. Sets the extension with witch B<Navigator> communicates.
-
-=back
-
-=back
 
 =item B<-navigatorpanel>
 
-=over 4
-
 Default value 'LEFT'. Sets the name of the panel home to B<Navigator>.
-
-=back
 
 =item B<-navigatorvisible>
 
-=over 4
-
 Default value 1. Show or hide navigator panel.
-
-=back
 
 =back
 
@@ -100,6 +79,8 @@ sub new {
 }
 
 =head1 METHODS
+
+=over 4
 
 =cut
 
@@ -150,28 +131,11 @@ sub SelectEntry {
 
 =head1 AUTHOR
 
-=over 4
-
 =item Hans Jeuken (hanje at cpan dot org)
-
-=back
-
-=cut
 
 =head1 BUGS
 
 Unknown. If you find any, please contact the author.
-
-=cut
-
-=head1 TODO
-
-=over 4
-
-
-=back
-
-=cut
 
 =head1 SEE ALSO
 

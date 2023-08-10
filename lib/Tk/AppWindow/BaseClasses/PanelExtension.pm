@@ -16,8 +16,6 @@ use base qw( Tk::AppWindow::BaseClasses::Extension );
 
 =head1 SYNOPSIS
 
-=over 4
-
  #This is useless
  my $ext = Tk::AppWindow::BaseClasses::PanelExtension->new($frame);
 
@@ -31,15 +29,9 @@ use base qw( Tk::AppWindow::BaseClasses::Extension );
     return $self
  }
 
-=back
-
 =head1 DESCRIPTION
 
-=over 4
-
-=back
-
-=head1 B<CONFIG VARIABLES>
+=head1 CONFIG VARIABLES
 
 =over 4
 
@@ -59,6 +51,8 @@ sub new {
 }
 
 =head1 METHODS
+
+=over 4
 
 =cut
 
@@ -90,4 +84,24 @@ sub PostConfig {
 	$self->PanelVisible($self->{VISIBLE});
 }
 
-;
+=back
+
+=head1 AUTHOR
+
+Hans Jeuken (hanje at cpan dot org)
+
+=head1 BUGS
+
+Unknown. If you find any, please contact the author.
+
+=head1 SEE ALSO
+
+=over 4
+
+
+=back
+
+=cut
+
+1;
+__END__

@@ -19,15 +19,11 @@ use base qw( Tk::AppWindow::BaseClasses::Extension );
 
 =head1 SYNOPSIS
 
-=over 4
-
  my $app = new Tk::AppWindow(@options,
     -contentmanagerclass => 'Tk::MyContentHandler',
     -extensions => ['SDI'],
  );
  $app->MainLoop;
-
-=back
 
 =head1 DESCRIPTION
 
@@ -45,101 +41,53 @@ for creating, opening, saving and closing files.
 You should define a content handler based on the abstract
 baseclass L<Tk::AppWindow::BaseClasses::ContentManager>. See also there.
 
-=head1 B<CONFIG VARIABLES>
+=head1 CONFIG VARIABLES
 
 =over 4
 
 =item B<-contentmanagerclass>
 
-=over 4
-
 This one should always be specified and you should always define a 
 content manager class inheriting L<Tk::AppWindow::BaseClasses::ContentManager>.
 This base class is a valid Tk widget.
 
-=back
-
 =item B<-contentmanageroptions>
-
-=over 4
 
 The possible options to pass on to the contentmanager.
 These will also become options to the main application.
 
-=back
-
-
 =item B<-maxhistory>
-
-=over 4
 
 Default value is 12.
 
-=back
-
-
 =item B<-filetypes>
-
-=over 4
 
 Default value is "All files|*"
 
-=back
-
-
 =item B<-historymenupath>
-
-=over 4
 
 Specifies the default location in the main menu of the history menu.
 Default value is File::Open recent. See also L<Tk::AppWindow::Ext::MenuBar>.
 
-=back
-
-
 =item B<-readonly>
-
-=over 4
 
 Default value 0. 
 
 =back
 
-=back
-
-=head1 B<COMMANDS>
+=head1 COMMANDS
 
 =over 4
 
 =item B<file_close>
 
-=over 4
-
-=back
-
 =item B<file_new>
-
-=over 4
-
-=back
 
 =item B<file_open>
 
-=over 4
-
-=back
-
 =item B<file_save>
 
-=over 4
-
-=back
-
 =item B<file_save_as>
-
-=over 4
-
-=back
 
 =back
 
@@ -263,10 +211,6 @@ sub CloseDoc {
 
 =item B<CmdFileClose>
 
-=over 4
-
-=back
-
 Closes the current document
 
 =cut
@@ -285,10 +229,6 @@ sub CmdFileClose {
 }
 
 =item B<CmdFileNew>
-
-=over 4
-
-=back
 
 Creates a new document. In and SDI environment it closes
 the currently existing one first.
@@ -311,10 +251,6 @@ sub CmdFileNew {
 
 =item B<CmdFileOpen>I(?$file?);
 
-=over 4
-
-=back
-
 Creates a new document. In and SDI environment it closes
 the currently existing one first.
 
@@ -325,9 +261,11 @@ If $file is not specified it launches a file dialog.
 sub CmdFileOpen {
 	my ($self, $file) = @_;
 	unless (defined($file)) {
-		$file = $self->getOpenFile(
+		my @op = ();
+		@op = (-popover => 'mainwindow') unless $self->OSName eq 'MSWin32';
+		$file = $self->getOpenFile(@op,
 # 			-initialdir => $initdir,
-			-popover => 'mainwindow',
+# 			-popover => 'mainwindow',
 		);
 	}
 	if ($self->DocExists($file)) {
@@ -352,16 +290,11 @@ sub CmdFileOpen {
 
 =item B<CmdFileSave>I(?$file?);
 
-=over 4
-
-=back
-
 Saves a document.
 
 If $file is not specified it saves the current document.
 
 For a new document it will call I<CmdFileSaveAs>.
-
 
 =cut
 
@@ -389,15 +322,11 @@ sub CmdFileSave {
 
 =item B<CmdFileSaveAs>I(?$file?);
 
-=over 4
-
 Saves a document under a new name. Launches a file dialog.
 
 If $file is not specified it saves the current document.
 
 For a new document it will call I<CmdFileSaveAs>.
-
-=back
 
 =cut
 
@@ -414,9 +343,11 @@ sub CmdFileSaveAs {
 	}
 
 	if (defined $doc) {
-		my $file = $self->getSaveFile(
-	# 		-initialdir => $initdir,
-			-popover => 'mainwindow',
+		my @op = ();
+		@op = (-popover => 'mainwindow') unless $self->OSName eq 'MSWin32';
+		my $file = $self->getSaveFile(@op,
+# 			-initialdir => $initdir,
+# 			-popover => 'mainwindow',
 		);
 		if (defined $file) {
 			$file = File::Spec->rel2abs($file);
@@ -477,11 +408,7 @@ sub Current {
 
 =item B<CurDoc>
 
-=over 4
-
 Returns the currently selected document object.
-
-=back
 
 =cut
 
@@ -496,11 +423,7 @@ sub CurDoc {
 
 =item B<DocExists>I<($name)
 
-=over 4
-
 Returns 1 if $name exists in the document pool. Else returns 0.
-
-=back
 
 =cut
 
@@ -511,11 +434,7 @@ sub DocExists {
 
 =item B<DocList>
 
-=over 4
-
 Returns a list of all open documents.
-
-=back
 
 =cut
 
@@ -527,11 +446,7 @@ sub DocList {
 
 =item B<GetDoc>I<($name)
 
-=over 4
-
 Returns document object for $name.
-
-=back
 
 =cut
 
@@ -542,11 +457,7 @@ sub GetDoc {
 
 =item B<GetTitle>I<($name)
 
-=over 4
-
 Strips the path from $name for the title bar.
-
-=back
 
 =cut
 
@@ -622,11 +533,7 @@ sub ReConfigure {
 
 =item B<RenameDoc>I<($old, $new)
 
-=over 4
-
 Renames a loaded document.
-
-=back
 
 =cut
 
@@ -703,28 +610,11 @@ sub ToolItems {
 
 =head1 AUTHOR
 
-=over 4
-
-=item Hans Jeuken (hanje at cpan dot org)
-
-=back
-
-=cut
+Hans Jeuken (hanje at cpan dot org)
 
 =head1 BUGS
 
 Unknown. If you find any, please contact the author.
-
-=cut
-
-=head1 TODO
-
-=over 4
-
-
-=back
-
-=cut
 
 =head1 SEE ALSO
 

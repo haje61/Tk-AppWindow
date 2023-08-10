@@ -11,14 +11,16 @@ use strict;
 use warnings;
 use vars qw($VERSION);
 $VERSION="0.01";
+use Config;
+my $osname = $Config{'osname'};
 
 use base qw( Tk::AppWindow::BaseClasses::Extension );
 
 use File::Basename;
-use Image::LibRSVG;
+use Module::Load;
+# use GD::Image;
 use MIME::Base64;
-use Config;
-use Tk;
+# use Tk;
 require Tk::Compound;
 require Tk::Photo;
 use Tk::PNG;
@@ -40,9 +42,10 @@ my %photoext = (
 );
 
 my @defaulticonpath = ();
-if ($Config{osname} eq 'MSWin32') {
+if ($osname eq 'MSWin32') {
 	push @defaulticonpath, $ENV{ALLUSERSPROFILE} . '\Icons'
 } else {
+	autoload('Image::LibRSVG');
 	push @extensions, '.svg';
 	push @defaulticonpath, $ENV{HOME} . '/.local/share/icons', '/usr/share/icons','/usr/local/share/icons';
 }
@@ -51,18 +54,14 @@ my @iconpath = ();
 
 =head1 SYNOPSIS
 
-=over 4
-
  my $app = new Tk::AppWindow(@options,
     -extensions => ['Art'],
  );
  $app->MainLoop;
 
-=back
-
 =head1 DESCRIPTION
 
-This module allows B<Tk::AppWindow> easy access to icon libraries used in desktops
+This extension allows B<Tk::AppWindow> easy access to icon libraries used in desktops
 like KDE and GNOME.
 
 if you are not on Windows, it supports libraries containing scalable vector graphics like Breeze.
@@ -81,26 +80,18 @@ the folder if it does not exist.
 
 Others: $ENV{HOME} . '/.local/share/icons', '/usr/share/icons'
 
-=head1 B<CONFIG VARIABLES>
+=head1 CONFIG VARIABLES
 
 =over 4
 
 =item Switch: B<-iconpath>
 
-=over 4
-
 For defaults see above.
 Only available at create time.
 
-=back
-
 =item Switch: B<-iconsize>
 
-=over 4
-
 Default is 16.
-
-=back
 
 =item Name  : B<iconTheme>
 
@@ -108,15 +99,16 @@ Default is 16.
 
 =item Switch: B<-icontheme>
 
-=over 4
-
 Default is Oxygen.
 
 =back
 
-=back
+=head1 METHODS
+
+=over 4
 
 =cut
+
 
 sub new {
 	my $class = shift;
@@ -152,21 +144,13 @@ sub new {
 }
 
 
-=head1 METHODS
-
-=over 4
-
 =item B<AvailableContexts>I<($theme, >[ I<$name, $size> ] I<);>
-
-=over 4
 
 Returns a list of available contexts. If you set $name to undef if will return
 all contexts of size $size. If you set $size to undef it will return all
 contexts associated with icon $name. If you set $name and $size to undef it
 will return all known contexts in the theme. out $size it returns a list
 of all contexts found in $theme.
-
-=back
 
 =cut
 
@@ -228,14 +212,10 @@ sub AvailableContexts {
 
 =item B<AvailableIcons>I<($theme, >[ I<$size, $context> ] I<);>
 
-=over 4
-
 Returns a list of available icons. If you set $size to undef the list will 
 contain names it found in all sizes. If you set $context to undef it will return
 names it found in all contexts. If you leave out both then
 you get a list of all available icons. Watch out, it might be pretty long.
-
-=back
 
 =cut
 
@@ -282,11 +262,7 @@ sub AvailableIcons {
 
 =item B<AvailableThemes>
 
-=over 4
-
 Returns a list of available themes it found while initiating the module.
-
-=back
 
 =cut
 
@@ -299,12 +275,8 @@ sub AvailableThemes {
 
 =item B<AvailableSizes>I<($theme, >[ I<$name, $context> ] I<);>
 
-=over 4
-
 Returns a list of available contexts. If you leave out $size it returns a list
 of all contexts found in $theme.
-
-=back
 
 =cut
 
@@ -483,15 +455,11 @@ sub DoPostConfig {
 
 =item B<FindImage>I<($name, >[ I<$size, $context, \$resize> ] I<);>
 
-=over 4
-
 Returns the filename of an image in the library. Finds the best suitable
 version of the image in the library according to $size and $context. If it
 eventually returns an image of another size, it sets $resize to 1. This gives
 the opportunity to scale the image to the requested icon size. All parameters
 except $name are optional.
-
-=back
 
 =cut
 
@@ -534,15 +502,11 @@ sub FindImageS {
 
 =item B<FindLibImage>I<($name, >[ I<$size, $context, \$resize> ] I<);>
 
-=over 4
-
 Returns the filename of an image in the library. Finds the best suitable
 version of the image in the library according to $size and $context. If it
 eventually returns an image of another size, it sets $resize to 1. This gives
 the opportunity to scale the image to the requested icon size. All parameters
 except $name are optional.
-
-=back
 
 =cut
 
@@ -564,15 +528,11 @@ sub FindLibImage {
 
 =item B<FindRawImage>I<($name, >[ I<$size, $context, \$resize> ] I<);>
 
-=over 4
-
 Returns the filename of an image in the library. Finds the best suitable
 version of the image in the library according to $size and $context. If it
 eventually returns an image of another size, it sets $resize to 1. This gives
 the opportunity to scale the image to the requested icon size. All parameters
 except $name are optional.
-
-=back
 
 =cut
 
@@ -595,12 +555,8 @@ sub FindRawImage {
 
 =item B<GetAlternateSize>I<($size>)>
 
-=over 4
-
 Tests if $size is available in the current itecontheme. Returns 
 the first size that is larger than $size if it is not.
-
-=back
 
 =cut
 
@@ -622,15 +578,11 @@ sub GetAlternateSize {
 
 =item B<GetIcon>I<($name>, [ I<$size, $context, $force> ] I<);>
 
-=over 4
-
 Returns a Tk::Image. If you do not specify I<$size> or the icon does
 not exist in the specified size, it will find the largest possible icon and
 scale it to the requested size. I<$force> can be 0 or 1. It is 0 by default.
 If you set it to 1 a missing icon image is returned instead of undef when the
 icon cannot be found.
-
-=back
 
 =cut
 
@@ -646,12 +598,8 @@ sub GetIcon {
 
 =item B<GetTheme>I<($themename)>
 
-=over 4
-
 Looks for a searchable index of the theme. If it is not yet created it will
 be created first and stored in the index pool.
-
-=back
 
 =cut
 
@@ -674,11 +622,7 @@ sub GetTheme {
 
 =item B<GetThemePath>I<($theme)>
 
-=over 4
-
 Returns the full path to the folder containing I<$theme>
-
-=back
 
 =cut
 
@@ -694,11 +638,7 @@ sub GetThemePath {
 
 =item B<IsImageFile>I<($file)>
 
-=over 4
-
 Returns true if I<$file> is an image. Otherwise returns false.
-
-=back
 
 =cut
 
@@ -712,11 +652,7 @@ sub IsImageFile {
 
 =item B<LoadImage>I<($file)>
 
-=over 4
-
 Loads image I<$file> and returns it as a Wx::Image object.
-
-=back
 
 =cut
 
@@ -759,12 +695,8 @@ sub LoadImage {
 
 =item B<LoadThemeFile>I<($file)>
 
-=over 4
-
 Loads a theme index file and returns the information in it in a hash.
 It returns a reference to this hash.
-
-=back
 
 =cut
 
@@ -807,12 +739,8 @@ sub LoadThemeFile {
 
 =item B<ParentTheme>I<($theme)>
 
-=over 4
-
 Returns the parent theme index that $theme inherits.
-Returns undef if there is not parent theme.
-
-=back
+Returns undef if there is no parent theme.
 
 =cut
 
@@ -823,29 +751,23 @@ sub ParentTheme {
 
 =back
 
+=head1 LICENSE
+
+Same as Perl.
+
 =head1 AUTHOR
 
-=over 4
-
-=item Hans Jeuken (hanje at cpan dot org)
-
-=back
+Hans Jeuken (hanje at cpan dot org)
 
 =head1 BUGS
 
 Unknown. If you find any, please contact the author.
 
-=head1 TODO
-
-=over 4
-
-
-=back
-
 =head1 SEE ALSO
 
 =over 4
 
+=item L<Tk::AppWindow>
 
 =back
 

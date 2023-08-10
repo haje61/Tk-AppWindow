@@ -12,8 +12,6 @@ use vars '$AUTOLOAD';
 
 =head1 SYNOPSIS
 
-=over 4
-
  #This is useless
  my $plug = Tk::AppWindow::BaseClasses::Plugin->new($frame);
 
@@ -27,17 +25,14 @@ use vars '$AUTOLOAD';
     return $self
  }
 
-=back
-
 =head1 DESCRIPTION
 
 A plugin is different from an extension in a couple of ways:
+
  - A plugin can be loaded and unloaded by the end user.
    If they do not desire the functionality they can simply 
    unload it.
  - A plugin can not define config variables
-
-=back
 
 =cut
 
@@ -67,12 +62,8 @@ sub AUTOLOAD {
 
 =item B<CanQuit>
 
-=over 4
-
 Returns 1. It is there for you to overwrite. It is called when you attempt to close the window or execute the quit command.
 Overwrite it to check for unsaved data and possibly veto these commands by returning a 0.
-
-=back
 
 =cut
 
@@ -81,11 +72,7 @@ sub CanQuit { return 1 }
 
 =item B<GetAppWindow>
 
-=over 4
-
 Returns a reference to the toplevel frame. The toplevel frame should be a Tk::AppWindow class.
-
-=back
 
 =cut
 
@@ -93,12 +80,8 @@ sub GetAppWindow { return $_[0]->{APPWINDOW} }
 
 =item B<MenuItems>
 
-=over 4
-
 Returns and empty list. It is there for you to overwrite. It is called by the B<Plugins> extension. You can return a list
 with menu items here. For details on the format see B<Tk::AppWindow::Ext::MenuBar>
-
-=back
 
 =cut
 
@@ -108,11 +91,7 @@ sub MenuItems {
 
 =item B<Name>
 
-=over 4
-
 returns the module name of $self, without the path. So, if left uninherited, it returns 'Plugin'.
-
-=back
 
 =cut
 
@@ -125,12 +104,8 @@ sub Name {
 
 =item B<ReConfigure>
 
-=over 4
-
 Does nothing. It is called when the user clicks the Apply button in the settings dialog. Overwrite it to act on 
 modified settings.
-
-=back
 
 =cut
 
@@ -140,12 +115,8 @@ sub ReConfigure {
 
 =item B<ToolItems>
 
-=over 4
-
 Returns and empty list. It is there for you to overwrite. It is called by the B<Plugins> extension. You can return a list
 with menu items here. For details on the format see B<Tk::AppWindow::Ext::MenuBar>
-
-=back
 
 =cut
 
@@ -155,11 +126,7 @@ sub ToolItems {
 
 =item B<UnLoad>
 
-=over 4
-
 Returns 1. For you to overwrite. Doe here what needs to be done to safely destroy the plugin.
-
-=back
 
 =cut
 
@@ -171,28 +138,11 @@ sub UnLoad {
 
 =head1 AUTHOR
 
-=over 4
-
-=item Hans Jeuken (hanje at cpan dot org)
-
-=back
-
-=cut
+Hans Jeuken (hanje at cpan dot org)
 
 =head1 BUGS
 
 Unknown. If you find any, please contact the author.
-
-=cut
-
-=head1 TODO
-
-=over 4
-
-
-=back
-
-=cut
 
 =head1 SEE ALSO
 

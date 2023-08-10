@@ -16,64 +16,40 @@ use base qw( Tk::AppWindow::BaseClasses::Extension );
 
 =head1 SYNOPSIS
 
-=over 4
-
  my $app = new Tk::AppWindow(@options,
     -extensions => ['MenuBar'],
  );
  $app->MainLoop;
 
-=back
-
 =head1 DESCRIPTION
-
-=over 4
 
 Adds a menu to your application.
 
-=back
-
-=head1 B<CONFIG VARIABLES>
+=head1 CONFIG VARIABLES
 
 =over 4
 
 =item Switch: B<-automenu>
 
-=over 4
-
 Default value 1.
 
 Specifies if the menu items of all extensions should be loaded automatically.
 
-=back
-
 =item Switch: B<-mainmenuitems>
-
-=over 4
 
 Default value [].
 
 Configure your menu here. See the section B<CONFIGURING MENUS> below.
 
-=back
-
 =item Switch: B<-menucolspace>
-
-=over 4
 
 Default value 3
 
 Space between the colums in a menu item.
 
-=back
-
 =item Switch: B<-menuiconsize>
 
-=over 4
-
 Default value 16
-
-=back
 
 =back
 
@@ -502,8 +478,6 @@ sub ReConfigure {
 
 =head1 CONFIGURING MENUS
 
-=over 4
-
 Feeding the B<-menuitems> switch and the B<MenuItems> methods of extensions is
 done with a two dimensional list. In Perl:
 
@@ -515,33 +489,15 @@ done with a two dimensional list. In Perl:
  );
  $app->MainLoop;
 
-
-=back
-
 =head1 AUTHOR
 
 =over 4
 
-=item Hans Jeuken (hanje at cpan dot org)
-
-=back
-
-=cut
+Hans Jeuken (hanje at cpan dot org)
 
 =head1 BUGS
 
 Unknown. If you find any, please contact the author.
-
-=cut
-
-=head1 TODO
-
-=over 4
-
-
-=back
-
-=cut
 
 =head1 SEE ALSO
 

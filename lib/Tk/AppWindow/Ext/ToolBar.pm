@@ -17,64 +17,38 @@ use base qw( Tk::AppWindow::BaseClasses::PanelExtension );
 
 =head1 SYNOPSIS
 
-=over 4
-
  my $app = new Tk::AppWindow(@options,
     -extensions => ['ToolBar'],
  );
  $app->MainLoop;
 
-=back
-
 =head1 DESCRIPTION
-
-=over 4
 
 Add a toolbar to your application.
 
-=back
-
-=head1 B<CONFIG VARIABLES>
+=head1 CONFIG VARIABLES
 
 =over 4
 
 =item B<-autotool>
 
-=over 4
-
 Default value 1.
 
 Specifies if the toolbar items of all extensions should be loaded automatically.
 
-=back
-
 =item B<-toolbarpanel>
-
-=over 4
 
 Default value 'TOP'. Sets the name of the panel home to B<ToolBar>.
 
-=back
-
 =item B<-toolbarvisible>
-
-=over 4
 
 Default value 1. Show or hide tool bar.
 
-=back
-
 =item B<-tooliconsize>
-
-=over 4
 
 Default value 16
 
-=back
-
 =item B<-toolitems>
-
-=over 4
 
 Default value [].
 
@@ -85,15 +59,9 @@ Configure your tool bar here. Example:
     [	'tool_separator' ],
  ]
 
-=back
-
 =item B<-tooltextposition>
 
-=over 4
-
 Default value I<right>. Can be I<top>, I<left>, I<bottom>, I<right> or I<none>.
-
-=back
 
 =back
 
@@ -132,12 +100,8 @@ sub new {
 
 =item B<AddItem>I<$item, ?$position?);
 
-=over 4
-
 Adds an item to the toolbar. The item must be a valid tk widget.
 Your addition will be lost after a call to B<ReConfigure>.
-
-=back
 
 =cut
 
@@ -208,15 +172,11 @@ sub Configure {
 
 =item B<ConfigureTypes>I<($type => $call, ...);
 
-=over 4
-
 Call this method before MainLoop runs.
 Configure additional types for your toolbar.
 Already defined types are i<tool_button> and I<-tool_separator>.
 I<$call> can be any valid Tk callback. Just make sure the callback
 returns a valid Tk widget.
-
-=back
 
 =cut
 
@@ -329,13 +289,9 @@ sub ReConfigure {
 
 =item B<RemoveItem>I<$position);
 
-=over 4
-
 Removes the item at $position from the tool bar.
 The item will re-appear after a call to B<ReConfigure> if the item is included in the B<-toolitems> option.
 Returns the removed item.
-
-=back
 
 =cut
 
@@ -354,28 +310,11 @@ sub RemoveItem {
 
 =head1 AUTHOR
 
-=over 4
-
-=item Hans Jeuken (hanje at cpan dot org)
-
-=back
-
-=cut
+Hans Jeuken (hanje at cpan dot org)
 
 =head1 BUGS
 
 Unknown. If you find any, please contact the author.
-
-=cut
-
-=head1 TODO
-
-=over 4
-
-
-=back
-
-=cut
 
 =head1 SEE ALSO
 

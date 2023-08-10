@@ -16,18 +16,12 @@ use base qw( Tk::AppWindow::BaseClasses::Extension );
 
 =head1 SYNOPSIS
 
-=over 4
-
  my $app = new Tk::AppWindow(@options,
     -extensions => ['Keyboard'],
  );
  $app->MainLoop;
 
-=back
-
 =head1 DESCRIPTION
-
-=cut
 
 =head1 B<CONFIG VARIABLES>
 
@@ -35,14 +29,9 @@ use base qw( Tk::AppWindow::BaseClasses::Extension );
 
 =item Switch: B<-keyboardboardbindings>
 
-=over 4
-
 Default value is an empty list
 
 Specify a paired list of keyboard bindings.
-
-
-=back
 
 =back
 
@@ -62,6 +51,8 @@ sub new {
 }
 
 =head1 METHODS
+
+=over 4
 
 =cut
 
@@ -104,28 +95,11 @@ sub ReConfigure {
 
 =head1 AUTHOR
 
-=over 4
-
-=item Hans Jeuken (hanje at cpan dot org)
-
-=back
-
-=cut
+Hans Jeuken (hanje at cpan dot org)
 
 =head1 BUGS
 
 Unknown. If you find any, please contact the author.
-
-=cut
-
-=head1 TODO
-
-=over 4
-
-
-=back
-
-=cut
 
 =head1 SEE ALSO
 

@@ -40,84 +40,46 @@ my %types = (
 
 =head1 SYNOPSIS
 
-=over 4
-
-=over 4
-
  my $app = new Tk::AppWindow(@options,
     -extensions => ['StatusBar'],
  );
  $app->MainLoop;
 
-=back
-
 =head1 DESCRIPTION
-
-=over 4
 
 Add a status bar to your application.
 
-=back
-
-=head1 B<CONFIG VARIABLES>
+=head1 CONFIG VARIABLES
 
 =over 4
 
 =item B<-statusbarpanel>
 
-=over 4
-
 Default value 'BOTTOM'. Sets the name of the panel home to B<StatusBar>.
-
-=back
 
 =item B<-statusbarvisible>
 
-=over 4
-
 Default value 1. Show or hide status bar.
-
-=back
 
 =item B<-statusitemborderwidth>
 
-=over 4
-
 Default value 2.
-
-=back
 
 =item B<-statusitempadding>
 
-=over 4
-
 Default value 2.
-
-=back
 
 =item B<-statusitemrelief>
 
-=over 4
-
 Default value 'groove'.
-
-=back
 
 =item B<-statusmsgitemoninit>
 
-=over 4
-
 Default value 1.
-
-=back
 
 =item B<-statusupdatecycle>
 
-=over 4
-
 Default value 500. Repeat time for updating the items on the status bar.
-
-=back
 
 =back
 
@@ -153,46 +115,30 @@ sub new {
 
 =item B<Add>I<($type, $name, @options)>
 
-=over 4
-
 Adds an item to the status bar.
 $type can have the values I<image>, I<message>, I<progress>, I<text>
 
 @options is a paired (switch => value) list.
 General options are listed here. See type methods below for type specific options.
 
-=item B<-label>
-
 =over 4
+
+=item B<-label>
 
 Specify the text of the label.
 If this option is set it will create a label next to the item on the statusbar.
 
-=back
-
 =item B<-itempack>
-
-=over 4
 
 Default value [-side=> 'left', -padx => 2, -pady => 2].
 
-=back
-
 =item B<-position>
-
-=over 4
 
 Specify the numerical position the item should be placed.
 
-=back
-
 =item B<-updatecommand>
 
-=over 4
-
 Specify a callback that returns the value for this item.
-
-=back
 
 =back
 
@@ -226,16 +172,14 @@ sub Add {
 
 =item B<AddImageItem>I<($name, @options)>
 
-=over 4
-
 Almost the same as Add('image', $name, @options).
 In the options B<-valueimages> you specify icon names.
 Extension B<Art> must be loaded for this.
 You can specify all the options for a Tk::Label and the following:
 
-=item B<-valueimages>
-
 =over 4
+
+=item B<-valueimages>
 
 Specify a hash ref. Example;
 
@@ -243,8 +187,6 @@ Specify a hash ref. Example;
        0 => $w->Bitmap('error'),
        1 -> $w->Bitmap('transparent')
     }
-
-=back
 
 =back
 
@@ -265,12 +207,8 @@ sub AddImageItem {
 
 =item B<AddMessageItem>I<($name, @options)>
 
-=over 4
-
 Same as Add('message', $name, @options)
 You can specify all the options for a Tk::Label.
-
-=back
 
 =cut
 
@@ -281,12 +219,8 @@ sub AddMessageItem {
 
 =item B<AddProgressItem>I<($name, @options)>
 
-=over 4
-
 Same as Add('progress', $name, @options)
 You can specify all the options for a Tk::ProgressBar.
-
-=back
 
 =cut
 
@@ -297,12 +231,8 @@ sub AddProgressItem {
 
 =item B<AddTextItem>I<($name, @options)>
 
-=over 4
-
 Same as Add('text', $name, @options)
 You can specify all the options for a Tk::Label.
-
-=back
 
 =cut
 
@@ -319,11 +249,7 @@ sub Cycle {
 
 =item B<DeleteI<($name)>
 
-=over 4
-
 Removes $name from the status bar and destroys the item object.
-
-=back
 
 =cut
 
@@ -355,11 +281,7 @@ sub InitMsgItem {
 
 =item B<Item>I<($name)>
 
-=over 4
-
 Returnes the item object for $name.
-
-=back
 
 =cut
 
@@ -370,11 +292,7 @@ sub Item {
 
 =item B<ItemExists>I<($name)>
 
-=over 4
-
 Returnes true if $name exists.
-
-=back
 
 =cut
 
@@ -394,12 +312,8 @@ sub MenuItems {
 
 =item B<Message>I<($text)>
 
-=over 4
-
 Display $text on the message item in the status bar if it exists.
 The message will be deleted upon the first key stroke or mouse click.
-
-=back
 
 =cut
 
@@ -422,28 +336,11 @@ sub Update {
 
 =head1 AUTHOR
 
-=over 4
-
-=item Hans Jeuken (hanje at cpan dot org)
-
-=back
-
-=cut
+Hans Jeuken (hanje at cpan dot org)
 
 =head1 BUGS
 
 Unknown. If you find any, please contact the author.
-
-=cut
-
-=head1 TODO
-
-=over 4
-
-
-=back
-
-=cut
 
 =head1 SEE ALSO
 

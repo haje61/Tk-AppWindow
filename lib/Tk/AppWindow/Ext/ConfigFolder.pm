@@ -18,26 +18,18 @@ use base qw( Tk::AppWindow::BaseClasses::Extension );
 
 =head1 SYNOPSIS
 
-=over 4
-
  my $app = new Tk::AppWindow(@options,
     -extensions => ['ConfigFolder'],
  );
  $app->MainLoop;
 
-=back
-
 =head1 DESCRIPTION
-
-=cut
 
 =head1 B<CONFIG VARIABLES>
 
 =over 4
 
 =item Switch: B<-configfolder>
-
-=over 4
 
 The default value depends on your operating system.
 
@@ -46,19 +38,13 @@ Others: $ENV{HOME}/.local/appname
 
 You can overwrite it at launch by setting a folder yourself.
 
-=back
-
 =item Switch: B<-savegeometry>
-
-=over 4
 
 Default value is 1
 
 If set it will save the applications geometry on exit.
 When reloaded the previously saved geometry is restored.
 In experimental stage
-
-=back
 
 =back
 
@@ -138,28 +124,11 @@ sub PostConfig {
 
 =head1 AUTHOR
 
-=over 4
-
-=item Hans Jeuken (hanje at cpan dot org)
-
-=back
-
-=cut
+Hans Jeuken (hanje at cpan dot org)
 
 =head1 BUGS
 
 Unknown. If you find any, please contact the author.
-
-=cut
-
-=head1 TODO
-
-=over 4
-
-
-=back
-
-=cut
 
 =head1 SEE ALSO
 

@@ -15,20 +15,14 @@ use base qw( Tk::AppWindow::BaseClasses::Extension );
 
 =head1 SYNOPSIS
 
-=over 4
-
  my $app = new Tk::AppWindow(@options,
     -extensions => ['Plugins'],
  );
  $app->MainLoop;
 
-=back
-
 =head1 DESCRIPTION
 
-=cut
-
-=head1 B<CONFIG VARIABLES>
+=head1 CONFIG VARIABLES
 
 =over 4
 
@@ -46,7 +40,7 @@ sub new {
 
 =head1 METHODS
 
-=cut
+=over 4
 
 =item B<CanQuit>
 
@@ -145,26 +139,11 @@ sub Reconfigure {
 
 =head1 AUTHOR
 
-=over 4
-
-=item Hans Jeuken (hanje at cpan dot org)
-
-=back
+Hans Jeuken (hanje at cpan dot org)
 
 =head1 BUGS
 
-=over 4 
-
 Unknown. Probably plenty. If you find any, please contact the author.
-
-=back
-
-=head1 TODO
-
-=over 4
-
-
-=back
 
 =head1 SEE ALSO
 

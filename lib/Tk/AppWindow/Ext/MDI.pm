@@ -18,37 +18,25 @@ use File::Basename;
 
 =head1 SYNOPSIS
 
-=over 4
-
  my $app = new Tk::AppWindow(@options,
     -extensions => ['MDI'],
  );
  $app->MainLoop;
 
-=back
-
 =head1 DESCRIPTION
-
-=over 4
 
 Adds a multi document interface to your application,
 Inherites L<Tk::AppWindow::Ext::SDI>.
 
-=back
-
-=head1 B<CONFIG VARIABLES>
+=head1 CONFIG VARIABLES
 
 =over 4
 
 =item Switch: B<-maxtablength>
 
-=over 4
-
 Default value 16
 
 Maximum size of the document tab in the document bar.
-
-=back
 
 =back
 
@@ -72,12 +60,8 @@ sub new {
 
 =item B<CmdFileClose>I(?$name?);
 
-=over 4
-
 Closes $name. returns 1 if succesfull.
 if $name is not specified closes the current document.
-
-=back
 
 =cut
 
@@ -101,12 +85,8 @@ sub CmdFileClose {
 
 =item B<CmdFileNew>I(?$name?);
 
-=over 4
-
 Initiates a new content handler for $name.
 If $name is not specified it creates and untitled document.
-
-=back
 
 =cut
 
@@ -127,11 +107,7 @@ sub CmdFileNew {
 
 =item B<CreateContentHandler>I($name);
 
-=over 4
-
 Initiates a new content handler for $name.
-
-=back
 
 =cut
 
@@ -153,11 +129,7 @@ sub CreateContentHandler {
 
 =item B<CreateInterface>
 
-=over 4
-
 Creates a Tk::YANoteBook multiple document interface.
-
-=back
 
 =cut
 
@@ -171,11 +143,7 @@ sub CreateInterface {
 
 =item B<Interface>
 
-=over 4
-
-Returns the reference to the multiple document interface.
-
-=back
+Returns a reference to the multiple document interface.
 
 =cut
 
@@ -185,11 +153,7 @@ sub Interface {
 
 =item B<MenuItems>
 
-=over 4
-
 Returns the menu items for MDI. Called by extension B<MenuBar>.
-
-=back
 
 =cut
 
@@ -225,28 +189,11 @@ sub Select {
 
 =head1 AUTHOR
 
-=over 4
-
-=item Hans Jeuken (hanje at cpan dot org)
-
-=back
-
-=cut
+Hans Jeuken (hanje at cpan dot org)
 
 =head1 BUGS
 
 Unknown. If you find any, please contact the author.
-
-=cut
-
-=head1 TODO
-
-=over 4
-
-
-=back
-
-=cut
 
 =head1 SEE ALSO
 

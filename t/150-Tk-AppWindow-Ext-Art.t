@@ -1,205 +1,18 @@
 
 use strict;
 use warnings;
-use lib './t/lib';
 
+use Test::More;
 use Test::Tk;
 $mwclass = 'Tk::AppWindow';
-
-use Test::More tests => 153;
-use Test::Deep;
-BEGIN { use_ok('Tk::AppWindow::Ext::Art') };
-
-
 my @iconpath = ('t/Themes');
+require Tk::NoteBook;
+require Tk::LabFrame;
 
-my @tests = (
-	{
-		name => 'Available themes',
-		args => [],
-		method => 'AvailableThemes',
-		expected => [ 'png_1', 'png_2', 'svg_1' ]
-	},
+use Config;
+my $osname = $Config{'osname'};
 
-	# Testing available contexts
-	{
-		name => 'All available contexts',
-		args => ['png_1' ],
-		method => 'AvailableContexts',
-		expected => [ 'Actions', 'Applications', ]
-	},
-	{
-		name => 'Available contexts in name',
-		args => ['png_1', 'edit-cut' ],
-		method => 'AvailableContexts',
-		expected => [ 'Actions', ]
-	},
-	{
-		name => 'No available contexts in name',
-		args => ['png_1', 'does-not-exist' ],
-		method => 'AvailableContexts',
-		expected => [ ]
-	},
-	{
-		name => 'Available contexts in name and size',
-		args => ['png_1', 'edit-cut', 32 ],
-		method => 'AvailableContexts',
-		expected => [ 'Actions', ]
-	},
-	{
-		name => 'No available contexts in name and size 1',
-		args => ['png_1', 'does-not-exist', 32 ],
-		method => 'AvailableContexts',
-		expected => [ ]
-	},
-	{
-		name => 'No available contexts in name and size 2',
-		args => ['png_1', 'edit-cut', 45 ],
-		method => 'AvailableContexts',
-		expected => [ ]
-	},
-	{
-		name => 'Available contexts in size',
-		args => ['png_1', undef, 22 ],
-		method => 'AvailableContexts',
-		expected => [ 'Actions', 'Applications', ]
-	},
-	{
-		name => 'No available contexts in size',
-		args => ['png_1', undef, 46 ],
-		method => 'AvailableContexts',
-		expected => [ ]
-	},
-
-	# Testing available icons
-	{
-		name => 'All available icons',
-		args => ['png_1' ],
-		method => 'AvailableIcons',
-		expected => [ 'accessories-text-editor', 'document-new', 'document-save', 'edit-cut', 'edit-find',
-			'help-browser', 'multimedia-volume-control', 'system-file-manager' ]
-	},
-	{
-		name => 'Available icons in size',
-		args => ['png_1', 32 ],
-		method => 'AvailableIcons',
-		expected => [ 'accessories-text-editor', 'edit-cut', 'edit-find', 'help-browser' ]
-	},
-	{
-		name => 'No available icons in size',
-		args => ['png_1', 47 ],
-		method => 'AvailableIcons',
-		expected => [ ]
-	},
-	{
-		name => 'Available icons in size and context',
-		args => ['png_1', 32, 'Actions' ],
-		method => 'AvailableIcons',
-		expected => [ 'edit-cut', 'edit-find', ]
-	},
-	{
-		name => 'No available icons in size and context 1',
-		args => ['png_1', 48, 'Actions' ],
-		method => 'AvailableIcons',
-		expected => [ ]
-	},
-	{
-		name => 'No available icons in size and context 2',
-		args => ['png_1', 32, 'Blobber' ],
-		method => 'AvailableIcons',
-		expected => [ ]
-	},
-	{
-		name => 'Available icons in context',
-		args => ['png_1', undef, 'Actions' ],
-		method => 'AvailableIcons',
-		expected => [ 'document-new', 'document-save', 'edit-cut', 'edit-find' ]
-	},
-	{
-		name => 'No available icons in context',
-		args => ['png_1', undef, 'Blobber' ],
-		method => 'AvailableIcons',
-		expected => [ ]
-	},
-
-	# Testing available sizes
-	{
-		name => 'All available sizes',
-		args => ['png_1' ],
-		method => 'AvailableSizes',
-		expected => [ 22, 32 ]
-	},
-	{
-		name => 'Available sizes in name',
-		args => ['png_1', 'edit-cut'],
-		method => 'AvailableSizes',
-		expected => [ 32 ]
-	},
-	{
-		name => 'No available sizes in name',
-		args => ['png_1', 'does-not-exist'],
-		method => 'AvailableSizes',
-		expected => [ ]
-	},
-	{
-		name => 'Available sizes in name and context',
-		args => ['png_1', 'edit-cut', 'Actions'],
-		method => 'AvailableSizes',
-		expected => [ 32 ]
-	},
-	{
-		name => 'No available sizes in name and context 1',
-		args => ['png_1', 'does-not-exist', 'Actions' ],
-		method => 'AvailableSizes',
-		expected => [ ]
-	},
-	{
-		name => 'No available sizes in name and context 2',
-		args => ['png_1', 'edit-cut', 'Blobber' ],
-		method => 'AvailableSizes',
-		expected => [ ]
-	},
-	{
-		name => 'Available sizes in context',
-		args => ['png_1', undef, 'Actions'],
-		method => 'AvailableSizes',
-		expected => [ 22, 32 ]
-	},
-	{
-		name => 'No available sizes in context',
-		args => ['png_1', undef, 'Blobber'],
-		method => 'AvailableSizes',
-		expected => [ ]
-	},
-
-	# Testing finding icon files
-	{
-		name => 'Find correct size',
-		args => ['document-new', 22, 'Actions' ],
-		method => 'FindImage',
-		expected => [ 't/Themes/PNG1/actions/22/document-new.png' ]
-	},
-	{
-		name => 'Find incorrect size',
-		args => ['document-new', 32, 'Actions' ],
-		method => 'FindImage',
-		expected => [ 't/Themes/PNG1/actions/22/document-new.png' ]
-	},
-	{
-		name => 'Find incorrect context',
-		args => ['document-new', 22, 'Applications' ],
-		method => 'FindImage',
-		expected => [ 't/Themes/PNG1/actions/22/document-new.png' ]
-	},
-	{
-		name => 'Find nothing',
-		args => ['no-exist', 22, 'Applications' ],
-		method => 'FindImage',
-		expected => [ undef ]
-	},
-
-
-);
+BEGIN { use_ok('Tk::AppWindow::Ext::Art') };
 
 createapp(
 	-extensions => ['Art'],
@@ -208,120 +21,208 @@ createapp(
 );
 
 my $art;
+my $notebook;
+my %pages = ();
+my %testicons = (
+	png_1 => [ 'accessories-text-editor', 'document-new', 'document-save', 'edit-cut', 'edit-find',
+			'help-browser', 'multimedia-volume-control', 'system-file-manager'],
+	png_2 => ['arrow-down', 'arrow-left', 'arrow-left-double', 'arrow-up-double',
+			'call-start', 'checkbox', 'gwenview', 'inkscape'],
+	svg_1 => ['adjustrgb', 'align-horizontal-left-out', 'align-horizontal-left',
+			'kate', 'utilities-terminal', 'vlc'],
+);
+
 if (defined $app) {
 	$art = $app->GetExt('Art');
-	$app->after(10, \&DoTesting);
-	$app->MainLoop;
+	$notebook = $app->NoteBook->pack(-fill => 'both');
+	$pages{22} = $notebook->add(22, -label => 22);
+	$pages{32} = $notebook->add(32, -label => 32);
 }
 
-sub DoTesting {
-	ok(1, "main loop runs");
+push @tests, [sub { return $art->Name }, 'Art', 'extension Art loaded'];
 
-	ok(($art->Name eq 'Art'), 'extension Art loaded');
+push @tests, [sub {
+	my @t = $art->AvailableThemes;
+	return \@t
+}, [ 'png_1', 'png_2', 'svg_1' ], 'Available themes'];
 
+push @tests, [sub {
+	my @c = $art->AvailableContexts('png_1');
+	return \@c
+}, [ 'Actions', 'Applications', ], 'Available contexts'];
 
-	# More tests for loading bitmapped icons
+push @tests, [sub {
+	my @c = $art->AvailableContexts('png_1', 'edit-cut');
+	return \@c
+}, [ 'Actions' ], 'Available contexts in name'];
+
+push @tests, [sub {
+	my @c = $art->AvailableContexts('png_1', 'does-not-exist');
+	return \@c
+}, [ ], 'No available contexts in name'];
+
+push @tests, [sub {
+	my @c = $art->AvailableContexts('png_1', 'edit-cut', 32);
+	return \@c
+}, [ 'Actions' ], 'Available contexts in name and size'];
+
+push @tests, [sub {
+	my @c = $art->AvailableContexts('png_1', 'does-not-exist', 32);
+	return \@c
+}, [ ], 'No available contexts in name and size 1'];
+
+push @tests, [sub {
+	my @c = $art->AvailableContexts('png_1', 'edit-cut', 45);
+	return \@c
+}, [ ], 'No available contexts in name and size 2'];
+
+push @tests, [sub {
+	my @c = $art->AvailableContexts('png_1', undef, 22);
+	return \@c
+}, [ 'Actions', 'Applications', ], 'Available contexts in size'];
+
+push @tests, [sub {
+	my @c = $art->AvailableContexts('png_1', undef, 45);
+	return \@c
+}, [ ], 'No available contexts in size'];
+
+push @tests, [sub {
+	my @i = $art->AvailableIcons('png_1');
+	return \@i
+}, [ 'accessories-text-editor', 'document-new', 'document-save', 'edit-cut', 'edit-find',
+			'help-browser', 'multimedia-volume-control', 'system-file-manager' ], 'All available icons'];
+
+push @tests, [sub {
+	my @i = $art->AvailableIcons('png_1', 32);
+	return \@i
+}, [ 'accessories-text-editor', 'edit-cut', 'edit-find', 'help-browser' ], 'All available icons in size'];
+
+push @tests, [sub {
+	my @i = $art->AvailableIcons('png_1', 45);
+	return \@i
+}, [ ], 'No available icons in size'];
+
+push @tests, [sub {
+	my @i = $art->AvailableIcons('png_1', 32, 'Actions');
+	return \@i
+}, [ 'edit-cut', 'edit-find' ], 'All available icons in size and context'];
+
+push @tests, [sub {
+	my @i = $art->AvailableIcons('png_1', 45, 'Actions');
+	return \@i
+}, [  ], 'No available icons in size and context 1'];
+
+push @tests, [sub {
+	my @i = $art->AvailableIcons('png_1', 32, 'Blobber');
+	return \@i
+}, [  ], 'No available icons in size and context 2'];
+
+push @tests, [sub {
+	my @i = $art->AvailableIcons('png_1', undef, 'Actions');
+	return \@i
+}, [ 'document-new', 'document-save', 'edit-cut', 'edit-find' ], 'All available icons in context'];
+
+push @tests, [sub {
+	my @i = $art->AvailableIcons('png_1', undef, 'Blobber');
+	return \@i
+}, [  ], 'No available icons in context'];
+
+push @tests, [sub {
+	my @s = $art->AvailableSizes('png_1',);
+	return \@s
+}, [ 22, 32 ], 'Available sizes'];
+
+push @tests, [sub {
+	my @s = $art->AvailableSizes('png_1','edit-cut');
+	return \@s
+}, [ 32 ], 'Available sizes in name'];
+
+push @tests, [sub {
+	my @s = $art->AvailableSizes('png_1','does-not-exist');
+	return \@s
+}, [ ], 'No available sizes in name'];
+
+push @tests, [sub {
+	my @s = $art->AvailableSizes('png_1','edit-cut', 'Actions');
+	return \@s
+}, [ 32 ], 'Available sizes in name and context'];
+
+push @tests, [sub {
+	my @s = $art->AvailableSizes('png_1','does-not-exist', 'Actions');
+	return \@s
+}, [ ], 'No available sizes in name and context 1'];
+
+push @tests, [sub {
+	my @s = $art->AvailableSizes('png_1','edit-cut', 'Blobber');
+	return \@s
+}, [ ], 'No available sizes in name and context 2'];
+
+push @tests, [sub {
+	my @s = $art->AvailableSizes('png_1', undef, 'Actions');
+	return \@s
+}, [ 22, 32 ], 'Available sizes in context'];
+
+push @tests, [sub {
+	my @s = $art->AvailableSizes('png_1', undef, 'Blobber');
+	return \@s
+}, [ ], 'No available sizes in context'];
+
+push @tests, [sub {
+	return $art->FindImage('document-new', 22, 'Actions');
+}, 't/Themes/PNG1/actions/22/document-new.png', 'Find correct size'];
+
+push @tests, [sub {
+	return $art->FindImage('document-new', 32, 'Actions');
+}, 't/Themes/PNG1/actions/22/document-new.png', 'Find incorrect size'];
+
+push @tests, [sub {
+	return $art->FindImage('document-new', 22, 'Applications');
+}, 't/Themes/PNG1/actions/22/document-new.png', 'Find incorrect context'];
+
+push @tests, [sub {
+	return 1 unless defined $art->FindImage('does-not-exist', 32, 'Actions');
+	return 0
+}, 1, 'Find nothing'];
+
+for (sort keys %pages) {
+	my $size = $_;
 	for ('png_1', 'png_2') {
-		my @names = $art->AvailableIcons($_);
-		my @sizes = $art->AvailableSizes($_);
-		&CreateImageTests(\@names, \@sizes, {
-			theme => $_,
-			validate => 'image',
-		});
+		&CreateImgTests($_, $size);
 	}
-
-	# Tests for loading svg icons
-	my @svgnames = $art->AvailableIcons('svg_1');
-	my @svgsizes = $art->AvailableSizes('svg_1');
-	&CreateImageTests(\@svgnames, \@svgsizes, {
-		theme => 'svg_1',
-		validate => 'image',
-		is_svg => 1,
-	});
-
-	for (@tests) {
-		if (exists $_->{theme}) {
-			$art->ConfigPut(-icontheme => $_->{theme})
-		}
-		my $checksize;
-		if (exists $_->{checksize}) {
-			$checksize = $_->{checksize}
-		}
-		my $args = $_->{args};
-		my $expected = $_->{expected};
-		my $is_svg = 0;
-		if (exists $_->{is_svg}) {
-			$is_svg = $_->{is_svg}
-		}
-		my $method = $art->can($_->{method});
-		my $name = $_->{name};
-		my $validate = 'list';
-		if (exists $_->{validate}) {
-			$validate = $_->{validate}
-		}
-		my @result = &$method($art, @$args);
-		if ($validate eq 'list') {
-			cmp_deeply($expected, \@result, $name);
-		} elsif ($validate eq 'image') {
-			my $img = $result[0];
-			my $outcome = 0;
-			if (defined $img) { $outcome = 1 }
-			is ($outcome, $expected, $name);
-			if (defined $checksize) {
-				SKIP: {
-					skip 'Previous test returned no image.', 1 unless $outcome;
-					ok((($img->height eq $checksize) and ($img->width eq $checksize)), 'Check size');
-				}
-			}
-		} else {
-			ok(&$validate($expected, \@result), $name);
-		}
-	}
-	if ($show) {
-		my @icons = ();
-		my $th = $app->ConfigGet('-iconthemes');
-		for (@$th) {
-			push @icons, $art->AvailableIcons($_)
-		}
-		my $maxcol =  4;
-		my $col = 0;
-		my $row = 0;
-		for (@icons) {
-			my $lab = $app->Label(
-				-image => $art->GetIcon($_, 32),
-			)->grid(
-				-column => $col,
-				-row => $row,
-				-padx => 2,
-				-pady => 2,
-			);
-			$col ++;
-			if ($col eq 4) {
-				$col = 0;
-				$row ++
-			}
-		}
-	} else {
-		$app->CommandExecute('quit')
+	unless ($osname eq 'MSWin32') {
+		&CreateImgTests('svg_1', $size);
 	}
 }
 
-sub CreateImageTests {
-	my ($nms, $szs, $empty) = @_;
-	for (@$nms) {
-		my $name = $_;
-		for (@$szs) {
-			my $size = $_;
-			my %test = %$empty;
-			$test{name} = "GetIcon, $name, $size";
-			$test{checksize} = $size;
-			$test{method} = 'GetIcon';
-			$test{args} = [ $name, $size ];
-			$test{expected} = 1;
-			$test{validate} = 'image';
-			push @tests, \%test;
-		}
+starttesting;
+my $num_of_tests = @tests + 3;
+done_testing( $num_of_tests );
+
+sub CreateImgTests {
+	my ($theme, $size) = @_;
+	my $f;
+	push @tests, [sub {
+		my $page = $pages{$size};
+		$art->ConfigPut(-icontheme => $theme);
+		$f = $page->LabFrame(
+			-label => $theme,
+			-labelside => 'acrosstop',
+		)->pack(-fill => 'both', -padx => 2, -pady => 2);
+		return 1
+	}, 1, "Setting theme $theme for size $size"];
+	my $icons = $testicons{$theme};
+	for (@$icons) {
+		my $icon = $_;
+		push @tests, [sub {
+			my $img = $art->GetIcon($icon, $size);
+			if (defined $img) {
+				$f->Label(
+					-image => $img,
+				)->pack(-side => 'left', -padx => 2, -pady => 2);
+				return 1
+			}
+			return 0
+		}, 1, "Theme $theme, size $size, icon $icon"];
 	}
 }
-
 

@@ -17,32 +17,23 @@ use base qw( Tk::AppWindow::BaseClasses::Extension );
 
 =head1 SYNOPSIS
 
-=over 4
-
  my $app = new Tk::AppWindow(@options,
     -extensions => ['Panels'],
  );
  $app->MainLoop;
 
-=back
 
 =head1 DESCRIPTION
 
-=over 4
-
-	Adds a layout of B<Frame> objects to the main window.
-	You can specify which frames should have a slider.
-	Each Frame can be in a shown or hidden state.
+Adds a layout of B<Frame> objects to the main window.
+You can specify which frames should have a slider.
+Each Frame can be in a shown or hidden state.
 	
-=back
-
-=head1 B<CONFIG VARIABLES>
+=head1 CONFIG VARIABLES
 
 =over 4
 
 =item B<-panellayout>
-
-=over 4
 
 Specify the structure of your layout. 
 
@@ -109,16 +100,10 @@ Default value:
     },
  ]
 
-=back
-
 =item B<-workspace>
-
-=over 4
 
 Specifies the central workspace of your application.
 Default value is WORK.
-
-=back
 
 =back
 
@@ -190,11 +175,7 @@ sub new {
 
 =item B<Hide>I<($panel)>
 
-=over 4
-
 Hide $panel and its adjuster if any.
-
-=back
 
 =cut
 
@@ -210,11 +191,7 @@ sub Hide {
 
 =item B<IsHidden>I<($panel)>
 
-=over 4
-
 Returns the state of $panel. 1 if hidden, 0 if not.
-
-=back
 
 =cut
 
@@ -296,11 +273,7 @@ sub PanelLayOut {
 
 =item B<Show>I<($panel)>
 
-=over 4
-
 Show $panel and its adjuster if any.
-
-=back
 
 =cut
 
@@ -320,28 +293,11 @@ sub Show {
 
 =head1 AUTHOR
 
-=over 4
-
-=item Hans Jeuken (hanje at cpan dot org)
-
-=back
-
-=cut
+Hans Jeuken (hanje at cpan dot org)
 
 =head1 BUGS
 
 Unknown. If you find any, please contact the author.
-
-=cut
-
-=head1 TODO
-
-=over 4
-
-
-=back
-
-=cut
 
 =head1 SEE ALSO
 

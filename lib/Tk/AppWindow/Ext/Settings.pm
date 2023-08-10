@@ -20,20 +20,12 @@ require Tk::QuickForm;
 
 =head1 SYNOPSIS
 
-=over 4
-
-=over 4
-
  my $app = new Tk::AppWindow(@options,
     -extensions => ['Settings'],
  );
  $app->MainLoop;
 
-=back
-
 =head1 DESCRIPTION
-
-=over 4
 
 Add a settings feature to your application and allow the end user to configure the application.
 
@@ -41,25 +33,15 @@ Creates a menu item in the main menu.
 
 Loads settings file at startup.
 
-=back
-
 =head1 CONFIG VARIABLES
 
 =over 4
 
 =item B<-settingsfile>
 
-=over 4
-
 Name of the settings file. Default is I<settingsrc>.
 
-=back
-
-=over 4
-
 =item B<-useroptions>
-
-=over 4
 
 Name of the settings file. Default is I<settingsrc>. A typical setup might look
 like this:
@@ -96,17 +78,11 @@ It uses L<Tk::TabbedForm> in the popup. See there for details of this option.
 
 =back
 
-=back
-
-=head1 B<COMMANDS>
+=head1 COMMANDS
 
 =over 4
 
 =item B<settings>
-
-=over 4
-
-=back
 
 =back
 
@@ -300,28 +276,11 @@ sub UserOptions {
 
 =head1 AUTHOR
 
-=over 4
-
-=item Hans Jeuken (hanje at cpan dot org)
-
-=back
-
-=cut
+Hans Jeuken (hanje at cpan dot org)
 
 =head1 BUGS
 
 Unknown. If you find any, please contact the author.
-
-=cut
-
-=head1 TODO
-
-=over 4
-
-
-=back
-
-=cut
 
 =head1 SEE ALSO
 

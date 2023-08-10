@@ -20,6 +20,7 @@ export2xrdb;
 use base qw(Tk::Derived Tk::MainWindow);
 Construct Tk::Widget 'AppWindow';
 
+use Config;
 use File::Basename;
 require Tk::AppWindow::BaseClasses::Callback;
 require Tk::YAMessage;
@@ -27,18 +28,12 @@ require Tk::PNG;
 
 =head1 SYNOPSIS
 
-=over 4
-
  my $app = new Tk::AppWindow(@options,
     -extensions => ['ConfigFolder'],
  );
  $app->MainLoop;
 
-=back
-
 =head1 DESCRIPTION
-
-=over 4
 
 B<Tk::AppWindow> is a modular application framework written in perl/Tk.
 It is a base application that can be extended.
@@ -48,17 +43,11 @@ To get started read L<Tk::AppWindow::OverView>.
 
 This document is a reference manual.
 
-=back
-
-=cut
-
 =head1 B<CONFIG VARIABLES>
 
 =over 4
 
 =item Switch: B<-appname>
-
-=over 4
 
 Set the name of your application.
 
@@ -66,11 +55,7 @@ If this option is not specified, the name of your application
 will be set to the filename of your executable with the first
 character in upper case.
 
-=back
-
 =item Switch: B<-commands>
-
-=over 4
 
 Defines commands to be used in your application. It takes a paired list of
 command names and callbacks as parameter.
@@ -84,23 +69,15 @@ command names and callbacks as parameter.
 
 Only available at create time.
 
-=back
-
 =item Name  : B<errorColor>
 
 =item Class : B<ErrorColor>
 
 =item Switch: B<-errorcolor>
 
-=over 4
-
 Default value '#FF0000' (red).
 
-=back
-
 =item Switch: B<-extensions>
-
-=over 4
 
 Specifies the list of extensions to be loaded.
 
@@ -116,26 +93,16 @@ Specifies the list of extensions to be loaded.
 The following order matters for the buildup of menus and bars.
 Only available at create time.
 
-=back
-
 =item Switch: B<-logo>
-
-=over 4
 
 Specifies the image file to be used as logo for your application.
 Default value is Tk::findINC('Tk/AppWindow/aw_logo.png').
 
-=back
-
 =item Switch: B<-verbose>
-
-=over 4
 
 Default value is 0.
 Set or get verbosity.
 Does not do anything at this moment. Meant for logging.
-
-=back
 
 =back
 
@@ -145,11 +112,7 @@ Does not do anything at this moment. Meant for logging.
 
 =item B<quit>
 
-=over 4
-
 Calls the CmdQuit method. See there.
-
-=back
 
 =back
 
@@ -179,6 +142,7 @@ sub Populate {
 	$self->{CONFIGTABLE} = {};
 	$self->{EXTENSIONS} = {};
 	$self->{EXTLOADORDER} = [];
+	$self->{OSNAME} = $Config{'osname'};
 	$self->{WORKSPACE} = $self;
 	$self->{VERBOSE} = 0;
 
@@ -231,14 +195,10 @@ sub Populate {
 
 =item B<AddPostConfig>I<('Method', $obj, @options)>
 
-=over 4
-
 Only to be called by extensions at create time.
 Specifies a callback te be executed after main loop starts.
 
 Callbacks are executed in the order they are added.
-
-=back
 
 =cut
 
@@ -251,12 +211,8 @@ sub AddPostConfig {
 
 =item B<AddPreConfig>I<(@configs)>
 
-=over 4
-
 Only to be called by extensions at create time.
 Specifies configs to the ConfigSpec method executed in Populate.
-
-=back
 
 =cut
 
@@ -268,12 +224,8 @@ sub AddPreConfig {
 
 =item B<AppName>I<($name)>
 
-=over 4
-
 Sets and returns the application name.
 Same as $app->ConfigPut(-name => $name), or $app->ConfigGet($name).
-
-=back
 
 =cut
 
@@ -285,12 +237,8 @@ sub AppName {
 
 =item B<CanQuit>
 
-=over 4
-
-returns 1. It is called when Tk::AppWindow tests all extensions if they can quit. You can 
+Returns 1. It is called when Tk::AppWindow tests all extensions if they can quit. You can 
 overwrite it when you inherit Tk::AppWindow.
-
-=back
 
 =cut
 
@@ -300,12 +248,8 @@ sub CanQuit {
 
 =item B<CmdQuit>
 
-=over 4
-
 Gets called when you execute the 'quit' command or close the main window.
 It queries all extensions for permission and exits if all cleanr.
-
-=back
 
 =cut
 
@@ -324,8 +268,6 @@ sub CmdQuit {
 
 =item B<CommandsConfig>I<(@commands)>
 
-=over 4
-
  $app->CommandsConfig(
     command1 => ['SomeMethod', $obj, @options],
     command2 => [sub { do whatever }, @options],
@@ -334,8 +276,6 @@ sub CmdQuit {
 CommandsConfig takes a paired list of commandnames and callback descriptions.
 It registers them to the commands table. After that B<CommandExecute> can 
 be called on them.
-
-=back
 
 =cut
 
@@ -350,8 +290,6 @@ sub CommandsConfig {
 
 =item B<CommandExecute>('command_name', @options);
 
-=over 4
-
 Looks for the callback assigned to command_name and executes it.
 It first passes the options you specify here. Then it passes the
 options you specified in B<CommandsConfig>. My advise is to make
@@ -359,8 +297,6 @@ a clear choice. Either specify all options here and nothing in
 B<CommandsConfig>. Or have all the options in B<CommandsConfig> and
 specify nothing here. This method is called by menu items, toolbar items
 and whatever you specify.
-
-=back
 
 =cut
 
@@ -377,11 +313,7 @@ sub CommandExecute {
 
 =item B<CommandExists>('command_name')
 
-=over 4
-
 Checks if command_name can be used as a command. Returns 1 or 0.
-
-=back
 
 =cut
 
@@ -403,12 +335,8 @@ sub CommandRegister {
 
 =item B<ConfigGet>I<('-option')>
 
-=over 4
-
 Equivalent to $app-cget. Except here you can also specify
 the options added by B<ConfigInit>
-
-=back
 
 =cut
 
@@ -424,16 +352,12 @@ sub ConfigGet {
 
 =item B<ConfigInit>I<(@options)>
 
-=over 4
-
  $app->ConfigInit(
     -option1 => ['method', $obj, @options],
     -option2 => [sub { do something }, @options],
  );
 
 Add options to the options table. Usually called at create time. But worth experimenting with.
-
-=back
 
 =cut
 
@@ -458,11 +382,7 @@ sub ConfigInit {
 
 =item B<ConfigMode>
 
-=over 4
-
 Returns 1 if MainLoop is not yet running.
-
-=back
 
 =cut
 
@@ -472,12 +392,8 @@ sub ConfigMode {
 
 =item B<ConfigPut>I<(-option => $value)>
 
-=over 4
-
 Equivalent to $app-configure. Except here you can also specify
 the options added by B<ConfigInit>
-
-=back
 
 =cut
 
@@ -495,12 +411,8 @@ sub ConfigPut {
 
 =item B<CreateCallback>(sub { do whatever }, @options);
 
-=over 4
-
 Creates and returns a Tk::AppWindow::Baseclasses::Callback object. 
 A convenience method that saves you some typing.
-
-=back
 
 =cut
 
@@ -511,11 +423,7 @@ sub CreateCallback {
 
 =item B<ExtensionList>
 
-=over 4
-
 Returns a list of all loaded extensions
-
-=back
 
 =cut
 
@@ -529,12 +437,8 @@ sub GetArgsRef { return $_[0]->{ARGS} }
 
 =item B<GetArt>I<($icon, $size)>
 
-=over 4
-
 Checks if extension B<Art> is loaded and returns requested image if so.
 If $size is not specified, default size is used.
-
-=back
 
 =cut
 
@@ -565,30 +469,26 @@ sub GetExt {
 
 =item B<LoadExtension>('Name');
 
-=over 4
-
 Loads and initializes an extension.
 Terminates application if it fails.
 
 Called at create time.
 
-=back
-
 =cut
 
 sub LoadExtension {
 	my ($self, $name) = @_;
-	my $plgs = $self->{EXTENSIONS};
-	my $plug = undef;
-	unless (exists $plgs->{$name}) { #unless already loaded
+	my $exts = $self->{EXTENSIONS};
+	my $ext = undef;
+	unless (exists $exts->{$name}) { #unless already loaded
 		my $obj;
 		my $modname = "Tk::AppWindow::Ext::$name";
 		eval "use $modname";
 		die $@ if $@;
-		$plug = $modname->new($self);
-		if (defined($plug)) {
+		$ext = $modname->new($self);
+		if (defined($ext)) {
 			print "Extension $name loaded\n" if $self->Verbose;
-			$plgs->{$name} = $plug;
+			$exts->{$name} = $ext;
 			my $o = $self->{EXTLOADORDER};
 			push @$o, $name;
 		} else {
@@ -599,13 +499,9 @@ sub LoadExtension {
 
 =item B<MenuItems>
 
-=over 4
-
 Returns a list of two items used by the B<MenuBar> plugin. The first defines the application menu.
 The second is the menu option Quit in this menu. Overwrite this method to make it return
 a different list. See also B<Tk::AppWindow::Ext::MenuBar>
-
-=back
 
 =cut
 
@@ -619,13 +515,13 @@ sub MenuItems {
 	)
 }
 
+sub OSName {
+	return $_[0]->{OSNAME}
+}
+
 =item B<PopMessage>I<($message, $icon, ?$size?)>
 
-=over 4
-
 Pops up a message box with a close button.
-
-=back
 
 =cut
 
@@ -652,7 +548,7 @@ sub PostConfig {
    my $lgf = $self->cget('-logo');
    if ((defined $lgf) and (-e $lgf)) {
       my $logo = $self->Photo(-file => $lgf, -format => 'PNG');
-      $self->iconphoto($logo);
+      $self->iconimage($logo);
    }
 	my $pc = $self->{POSTCONFIG};
 	for (@$pc) { $_->Execute }
@@ -660,12 +556,8 @@ sub PostConfig {
 
 =item B<ToolItems>
 
-=over 4
-
 Returns an empty list. It is called by the B<ToolBar> extension. Overwrite it
 if you like.
-
-=back
 
 =cut
 
@@ -677,11 +569,7 @@ sub ToolItems {
 
 =item B<Verbose>
 
-=over 4
-
 Set or get verbosity. Same as $app->ConfigPut(-verbose => $value) or $self->ConfigGet('-verbose');
-
-=back
 
 =cut
 
@@ -701,26 +589,15 @@ sub WorkSpace {
 
 =head1 AUTHOR
 
-=over 4
+Hans Jeuken (hanje at cpan dot org)
 
-=item Hans Jeuken (hanje at cpan dot org)
+=head1 LICENSE
 
-=back
-
-=cut
+Same as Perl.
 
 =head1 BUGS
 
 Unknown. Probably plenty. If you find any, please contact the author.
-
-=cut
-
-=head1 TODO
-
-=over 4
-
-
-=back
 
 =cut
 

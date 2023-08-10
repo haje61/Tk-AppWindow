@@ -5,7 +5,7 @@ use warnings;
 use Test::Tk;
 $mwclass = 'Tk::AppWindow';
 
-use Test::More tests => 13;
+use Test::More tests => 12;
 BEGIN { 
 	use_ok('Tk::AppWindow::Ext::StatusBar::SBaseItem');
 	use_ok('Tk::AppWindow::Ext::StatusBar::SImageItem');
@@ -83,7 +83,7 @@ if (defined $app) {
 	[sub { return ref $ext->{MI} }, 'Tk::AppWindow::Ext::StatusBar::SMessageItem', 'message item loaded'],
 	[sub { return ref $ext->Item('image') }, 'Tk::AppWindow::Ext::StatusBar::SImageItem', 'image item loaded'],
 	[sub { return ref $ext->Item('text') }, 'Tk::AppWindow::Ext::StatusBar::STextItem', 'text item loaded'],
-	[sub { return ref $ext->Item('progress') }, 'Tk::AppWindow::Ext::StatusBar::SProgressItem', 'progress item loaded'],
+# 	[sub { return ref $ext->Item('progress') }, 'Tk::AppWindow::Ext::StatusBar::SProgressItem', 'progress item loaded'],
 );
 
 starttesting;

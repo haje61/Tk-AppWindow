@@ -22,34 +22,21 @@ require Tk::Pod::Text;
 
 =head1 SYNOPSIS
 
-=over 4
-
  my $app = new Tk::AppWindow(@options,
     -extensions => ['Help'],
  );
  $app->MainLoop;
 
-
-=back
-
 =head1 DESCRIPTION
-
-=over 4
 
 Adds a help facility and an about box to your application. Initiates
 menu entries for them.
 
-=back
-
-=cut
-
-=head1 B<CONFIG VARIABLES>
+=head1 CONFIG VARIABLES
 
 =over 4
 
 =item Switch: B<-aboutinfo>
-
-=over 4
 
 Specify the link to a hash. Possible keys
 
@@ -59,23 +46,13 @@ Specify the link to a hash. Possible keys
  http
  email
 
-=back
-
 =item Switch: B<-helpfile>
-
-=over 4
 
 Point to your help file.
 
-=back
-
 =item Switch: B<-helptype>
 
-=over 4
-
 Can be B<pod> or B<html>. Default value is B<pod>.
-
-=back
 
 =back
 
@@ -85,19 +62,11 @@ Can be B<pod> or B<html>. Default value is B<pod>.
 
 =item B<about>
 
-=over 4
-
 Pops the about box.
-
-=back
 
 =item B<help>
 
-=over 4
-
 Pops the help dialog.
-
-=back
 
 =back
 
@@ -219,12 +188,8 @@ sub CmdHelp {
 
 =item B<MenuItems>
 
-=over 4
-
 Returns the about and help menu items for the main menu.
 Called by the b<MenuBar> extension.
-
-=back
 
 =cut
 
@@ -244,28 +209,11 @@ sub MenuItems {
 
 =head1 AUTHOR
 
-=over 4
-
-=item Hans Jeuken (hanje at cpan dot org)
-
-=back
-
-=cut
+Hans Jeuken (hanje at cpan dot org)
 
 =head1 BUGS
 
 Unknown. If you find any, please contact the author.
-
-=cut
-
-=head1 TODO
-
-=over 4
-
-
-=back
-
-=cut
 
 =head1 SEE ALSO
 
