@@ -8,7 +8,7 @@ use Test::Tk;
 $mwclass = 'Tk::AppWindow';
 # $delay = 1500;
 
-use Test::More tests => 4;
+use Test::More tests => 7;
 BEGIN { 
 	use_ok('Tk::AppWindow::Ext::Plugins');
 };
@@ -30,7 +30,9 @@ if (defined $app) {
 
 @tests = (
 	[sub { return $ext->Name }, 'Plugins', 'extension Plugins loaded'],
-# 	[sub { return $ext->GetPlugin('Test')->Name }, 'Test', 'plugin Test loaded',],
+	[sub { return $ext->GetPlugin('Test')->Name }, 'Test', 'plugin Test loaded',],
+	[sub { $app->cmdExecute('quit'); return 1 }, 1, 'still running'],
+	[sub { $ext->GetPlugin('Test')->Quitter(1); return 1 }, 1, 'now can quit'],
 );
 
 starttesting;

@@ -60,7 +60,7 @@ sub CanQuit {
 	my @plugs = $self->PluginList;
 	my $close = 1;
 	for (@plugs) {
-		$close = 0 unless $self->PluginUnload($_)
+		$close = 0 unless $self->GetPlugin($_)->CanQuit
 	}
 	return $close
 }
