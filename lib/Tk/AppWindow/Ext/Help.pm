@@ -89,7 +89,7 @@ sub new {
 		-helpfile => ['PASSIVE', undef, undef, Tk::findINC('Tk/AppWindow.pm')],
 	);
 
-	$self->CommandsConfig(
+	$self->cmdConfig(
 		about => [\&CmdAbout, $self],
 		help => [\&CmdHelp, $self],
 	);
@@ -102,7 +102,7 @@ sub new {
 
 sub CmdAbout {
 	my $self = shift;
-	my $inf = $self->ConfigGet('-aboutinfo');
+	my $inf = $self->configGet('-aboutinfo');
 	my $w = $self->GetAppWindow;
 	my $db = $w->YADialog(
 		-buttons => ['Ok'],
@@ -120,7 +120,7 @@ sub CmdAbout {
 	} else {
 		$ap = $db->Frame->pack(-expand => 1, -fill => 'both');;
 	}
-	my $lg = $self->ConfigGet('-logo');
+	my $lg = $self->configGet('-logo');
 	if (defined $lg) {
 		$ap->Label(-image => $w->Photo(-file => $lg))->pack;
 	}
@@ -165,8 +165,8 @@ sub CmdAbout {
 
 sub CmdHelp {
 	my $self = shift;
-	my $type = $self->ConfigGet('-helptype');
-	my $file = $self->ConfigGet('-helpfile');
+	my $type = $self->configGet('-helptype');
+	my $file = $self->configGet('-helpfile');
 	if ($type eq 'pod') {
 		my $w = $self->GetAppWindow;
 		my $db = $w->YADialog(
@@ -198,7 +198,7 @@ sub MenuItems {
 	return (
 #This table is best viewed with tabsize 3.
 #			 type					menupath				label					cmd			icon					keyb			config variable
-		[	'menu_normal',		'appname::Quit',	"~About", 			'about',		'help-about',		'Shift-F1'	], 
+		[	'menu_normal',		'appname::Quit',	"~About", 			'about',		'help-about',		'SHIFT+F1'	], 
 		[	'menu_normal',		'appname::Quit',	"~Help", 			'help',		'help-browser',	'F1',			], 
 		[	'menu_separator',	'appname::Quit',	'h1'], 
 

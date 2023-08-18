@@ -18,7 +18,7 @@ use base qw( Tk::AppWindow::BaseClasses::Extension );
 
 use File::Basename;
 use Module::Load;
-# use GD::Image;
+use Imager;
 use MIME::Base64;
 # use Tk;
 require Tk::Compound;
@@ -119,7 +119,7 @@ sub new {
 	$self->{THEMES} = {};
 	$self->{ICONSIZE} = undef;
 
-	$self->CommandsConfig(
+	$self->cmdConfig(
 		available_icon_sizes => ['AvailableSizesCurrentTheme', $self],
 		available_icon_themes => ['AvailableThemes', $self],
 	);
@@ -336,7 +336,7 @@ sub AvailableSizes {
 
 sub AvailableSizesCurrentTheme {
 	my $self = shift;
-	return $self->AvailableSizes($self->ConfigGet('-icontheme'));
+	return $self->AvailableSizes($self->configGet('-icontheme'));
 }
 
 sub CollectThemes {
@@ -377,11 +377,11 @@ sub CreateCompound {
 	my $compound = $self->Compound;
 	if ($side eq 'left') {
 		$compound->Text(-text => $args{'-text'}, -anchor => 'c');
-		$compound->Space(-width => $self->ConfigGet('-compoundcolspace'));
+		$compound->Space(-width => $self->configGet('-compoundcolspace'));
 		$compound->Image(-image => $args{'-image'});
 	} elsif ($side eq 'right') {
 		$compound->Image(-image => $args{'-image'});
-		$compound->Space(-width => $self->ConfigGet('-compoundcolspace'));
+		$compound->Space(-width => $self->configGet('-compoundcolspace'));
 		$compound->Text(-text => $args{'-text'}, -anchor => 'c');
 	} elsif ($side eq 'top') {
 		$compound->Text(-text => $args{'-text'}, -anchor => 'c');
@@ -435,22 +435,22 @@ sub DoPostConfig {
 	
 	#Fixing name problem. Gtk init files specify the used icon library
 	#as their folder name instead of the name in their index.
-	my $theme = $self->ConfigGet('-icontheme');
+	my $theme = $self->configGet('-icontheme');
 	unless (exists $self->{THEMES}->{$theme}) {
 		for ($self->AvailableThemes) {
 			my $test = $self->{THEMES}->{$_};
 			if ($test->{'path'} =~ /$theme$/) {
 				$theme = $_;
-				$self->ConfigPut(-icontheme => $theme);
+				$self->configPut(-icontheme => $theme);
 				last;
 			}
 		}
 	}
 	#Fixing cases of specified iconsize not matching any of the
 	#available iconsizes.
-	my $size = $self->ConfigGet('-iconsize');
+	my $size = $self->configGet('-iconsize');
 	$size = $self->GetAlternateSize($size);
-	$self->ConfigPut(-iconsize => $size);
+	$self->configPut(-iconsize => $size);
 }
 
 =item B<FindImage>I<($name, >[ I<$size, $context, \$resize> ] I<);>
@@ -515,7 +515,7 @@ sub FindLibImage {
 
 	$size = 'unknown' unless (defined $size);
 	$context = 'unknown' unless (defined $context);
-	$theme = $self->ConfigGet('-icontheme') unless defined $theme;
+	$theme = $self->configGet('-icontheme') unless defined $theme;
 
 	my $index = $self->GetTheme($theme);
 	return $self->FindImageS($index->{$name}, $size, $context, $resize) if exists $index->{$name};
@@ -562,7 +562,7 @@ the first size that is larger than $size if it is not.
 
 sub GetAlternateSize {
 	my ($self,$size) = @_;
-	my $theme = $self->ConfigGet('-icontheme');
+	my $theme = $self->configGet('-icontheme');
 	my @sizes = $self->AvailableSizes($theme);
 	my ($index) = grep { $sizes[$_] eq $size } 0..$#sizes;
 	unless (defined $index) {
@@ -588,7 +588,7 @@ icon cannot be found.
 
 sub GetIcon {
 	my ($self, $name, $size, $context) = @_;
-	unless (defined $size) { $size = $self->ConfigGet('-iconsize')}
+	unless (defined $size) { $size = $self->configGet('-iconsize')}
 	my $file = $self->FindImage($name, $size, $context);
 	if (defined $file) { 
 		return $self->LoadImage($file, $size);
@@ -661,14 +661,27 @@ sub LoadImage {
 	if (-e $file) {
 		my ($name,$path,$suffix) = fileparse(lc($file), @extensions);
 		if (exists $photoext{$suffix}) {
-			my $img = $self->GetAppWindow->Photo(
-				-file => $file,
-				-height => $size,
-				-width => $size,
-			);
+			my $img = Imager->new(file=>$file);
 			if (defined $img) {
-				return $img
+				if (defined $size) {
+					$img = $img->scale(xpixels => $size, ypixels => $size) if $size ne $img->getwidth;
+				}
+				my $data;
+				$img->write(data => \$data, type => 'png');
+				return $self->GetAppWindow->Photo(
+					-data => encode_base64($data), 
+					-format => 'png',
+				)
+
 			}
+# 			my $img = $self->GetAppWindow->Photo(
+# 				-file => $file,
+# 				-height => $size,
+# 				-width => $size,
+# 			);
+# 			if (defined $img) {
+# 				return $img
+# 			}
 		} elsif ($suffix eq '.svg') {
 			if ($Config{osname} eq 'Win32') {
 				warn "Svg images not supported on Windows";

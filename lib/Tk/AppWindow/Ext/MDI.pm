@@ -114,7 +114,7 @@ Initiates a new content handler for $name.
 sub CreateContentHandler {
 	my ($self, $name) = @_;
 	return undef if $self->DocExists($name);
-	my $cmclass = $self->ConfigGet('-contentmanagerclass');
+	my $cmclass = $self->configGet('-contentmanagerclass');
 	my @op = ();
 	my $cti = $self->GetArt('tab-close', 16);
 	push @op, -closeimage => $cti if defined $cti;
@@ -162,7 +162,7 @@ sub MenuItems {
 	return ($self->SUPER::MenuItems,
 #This table is best viewed with tabsize 3.
 #			 type					menupath			label						cmd						icon					keyb			config variable
-		[	'menu_normal',		'File::f2',		"S~ave all",			'file_save_all',		'document-save',	'Control-l'	], 
+		[	'menu_normal',		'File::f2',		"S~ave all",			'file_save_all',		'document-save',	'CTRL+L'	], 
 	)
 }
 

@@ -1,6 +1,7 @@
 
 use strict;
 use warnings;
+sleep 1;
 use lib './t/lib';
 
 use Test::Tk;
@@ -15,6 +16,7 @@ BEGIN {
 require TestTextManager;
 
 createapp(
+	-appname => 'Navigator',
 	-extensions => [qw[Art Balloon MenuBar ToolBar StatusBar MDI Navigator]],
 	-configfolder => 't/settings',
 	-contentmanagerclass => 'TestTextManager',

@@ -68,7 +68,7 @@ sub PanelVisible {
 	if (@_) {
 		my $status = shift;
 		my $panel = $self->{PANEL};
-		if ($self->ConfigMode) {
+		if ($self->configMode) {
 		} elsif ($status eq 1) {
 			$panels->Show($panel);
 		} elsif ($status eq 0) {

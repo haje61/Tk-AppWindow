@@ -57,7 +57,7 @@ sub new {
 		-documentinterface => ['PASSIVE', undef, undef, 'MDI'],
 	);
 
-	$self->ConfigInit(
+	$self->configInit(
 		-navigatorpanel => ['Panel', $self, 'LEFT'],
 		-navigatorvisible	=> ['PanelVisible', $self, 1],
 	);
@@ -119,7 +119,7 @@ sub MenuItems {
 
 sub SelectDocument {
 	my ($self, $name) = @_;
-	$self->GetExt($self->ConfigGet('-documentinterface'))->Select($name);
+	$self->GetExt($self->configGet('-documentinterface'))->Select($name);
 }
 
 sub SelectEntry {

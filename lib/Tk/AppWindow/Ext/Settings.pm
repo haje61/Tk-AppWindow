@@ -98,13 +98,13 @@ sub new {
 	$self->{USEROPTIONS} = undef;
 
 	
-	$self->ConfigInit(
+	$self->configInit(
 		-settingsfile => ['SettingsFile', $self, 'settingsrc'],
 		-useroptions => ['UserOptions', $self, []],
 	);
 
-	$self->CommandsConfig(
-		settings => [\&CmdSettings, $self],
+	$self->cmdConfig(
+		settings => ['CmdSettings', $self],
 	);
 
 	return $self;
@@ -133,7 +133,7 @@ sub CmdSettings {
 			for (@opts) {
 				my $val = $options{$_};
 				if ($val ne '') {
-					$self->ConfigPut($_, $val);
+					$self->configPut($_, $val);
 					push @save, $_;
 				}
 			}
@@ -141,10 +141,19 @@ sub CmdSettings {
 			$self->SaveSettings(@save);
 		}
 	);
-	$f = $m->QuickForm(
+
+	my %qopts = ();
+	my $fil = $self->GetArt('text-x-plain');
+	$qopts{'-fileimage'} = $fil if defined $fil;
+	my $fol = $self->GetArt('folder');
+	$qopts{'-folderimage'} = $fol if defined $fol;
+	my $fon = $self->GetArt('gtk-select-font');
+	$qopts{'-fontimage'} = $fon if defined $fon;
+
+	$f = $m->QuickForm(%qopts,
 		-acceptempty => 1,
-# 		-listcall => ['CommandExecute', $self],
-		-structure => $self->ConfigGet('-useroptions'),
+# 		-listcall => ['cmdExecute', $self],
+		-structure => $self->configGet('-useroptions'),
 		-postvalidatecall => sub {
 			my $flag = shift;
 			if ($flag) {
@@ -164,7 +173,7 @@ sub CmdSettings {
 
 sub GetUserOptions {
 	my $self = shift;
-	my $uo = $self->ConfigGet('-useroptions');
+	my $uo = $self->configGet('-useroptions');
 	my @options = @$uo;
 	my %usopt = ();
 	while (@options) {
@@ -177,16 +186,16 @@ sub GetUserOptions {
 			next;
 		}
 		shift @options;
-		$usopt{$key} = $self->ConfigGet($key);
+		$usopt{$key} = $self->configGet($key);
 	}
 	return %usopt
 }
 
 sub LoadSettings {
 	my $self = shift;
-	my $file = $self->ConfigGet('-configfolder') . "/" . $self->ConfigGet('-settingsfile');
+	my $file = $self->configGet('-configfolder') . "/" . $self->configGet('-settingsfile');
 	return () unless -e $file;
-	my $uo = $self->ConfigGet('-useroptions');
+	my $uo = $self->configGet('-useroptions');
 	my %useroptions = ();
 	my @temp = (@$uo);
 	while (@temp) {
@@ -246,11 +255,11 @@ sub ReConfigureAll {
 
 sub SaveSettings {
 	my $self = shift;
-	my $file = $self->ConfigGet('-configfolder') . "/" . $self->ConfigGet('-settingsfile');
+	my $file = $self->configGet('-configfolder') . "/" . $self->configGet('-settingsfile');
 	if (open(OFILE, ">", $file)) {
 		for (@_) {
 			my $option = $_;
-			my $value = $self->ConfigGet($_);
+			my $value = $self->configGet($_);
 			print "saving $option with value $value\n";
 			print OFILE $option, '=', $value, "\n";
 		}

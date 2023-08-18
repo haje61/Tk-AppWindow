@@ -116,7 +116,7 @@ sub new {
 	$self->{PACKINFO} = {};
 	$self->{ADJUSTERS} = {};
 
-	$self->ConfigInit(
+	$self->configInit(
 		-panellayout => ['PanelLayOut', $self, [
 			CENTER => {
 				-in => 'MAIN',

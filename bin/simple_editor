@@ -40,9 +40,9 @@ sub Populate {
 sub ConfigureCM {
 	my $self = shift;
 	my $plug = $self->Extension;
-	my $cmopt = $plug->ConfigGet('-contentmanageroptions');
+	my $cmopt = $plug->configGet('-contentmanageroptions');
 	for (@$cmopt) {
-		my $val = $plug->ConfigGet($_);
+		my $val = $plug->configGet($_);
 		if ((defined $val) and ($val ne '')) {
 			$val = [$val] if $_ eq '-contenttabs';
 			$self->configure($_, $val) ;
@@ -87,7 +87,8 @@ package main;
 
 require Tk::AppWindow;
 
-my $se = Tk::AppWindow->new(
+my $se;
+$se = Tk::AppWindow->new(
 	-appname => 'Sed',
 	-contentmanagerclass => 'TextManager',
 	-contentmanageroptions => ['-contentbackground', '-contentfont', '-contentforeground', '-contenttabs', '-contentwrap'],
@@ -96,14 +97,14 @@ my $se = Tk::AppWindow->new(
 #This table is best viewed with tabsize 3.
 #			 type					menupath			label						cmd						icon					keyb			config variable
  		[	'menu', 				'View',			"~Edit" 	], 
-		[	'menu_normal',		'Edit::',		"~Copy",					'<Control-c>',				'edit-copy',		'*Control-c'			], 
-		[	'menu_normal',		'Edit::',		"C~ut",					'<Control-x>'	,			'edit-cut',			'*Control-x'			], 
-		[	'menu_normal',		'Edit::',		"~Paste",				'<Control-v>'	,			'edit-paste',		'*Control-v'			], 
+		[	'menu_normal',		'Edit::',		"~Copy",					'<Control-c>',				'edit-copy',		'*CTRL+C'			], 
+		[	'menu_normal',		'Edit::',		"C~ut",					'<Control-x>'	,			'edit-cut',			'*CTRL+X'			], 
+		[	'menu_normal',		'Edit::',		"~Paste",				'<Control-v>'	,			'edit-paste',		'*CTRL+V'			], 
  		[	'menu_separator',	'Edit::', 		'e1' ], 
-		[	'menu_normal',		'Edit::',		"U~ndo",					'<Control-z>'	,			'edit-undo',		'*Control-z'			], 
-		[	'menu_normal',		'Edit::',		"~Redo",					'<Control-Z>'	,			'edit-redo',		'*Control-Z'			], 
-		[	'menu_separator',	'File::', 		'e2' ], 
-		[	'menu_normal',		'Edit::',		"~Select all",			'<Control-a>',				'edit-select-all','*Control-a'			], 
+		[	'menu_normal',		'Edit::',		"U~ndo",					'<Control-z>'	,			'edit-undo',		'*CTRL+Z'			], 
+		[	'menu_normal',		'Edit::',		"~Redo",					'<Control-Z>'	,			'edit-redo',		'*CTRL+SHIFT+Z'	], 
+		[	'menu_separator',	'Edit::', 		'e2' ], 
+		[	'menu_normal',		'Edit::',		"~Select all",			'<Control-a>',				'edit-select-all','*CTRL+A'			], 
 	],
 	-extensions => [qw[Art Balloon MenuBar SDI ToolBar StatusBar Help Settings]],
 	-toolitems => [
@@ -125,19 +126,19 @@ my $se = Tk::AppWindow->new(
 		'*end',
 		'*section' => 'Editor settings',
 		-contenttabs => ['text', 'Tab size'],
-		-contentwrap => ['radio', 'Wrap', [qw[none char word]]],
+		-contentwrap => ['radio', 'Wrap', -values =>[qw[none char word]]],
 		'*end',
 		'*page' => 'Icons',
-		-icontheme => ['list', 'Icon theme', 'available_icon_themes'],
-		-iconsize => ['list', 'Icon size', 'available_icon_sizes'],
+		-icontheme => ['list', 'Icon theme', -values => sub { return $se->cmdExecute('available_icon_themes') }],
+		-iconsize => ['list', 'Icon size', -values => sub { return $se->cmdExecute('available_icon_sizes') }],
 		'*page' => 'Bars',
 		'*section' => 'Menubar',
-		-menuiconsize => ['list', 'Icon size', 'available_icon_sizes'],
+		-menuiconsize => ['list', 'Icon size', -values => sub { return $se->cmdExecute('available_icon_sizes') }],
 		'*end',
 		'*section' => 'Toolbar',
 		-toolbarvisible => ['boolean', 'Visible at launch'],
-		-tooliconsize => ['list', 'Icon size', 'available_icon_sizes'],
-		-tooltextposition => ['radio', 'Text position', [qw[none left right top bottom]]],
+		-tooliconsize => ['list', 'Icon size', -values => sub { return $se->cmdExecute('available_icon_sizes') }],
+		-tooltextposition => ['radio', 'Text position', -values => [qw[none left right top bottom]]],
 		'*end',
 		'*section' => 'Statusbar',
 		-statusbarvisible => ['boolean', 'Visible at launch'],

@@ -80,13 +80,13 @@ sub new {
 
 sub AddKeyboardBinding {
 	my $self = shift;
-	$self->GetAppWindow->CommandExecute('addkeyboardbinding', @_);
+	$self->GetAppWindow->cmdExecute('addkeyboardbinding', @_);
 }
 
 sub CheckStackForImages {
 	my ($self, $stack) = @_;
 	my $hasimages = 0;
-	my $name = $self->ConfigGet('-appname');
+	my $name = $self->configGet('-appname');
 	for (@$stack) {
 		my %conv = ( @$_ );
 		if (exists $conv{'cascade'}) {
@@ -99,7 +99,7 @@ sub CheckStackForImages {
 		
 	}
 	if ($hasimages) {
-		my $size = $self->ConfigGet('-menuiconsize');
+		my $size = $self->configGet('-menuiconsize');
 		my $empty = $self->CreateEmptyImage($size, $size);
 		for (@$stack) {
 			my %conv = ( @$_ );
@@ -114,15 +114,15 @@ sub ConfDoConfig {
 	my ($self, $config, $item) = @_;
 	if (defined $config) {
 		my $val = '';
-		$self->MenuPostAdd(sub { $val = $self->ConfigGet($config) });
-		push @$item, -variable => \$val, -command => sub {	$self->ConfigPut($config, $val) }
+		$self->MenuPostAdd(sub { $val = $self->configGet($config) });
+		push @$item, -variable => \$val, -command => sub {	$self->configPut($config, $val) }
 	}
 }
 
 sub ConfDoIcon {
 	my ($self, $icon, $item) = @_;
 	if (defined $icon) {
-		my $size = $self->ConfigGet('-menuiconsize');
+		my $size = $self->configGet('-menuiconsize');
 		my $bmp = $self->GetArt($icon, $size);
 		if (defined $bmp) {
 			push @$item, -image => $bmp, -compound => 'left'
@@ -214,7 +214,7 @@ sub ConfMenuNormal {
 			$self->ConfVirtEvent($cmd, $keyb) if $cmd =~ /^<<.+>>/;
 			push @item, -command => ['eventGenerate', $w, $cmd]
 		} else {
-			push @item, -command => ['CommandExecute', $w, $cmd];
+			push @item, -command => ['cmdExecute', $w, $cmd];
 		}
 	}
 	$self->ConfDoKeyb($cmd, $keyb,\@item);
@@ -313,10 +313,10 @@ sub CreateCompound {
 	my ($self, $text, $icon) = @_;
 	my $w = $self->GetAppWindow;
 	my $comp = $w->Compound;
-	my $space = $self->ConfigGet('-menucolspace');
+	my $space = $self->configGet('-menucolspace');
 	my $img = undef;
 	if (defined $icon) {
-		$img = $self->GetArt($icon, $self->ConfigGet('-menuiconsize'));
+		$img = $self->GetArt($icon, $self->configGet('-menuiconsize'));
 	}
 	if (defined $img) {
 		$comp->Image(-image => $img);
@@ -350,7 +350,7 @@ sub CreateMenu {
 	my $self = shift;
 	my $w = $self->GetAppWindow;
 	my @u = ();
-	if ($w->ConfigGet('-automenu')) {
+	if ($w->configGet('-automenu')) {
 		my @p = $self->ExtensionList;
 		my @l = ($w);
 		for (@p) { push @l, $self->GetExt($_) }
@@ -358,7 +358,7 @@ sub CreateMenu {
 			push @u, $_->MenuItems;
 		}
 	}
-	my $m = $w->ConfigGet('-mainmenuitems');
+	my $m = $w->configGet('-mainmenuitems');
 	push @u, @$m;
 	$self->Configure(@u);
 }
@@ -416,16 +416,16 @@ sub DoPostConfig {
 	my $self = shift;
 	my $art = $self->GetExt('Art');
 	if (defined $art) {
-		my $size = $self->ConfigGet('-menuiconsize');
+		my $size = $self->configGet('-menuiconsize');
 		$size = $art->GetAlternateSize($size);
-		$self->ConfigPut(-menuiconsize => $size)
+		$self->configPut(-menuiconsize => $size)
 	}
 	$self->CreateMenu;
 }
 
 sub FindMenuEntry {
 	my ($self, $path) = @_;
-	my $menu = $self->ConfigGet('-menu');
+	my $menu = $self->configGet('-menu');
 	my $p = $path;
 	while ($p =~ s/([^\:]+)\:\://) {
 		my $item = $1;
@@ -455,7 +455,7 @@ sub MenuPost {
 		if (ref $_) {
 			&$_
 		} else {
-			$w->CommandExecute($_)
+			$w->cmdExecute($_)
 		}
 	}
 }

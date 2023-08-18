@@ -72,7 +72,7 @@ sub new {
 	my $self = $class->SUPER::new(@_);
 
 	$self->Require('Art');
-	$self->ConfigInit(
+	$self->configInit(
 		-toolbarpanel => ['Panel', $self, 'TOP'],
 		-toolbarvisible => ['PanelVisible', $self, 1],
 	);
@@ -160,7 +160,7 @@ sub Configure {
 		my $type = shift @item;
 		if (defined $type) {
 			if (my $p = $uitypes->{$type}) {
-				$p->Execute(@item);
+				$p->execute(@item);
 			} else {
 				warn "invalid type: $type"
 			}
@@ -196,12 +196,12 @@ sub ConfToolButton {
 
 	my $bmp;
 	if (defined $icon) {
-		$bmp = $self->GetArt($icon, $self->ConfigGet('-tooliconsize'));
+		$bmp = $self->GetArt($icon, $self->configGet('-tooliconsize'));
 	}
 
 	my @balloon = ();
 	push @balloon, -statusmsg => $help if defined $help;
-	my $textpos = $self->ConfigGet('-tooltextposition');
+	my $textpos = $self->configGet('-tooltextposition');
 	my $but;
 
 	if (defined $bmp) {
@@ -223,7 +223,7 @@ sub ConfToolButton {
 	if ($cmd =~ /^<.+>/) { #matching an event
 		$call = ['eventGenerate', $self, $cmd] 
 	} else {
-		$call = ['CommandExecute', $self, $cmd]
+		$call = ['cmdExecute', $self, $cmd]
 	}
 	$but->configure(
 		-command => $call,
@@ -241,7 +241,7 @@ sub CreateItems {
 	my $self = shift;
 	my @u = ();
 	my $w = $self->GetAppWindow;
-	if ($self->ConfigGet('-autotool')) {
+	if ($self->configGet('-autotool')) {
 		my @p = $self->ExtensionList;
 		my @l = ($w);
 		for (@p) { push @l, $w->GetExt($_) }
@@ -249,7 +249,7 @@ sub CreateItems {
 			push @u, $_->ToolItems;
 		}
 	}
-	my $m = $self->ConfigGet('-toolitems');
+	my $m = $self->configGet('-toolitems');
 	push @u, @$m;
 	$self->Configure(@u);
 }
@@ -265,9 +265,9 @@ sub DoPostConfig {
 
 	#fixing possible mismatch of iconsize at launch
 	my $art = $self->GetExt('Art');
-	my $size = $self->ConfigGet('-tooliconsize');
+	my $size = $self->configGet('-tooliconsize');
 	$size = $art->GetAlternateSize($size);
-	$self->ConfigPut(-tooliconsize => $size);
+	$self->configPut(-tooliconsize => $size);
 
 	$self->CreateItems;
 }

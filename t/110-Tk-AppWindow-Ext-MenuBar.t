@@ -1,6 +1,7 @@
 
 use strict;
 use warnings;
+sleep 1;
 use lib 't/lib';
 
 use Test::Tk;
@@ -63,7 +64,7 @@ starttesting;
 sub Update {
 	for (@configs) {
 		my $rvar = $showitems{$_};
-		$$rvar = $app->ConfigGet($_); 
+		$$rvar = $app->configGet($_); 
 	}
 	$app->after(200, \&Update);
 }

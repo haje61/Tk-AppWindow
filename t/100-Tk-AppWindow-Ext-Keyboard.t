@@ -1,10 +1,11 @@
 
 use strict;
 use warnings;
+sleep 1;
 
 use Test::Tk;
 $mwclass = 'Tk::AppWindow';
-use Test::More tests => 4;
+use Test::More tests => 7;
 BEGIN { use_ok('Tk::AppWindow::Ext::Keyboard') };
 
 
@@ -24,7 +25,10 @@ if (defined $app) {
 }
 
 @tests = (
-	[sub { return $ext->Name }, 'Keyboard', 'extension Keyboard loaded']
+	[sub { return $ext->Name }, 'Keyboard', 'extension Keyboard loaded'],
+	[sub { return $ext->Convert2Tk('CTRL+SHIFT+G') }, 'Control-G', 'Conversion CTRL+SHIFT+G'],
+	[sub { return $ext->Convert2Tk('CTRL+G') }, 'Control-g', 'Conversion CTRL+G'],
+	[sub { return $ext->Convert2Tk('SHIFT+F10') }, 'Shift-F10', 'Conversion SHIFT+F10'],
 );
 
 starttesting;

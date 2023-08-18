@@ -8,6 +8,7 @@ Tk::AppWindow - an application framework based on Tk
 
 use strict;
 use warnings;
+use Carp;
 use vars qw($VERSION);
 $VERSION="0.01";
 
@@ -43,7 +44,7 @@ To get started read L<Tk::AppWindow::OverView>.
 
 This document is a reference manual.
 
-=head1 B<CONFIG VARIABLES>
+=head1 CONFIG VARIABLES
 
 =over 4
 
@@ -146,12 +147,12 @@ sub Populate {
 	$self->{WORKSPACE} = $self;
 	$self->{VERBOSE} = 0;
 
-	$self->CommandsConfig(
+	$self->cmdConfig(
 		poptest => ['PopTest', $self], #usefull for testing only
 		quit => ['CmdQuit', $self],
 		@$commands
 	);
-	$self->ConfigInit(
+	$self->configInit(
 		-appname => ['AppName', $self, $appname],
 		-verbose => ['Verbose', $self, 0],
 	);
@@ -170,7 +171,7 @@ sub Populate {
 			my $option = shift @useroptions;
 			my $value = shift @useroptions;
 			if (exists $tab->{$option}) {
-				$self->ConfigPut($option, $value)
+				$self->configPut($option, $value)
 			} else {
 				$args->{$option} = $value;
 			}
@@ -179,6 +180,8 @@ sub Populate {
 	my $pre = $self->{PRECONFIG};
 	$self->ConfigSpecs(
 		-errorcolor => ['PASSIVE', 'errorColor', 'ErrorColor', '#FF0000'],
+		-logcall => ['CALLBACK', undef, undef, sub { print STERR shift }], 
+		-logerrorcall => ['CALLBACK', undef, undef, sub { print STERR shift }], 
 		-logo => ['PASSIVE', undef, undef, Tk::findINC('Tk/AppWindow/aw_logo.png')],
 		@$pre,
 		DEFAULT => ['SELF'],
@@ -225,7 +228,7 @@ sub AddPreConfig {
 =item B<AppName>I<($name)>
 
 Sets and returns the application name.
-Same as $app->ConfigPut(-name => $name), or $app->ConfigGet($name).
+Same as $app->configPut(-name => $name), or $app->configGet($name).
 
 =cut
 
@@ -246,13 +249,6 @@ sub CanQuit {
 	return 1
 }
 
-=item B<CmdQuit>
-
-Gets called when you execute the 'quit' command or close the main window.
-It queries all extensions for permission and exits if all cleanr.
-
-=cut
-
 sub CmdQuit {
 	my $self = shift;
 	my $quit = 1;
@@ -266,93 +262,166 @@ sub CmdQuit {
 	} 
 }
 
-=item B<CommandsConfig>I<(@commands)>
+=item B<cmdConfig>I<(@commands)>
 
- $app->CommandsConfig(
+ $app->cmdConfig(
     command1 => ['SomeMethod', $obj, @options],
     command2 => [sub { do whatever }, @options],
  );
 
-CommandsConfig takes a paired list of commandnames and callback descriptions.
-It registers them to the commands table. After that B<CommandExecute> can 
+cmdConfig takes a paired list of commandnames and callback descriptions.
+It registers them to the commands table. After that B<cmdExecute> can 
 be called on them.
 
 =cut
 
-sub CommandsConfig {
+sub cmdConfig {
 	my $self = shift;
+	my $tbl = $self->{CMNDTABLE};
 	while (@_) {
 		my $key = shift;
 		my $callback = shift;
-		$self->CommandRegister($key, $callback);
+		unless (exists $tbl->{$key}) {
+			$tbl->{$key} = $self->CreateCallback(@$callback);
+		} else {
+			carp "Command $key already exists"
+		}
 	}
 }
 
-=item B<CommandExecute>('command_name', @options);
+=item B<cmdExecute>('command_name', @options);
 
 Looks for the callback assigned to command_name and executes it.
 It first passes the options you specify here. Then it passes the
-options you specified in B<CommandsConfig>. My advise is to make
+options you specified in B<cmdConfig>. My advise is to make
 a clear choice. Either specify all options here and nothing in
-B<CommandsConfig>. Or have all the options in B<CommandsConfig> and
+B<cmdConfig>. Or have all the options in B<cmdConfig> and
 specify nothing here. This method is called by menu items, toolbar items
 and whatever you specify.
 
 =cut
 
-sub CommandExecute {
+sub cmdExecute {
 	my $self = shift;
 	my $key = shift;
 	my $cmd = $self->{CMNDTABLE}->{$key};
 	if (defined $cmd) {
-		return $cmd->Execute(@_);
+		return $cmd->execute(@_);
 	} else {
-		warn "Command $key is not defined"
+		carp "Command $key is not defined"
 	}
 }
 
-=item B<CommandExists>('command_name')
+=item B<cmdExists>('command_name')
 
 Checks if command_name can be used as a command. Returns 1 or 0.
 
 =cut
 
-sub CommandExists {
+sub cmdExists {
 	my ($self, $key) = @_;
 	unless (defined $key) { return 0 }
 	return exists $self->{CMNDTABLE}->{$key};
 }
 
-sub CommandRegister {
-	my ($self, $key, $callback) = @_;
-	my $tbl = $self->{CMNDTABLE};
-	unless (exists $tbl->{$key}) {
-		$tbl->{$key} = $self->CreateCallback(@$callback);
-	} else {
-		warn "Command $key already exists"
-	}
+sub CmdGet {
+	my ($self, $cmd) = @_;
+	return $self->{CMNDTABLE}->{$cmd}
 }
 
-=item B<ConfigGet>I<('-option')>
+sub CmdHook {
+	my $self = shift;
+	my $method = shift;
+	my $cmd = shift;
+	my $call = $self->CmdGet($cmd);
+	if (defined $call) {
+		$call->$method(@_);
+		return
+	}
+	carp "Command '$cmd' does not exist"
+}
 
-Equivalent to $app-cget. Except here you can also specify
-the options added by B<ConfigInit>
+=item B<cmdHookAfter>(I<'command_name'>, I<@callback>)
+
+Adds a hook to after stack of the callback associated with 'command_name'.
+See L<Tk::AppWindow::BaseClasses::Callback>.
 
 =cut
 
-sub ConfigGet {
+sub cmdHookAfter {
+	my $self = shift;
+	return $self->CmdHook('hookAfter', @_);
+}
+
+=item B<cmdHookBefore>(I<'command_name'>, I<@callback>)
+
+Adds a hook to before stack of the callback associated with 'command_name'.
+See L<Tk::AppWindow::BaseClasses::Callback>.
+
+=cut
+
+sub cmdHookBefore {
+	my $self = shift;
+	return $self->CmdHook('hookBefore', @_);
+}
+
+
+=item B<cmdRemove>(I<'command_name'>)
+
+Removes 'command_name' from the command stack.
+
+=cut
+
+sub cmdRemove {
+	my ($self, $key) = @_;
+	return unless defined $key;
+	return delete $self->{CMNDTABLE}->{$key};
+}
+
+=item B<cmdHookAfter>(I<'command_name'>, I<@callback>)
+
+unhooks a hook from after stack of the callback associated with 'command_name'.
+See L<Tk::AppWindow::BaseClasses::Callback>.
+
+=cut
+
+sub cmdUnhookAfter {
+	my $self = shift;
+	return $self->CmdHook('unhookAfter', @_);
+}
+
+=item B<cmdHookBefore>(I<'command_name'>, I<@callback>)
+
+unhooks a hook from before stack of the callback associated with 'command_name'.
+see L<Tk::AppWindow::BaseClasses::Callback>.
+
+=cut
+
+sub cmdUnhookBefore {
+	my $self = shift;
+	return $self->CmdHook('unhookBefore', @_);
+}
+
+=item B<configGet>I<('-option')>
+
+Equivalent to $app-cget. Except here you can also specify
+the options added by B<configInit>
+
+=cut
+
+sub configGet {
 	my ($self, $option) = @_;
 	if (exists $self->{CONFIGTABLE}->{$option}) {
 		my $call = $self->{CONFIGTABLE}->{$option};
-		return $call->Execute;
+		return $call->execute;
 	} else {
 		return $self->cget($option);
 	}
 }
 
-=item B<ConfigInit>I<(@options)>
+=item B<configInit>I<(@options)>
 
- $app->ConfigInit(
+ $app->configInit(
     -option1 => ['method', $obj, @options],
     -option2 => [sub { do something }, @options],
  );
@@ -361,7 +430,7 @@ Add options to the options table. Usually called at create time. But worth exper
 
 =cut
 
-sub ConfigInit {
+sub configInit {
 	my $self = shift;
 	my $args = $self->{ARGS};
 	my $table = $self->{CONFIGTABLE};
@@ -373,35 +442,35 @@ sub ConfigInit {
 		unless (defined $value) { $value = $default };
 		unless (exists $table->{$option}) {
 			$table->{$option} = $self->CreateCallback($call, $owner);
-			$self->ConfigPut($option, $value);
+			$self->configPut($option, $value);
 		} else {
 			warn "Config option $option already defined\n";
 		}
 	}
 }
 
-=item B<ConfigMode>
+=item B<configMode>
 
 Returns 1 if MainLoop is not yet running.
 
 =cut
 
-sub ConfigMode {
+sub configMode {
 	return exists $_[0]->{ARGS};
 }
 
-=item B<ConfigPut>I<(-option => $value)>
+=item B<configPut>I<(-option => $value)>
 
 Equivalent to $app-configure. Except here you can also specify
-the options added by B<ConfigInit>
+the options added by B<configInit>
 
 =cut
 
-sub ConfigPut {
+sub configPut {
 	my ($self, $option, $value) = @_;
 	if (exists $self->{CONFIGTABLE}->{$option}) {
 		my $call = $self->{CONFIGTABLE}->{$option};
-		$call->Execute($value);
+		$call->execute($value);
 	} else {
 		$self->configure($option, $value);
 	}
@@ -487,7 +556,7 @@ sub LoadExtension {
 		die $@ if $@;
 		$ext = $modname->new($self);
 		if (defined($ext)) {
-			print "Extension $name loaded\n" if $self->Verbose;
+			$self->log("Extension $name loaded\n") if $self->Verbose;
 			$exts->{$name} = $ext;
 			my $o = $self->{EXTLOADORDER};
 			push @$o, $name;
@@ -495,6 +564,18 @@ sub LoadExtension {
 			warn "unable to load extension $name\n";
 		}
 	}
+}
+
+sub log {
+	my ($self, $message) = @_;
+	$message = "$message\n" unless $message =~ /\n$/;
+	$self->Callback('-logcall', $message);
+}
+
+sub logError {
+	my ($self, $message) = @_;
+	$message = "$message\n" unless $message =~ /\n$/;
+	$self->Callback('-logerrorcall', $message);
 }
 
 =item B<MenuItems>
@@ -511,7 +592,7 @@ sub MenuItems {
 #This table is best viewed with tabsize 3.
 #			 type					menupath			label						cmd			icon							keyb			config variable
 		[	'menu', 				undef,			"~appname", 		], 
-		[	'menu_normal',		'appname::',		"~Quit",					'quit',		'application-exit',		'Control-q',	], 
+		[	'menu_normal',		'appname::',		"~Quit",					'quit',		'application-exit',		'CTRL+Q',	], 
 	)
 }
 
@@ -551,7 +632,7 @@ sub PostConfig {
       $self->iconimage($logo);
    }
 	my $pc = $self->{POSTCONFIG};
-	for (@$pc) { $_->Execute }
+	for (@$pc) { $_->execute }
 }
 
 =item B<ToolItems>
@@ -569,7 +650,7 @@ sub ToolItems {
 
 =item B<Verbose>
 
-Set or get verbosity. Same as $app->ConfigPut(-verbose => $value) or $self->ConfigGet('-verbose');
+Set or get verbosity. Same as $app->configPut(-verbose => $value) or $self->configGet('-verbose');
 
 =cut
 

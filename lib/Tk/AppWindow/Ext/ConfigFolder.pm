@@ -65,8 +65,8 @@ sub new {
 		-savegeometry => ['PASSIVE', undef, undef, 1],
 	);
 
-	$self->ConfigInit(
-		-configfolder => ['ConfigFolder', $self, $configfolder . $self->ConfigGet('-appname')],
+	$self->configInit(
+		-configfolder => ['ConfigFolder', $self, $configfolder . $self->configGet('-appname')],
 	);
 
 	$self->AddPostConfig('PostConfig', $self);
@@ -83,8 +83,8 @@ None.
 
 sub CanQuit {
 	my $self = shift;
-	if ($self->ConfigGet('-savegeometry')) {
-		my $file = $self->ConfigGet('-configfolder') . '/geometry';
+	if ($self->configGet('-savegeometry')) {
+		my $file = $self->configGet('-configfolder') . '/geometry';
 		if (open(OFILE, ">", $file)) {
 			print OFILE $self->geometry . "\n";
 			close OFILE
@@ -107,8 +107,8 @@ sub ConfigFolder {
 
 sub PostConfig {
 	my $self = shift;
-	if ($self->ConfigGet('-savegeometry')) {
-		my $file = $self->ConfigGet('-configfolder') . '/geometry';
+	if ($self->configGet('-savegeometry')) {
+		my $file = $self->configGet('-configfolder') . '/geometry';
 		if (open(OFILE, "<", $file)) {
 			my $g = <OFILE>;
 			close OFILE;

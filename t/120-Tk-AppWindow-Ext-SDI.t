@@ -1,6 +1,7 @@
 
 use strict;
 use warnings;
+sleep 1;
 use lib './t/lib';
 
 use Test::Tk;

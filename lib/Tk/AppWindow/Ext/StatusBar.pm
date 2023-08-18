@@ -100,7 +100,7 @@ sub new {
 	$self->{ITEMS} = {};
 
 	
-	$self->ConfigInit(
+	$self->configInit(
 		-statusbarpanel => ['Panel', $self, 'BOTTOM'],
 		-statusbarvisible => ['PanelVisible', $self, 1],
 	);
@@ -156,15 +156,15 @@ sub Add {
 	my $pos = delete $params{'-position'};
 	my $class = $types{$type}->{class};
 	my $pack = $types{$type}->{pack};
-	my $itempadding = $self->ConfigGet('-statusitempadding');
+	my $itempadding = $self->configGet('-statusitempadding');
 	if (defined $pos) {
 		my @items = $self->Subwidget($self->Panel)->children;
 		my $b = $items[$pos];
 		push @$pack, -before => $b if defined $b;
 	}
 	my $i = $self->Subwidget($self->Panel)->$class(%params, 
-		-relief => $self->ConfigGet('-statusitemrelief'),
-		-borderwidth => $self->ConfigGet('-statusitemborderwidth'),
+		-relief => $self->configGet('-statusitemrelief'),
+		-borderwidth => $self->configGet('-statusitemborderwidth'),
 	)->pack(@$pack, -padx => $itempadding, -pady => $itempadding, -side => 'left');
 	$self->{ITEMS}->{$name} = $i;
 	return $i
@@ -243,7 +243,7 @@ sub AddTextItem {
 
 sub Cycle {
 	my $self = shift;
-	my $time = $self->ConfigGet('-statusupdatecycle');
+	my $time = $self->configGet('-statusupdatecycle');
 	$self->after($time, ['Update', $self]) unless $time eq 0;
 }
 
@@ -268,7 +268,7 @@ sub Delete {
 
 sub InitMsgItem {
 	my $self = shift;
-	if ($self->ConfigGet('-statusmsgitemoninit')) {
+	if ($self->configGet('-statusmsgitemoninit')) {
 		unless (exists $self->{MI}) {
 			my $mi = $self->AddMessageItem('msg', -position => 0);
 			$self->{MI} = $mi;

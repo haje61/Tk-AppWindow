@@ -119,7 +119,7 @@ sub new {
 		-historymenupath => ['PASSIVE', undef, undef, 'File::Open recent'],
 		-readonly => ['PASSIVE', undef, undef, 0],
 	);
-	$self->CommandsConfig(
+	$self->cmdConfig(
 		file_new => ['CmdFileNew', $self],
 		file_open => ['CmdFileOpen', $self],
 		file_save => ['CmdFileSave', $self],
@@ -153,7 +153,7 @@ sub CanQuit {
 sub ClearCurrent {
 	my $self = shift;
 	$self->Current(undef);
-	$self->ConfigPut(-title => $self->ConfigGet('-appname'));
+	$self->configPut(-title => $self->configGet('-appname'));
 }
 
 sub CloseDoc {
@@ -189,7 +189,7 @@ sub CloseDoc {
 
 			#Keep history list below maximum
 			my $siz = @$hist;
-			pop @$hist if ($siz > $self->ConfigGet('-maxhistory'));
+			pop @$hist if ($siz > $self->configGet('-maxhistory'));
 		}
 
 		#delete from document hash
@@ -300,7 +300,7 @@ For a new document it will call I<CmdFileSaveAs>.
 
 sub CmdFileSave {
 	my ($self, $name) = @_;
-	return 0 if $self->ConfigGet('-readonly');
+	return 0 if $self->configGet('-readonly');
 	
 	my $doc;
 	unless (defined $name) {
@@ -332,7 +332,7 @@ For a new document it will call I<CmdFileSaveAs>.
 
 sub CmdFileSaveAs {
 	my ($self, $name) = @_;
-	return 0 if $self->ConfigGet('-readonly');
+	return 0 if $self->configGet('-readonly');
 
 	my $doc;
 	unless (defined $name) {
@@ -366,7 +366,7 @@ sub CmdPopulateHistoryMenu {
 	my $self = shift;
 	my $mnu = $self->GetExt('MenuBar');
 	if (defined $mnu) {
-		my $path = $self->ConfigGet('-historymenupath');
+		my $path = $self->configGet('-historymenupath');
 		my ($menu, $index) = $mnu->FindMenuEntry($path);
 		if (defined($menu)) {
 			my $submenu = $menu->entrycget($index, '-menu');
@@ -391,7 +391,7 @@ sub CmdPopulateHistoryMenu {
 sub CreateContentHandler {
 	my ($self, $name) = @_;
 	if ($self->CmdFileClose) {
-		my $cmclass = $self->ConfigGet('-contentmanagerclass');
+		my $cmclass = $self->configGet('-contentmanagerclass');
 		my $h = $self->WorkSpace->$cmclass(-extension => $self)->pack(-expand => 1, -fill => 'both');
 		$self->{DOCS}->{$name} = $h;
 		$self->update;
@@ -479,7 +479,7 @@ sub GetUntitled {
 
 sub LoadHistory {
 	my $self = shift;
-	my $folder = $self->ConfigGet('-configfolder');
+	my $folder = $self->configGet('-configfolder');
 	if (-e "$folder/history") {
 		if (open(OFILE, "<", "$folder/history")) {
 			my @history = ();
@@ -496,7 +496,7 @@ sub LoadHistory {
 
 sub MenuItems {
 	my $self = shift;
-	my $readonly = $self->ConfigGet('-readonly');
+	my $readonly = $self->configGet('-readonly');
 
 	my @items = (
 #This table is best viewed with tabsize 3.
@@ -504,21 +504,21 @@ sub MenuItems {
  		[	'menu', 				undef,			"~File" 	], 
 	);
 	push @items,
-		[	'menu_normal',		'File::',		"~New",					'file_new',				'document-new',	'Control-n'			], 
+		[	'menu_normal',		'File::',		"~New",					'file_new',				'document-new',	'CTRL+N'			], 
 		[	'menu_separator',	'File::', 		'f1'], 
 	unless $readonly;
 	push @items,
-		[	'menu_normal',		'File::',		"~Open",					'file_open',			'document-open',	'Control-o'			], 
+		[	'menu_normal',		'File::',		"~Open",					'file_open',			'document-open',	'CTRL+O'			], 
  		[	'menu', 				'File::',		"Open ~recent", 		'pop_hist_menu', 	],
 	;
 	push @items,
 		[	'menu_separator',	'File::', 		'f2' ], 
-		[	'menu_normal',		'File::',		"~Save",					'file_save',			'document-save',	'Control-s'			], 
-		[	'menu_normal',		'File::',		"~Save as",				'file_save_as',		'document-save-as',],
+		[	'menu_normal',		'File::',		"~Save",					'file_save',			'document-save',	'CTRL+S'			], 
+		[	'menu_normal',		'File::',		"S~ave as",				'file_save_as',		'document-save-as',],
 	unless $readonly;
 	push @items,
 		[	'menu_separator',	'File::', 		'f3' ], 
-		[	'menu_normal',		'File::',		"~Close",				'file_close',			'document-close',	'Control-O'	], 
+		[	'menu_normal',		'File::',		"~Close",				'file_close',			'document-close',	'CTRL+SHIFT+O'	], 
 	;
 	return @items
 }
@@ -562,7 +562,7 @@ sub SaveHistory {
 	my $self = shift;
 	my $hist = $self->{HISTORY};
 	if (@$hist) {
-		my $folder = $self->ConfigGet('-configfolder');
+		my $folder = $self->configGet('-configfolder');
 		if (open(OFILE, ">", "$folder/history")) {
 			for (@$hist) {
 				print OFILE "$_\n";
@@ -577,14 +577,14 @@ sub SaveHistory {
 sub SelectDoc {
 	my ($self, $name) = @_;
 	$self->{CURRENT} = $name;
-	$self->ConfigPut(-title => $self->ConfigGet('-appname') . ' - ' . $self->GetTitle($name));
+	$self->configPut(-title => $self->configGet('-appname') . ' - ' . $self->GetTitle($name));
 	my $navigator = $self->GetExt('Navigator');
 	$navigator->SelectEntry($name) if defined $navigator;
 }
 
 sub ToolItems {
 	my $self = shift;
-	my $readonly = $self->ConfigGet('-readonly');
+	my $readonly = $self->configGet('-readonly');
 	my @items = ();
 
 	push @items,

@@ -13,15 +13,49 @@ use Carp;
 use vars qw($VERSION);
 $VERSION="0.01";
 
+use Data::Compare;
+use Scalar::Util qw(blessed);
+
 =head1 SYNOPSIS
 
  my $cb = Tk::AppWindow::BaseClasses::Callback->new('MethodName', $owner, @options);
  my $cb = Tk::AppWindow::BaseClasses::Callback->new(sub { do whatever }, @options);
- $cb->Execute(@moreoptions);
+ $cb->execute(@moreoptions);
+ $cb->hookBefore('some_method', $obj, @param);
+ $cb->hookBefore(\&some_sub, @param);
+ $cb->unhookBefore('some_method', $obj, @param);
+ $cb->unhookBefore(\&some_sub, @param);
+ $cb->hookAfter('some_method', $obj, @param);
+ $cb->hookAfter(\&some_sub, @param);
+ $cb->unhooAfter('some_method', $obj, @param);
+ $cb->unhookAfter(\&some_sub, @param);
 
 =head1 DESCRIPTION
 
-This module provides a simple object to store and execute a code reference. 
+This module provides means to create universal callbacks.
+
+After creation it can hook and unhook other callbacks to it.
+Those hooked through the B<hookBefore> method will be called before the main callback.
+Those hooked through the B<hookAfter> method will be called after the main callback.
+Results are passed forward through the chain.
+
+=head1 METHODS
+
+=over 4
+
+=cut
+
+=item B<new>
+
+There are two ways to create a new callback;
+
+ my $c = Tk::AppWindow::BaseClasses::Callback->new('MethodName', $owner, @options);
+
+When you call B<execute> the options you pass to it will be placed after $owner and before @options
+
+ my $c = Tk::AppWindow::BaseClasses::Callback->new(\&SomeAnonymusSub, @options);
+
+When you call B<execute> the options you pass to it will be placed before @options
 
 =cut
 
@@ -30,102 +64,156 @@ sub new {
 	my $class = ref($proto) || $proto;
 	my $self = {};
 
-	$self->{ANONYMOUS} = 0;
-	my $call = shift;
-	if ((ref $call) and ($call =~/^CODE/)) {
-		$self->{ANONYMOUS} = 1;
-	} else {
-		my $owner = shift;
-		if ($owner->can($call)) {
-			$call = $owner->can($call);
-			$self->{OWNER} = $owner;
-		} else {
-			carp "cannot create callback"
-		}
-	}
-	$self->{CALL} = $call;
-	$self->{OPTIONS} = \@_;
+	$self->{CMD} = [];
+	$self->{HOOKSAFTER} = [];
+	$self->{HOOKSBEFORE} = [];
 
 	bless ($self, $class);
+	$self->{CMD} = [@_]; #if $self->Check(@_);
 	return $self;
 }
 
-=head1 METHODS
-
-=over 4
-
-=item B<Anonymous>
-
-returns the state of the Anonymous flag. 
-
-=cut
-
-sub Anonymous {
-	my $self = shift;
-	return $self->{ANONYMOUS};
-}
-
-=item B<Call>($coderef)
-
-=item B<Call>('MethodName')
-
-Sets and returns the methodname or code reference.
-
-=cut
-
-sub Call {
-	my $self = shift;
-	if (@_) { $self->{CALL} = shift; }
-	return $self->{CALL};
-}
-
-=item B<Execute>(@options)
-
-Executes the callback. It checks if the call is a code reference, if yes it invokes it.
-If the call is a method name, it looks for that method in owner and then invokes that
-method. 
-
-The first parameter given to the call is the value of B<Owner>. Then whatever you feed 
-B<Execute>, if any. Finally the list in B<Options> is passed on.
-
-If the B<Anonymous> flag is set it will pass all the options
-you specify at B<Execute> and then B<Owner> and B<Options>.
-
-=cut
-
-sub Execute {
-	my $self = shift;
-	my $call = $self->{CALL};
-	my $options = $self->{OPTIONS};
-	if ($self->{ANONYMOUS}) {
-		return &$call(@_, @$options);
+sub Callback {
+	my ($self, $cmd, @options) = @_;
+	my @call = @$cmd;
+	my $sub = shift @call;
+	my @opt = ();
+	unless ((ref $sub) and ($sub =~/^CODE/)) {
+		my $owner = shift @call;
+		$sub = $owner->can($sub);
+		return &$sub($owner, @options, @call);
 	} else {
-		return &$call($self->{OWNER}, @_, @$options);
+		return &$sub(@options, @call);
 	}
 }
 
-=item B<Options>
-
-Sets and returns a reference to a list of options. You normally do not call this method yourself.
-
-=cut
-
-sub Options {
+sub Check {
 	my $self = shift;
-	if (@_) { $self->{OPTIONS} = shift; }
-	return $self->{OPTIONS};
+	my $call = shift;
+	unless ((ref $call) and ($call =~/^CODE/)) {
+		my $owner = shift;
+		unless (defined $owner) {
+			carp "no owner defined";
+			return 0
+		}
+		unless ((blessed $owner) and ($owner =~ /^\S+\=/)) {
+			carp "not an object";
+			return 0
+		}
+		unless ($owner->can($call)) {
+			carp "invalid method: $call";
+			return 0;
+		}
+	}
+	return 1;
 }
 
-=item B<Owner>($owner)
+=item B<execute>(I<@options>)
 
-Returns a reference to the owner of the callback. 
+Runs the callback and returns the result. 
 
 =cut
 
-sub Owner {
-   my $self = shift;
-   if (@_) { $self->{OWNER} = shift; }
-   return $self->{OWNER};
+sub execute {
+	my $self = shift;
+	my @param = @_;
+
+	my $before = $self->{HOOKSBEFORE};
+	for (@$before) {
+		@param = $self->Callback($_, @param);
+	}
+	
+	my @result = $self->Callback($self->{CMD}, @param);
+
+	my $after = $self->{HOOKSAFTER};
+	for (@$after) {
+		@result = $self->Callback($_, @result);
+	}
+	return if @result eq 0;
+	return $result[0] if @result eq 1;
+	return @result
+}
+
+=item B<hookAfter(@callback)
+
+Adds a hook to the after section. The items in I<@callback> are exactly as creating a new instance.
+The callback will be called after the main callback is fed what the main callback returns as parameters.
+
+=cut
+
+sub hookAfter {
+	my $self = shift;
+	my $hk = $self->{HOOKSAFTER};
+	$self->Check(@_);
+	push @$hk, [@_];
+}
+
+=item B<hookBefore>(I<@callback>)
+
+Adds a hook to the before section. The items in I<@callback> are exactly as creating a new instance.
+The callback will be called before the main callback and feeds it what it returns as parameters.
+
+=cut
+
+sub hookBefore {
+	my $self = shift;
+	my $hk = $self->{HOOKSBEFORE};
+	$self->Check(@_);
+	push @$hk, [@_];
+}
+
+
+=item B<unhookAfter(@options)
+
+Removes a hook from the after section. The items in I<@callback> are exactly as when adding the hook.
+If multiple identical items are present it removes them alls.
+
+=cut
+
+sub unhookAfter {
+	my $self = shift;
+	my $hook = [ @_ ];
+	my $found = 0;
+
+	my $after = $self->{HOOKSAFTER};
+	my @na = ();
+	for (@$after) {
+		unless (Compare($_, $hook)) {
+			push @na, $_;
+		} else {
+			$found = 1;
+# 			last;
+		}
+	}
+	$self->{HOOKSAFTER } = \@na;
+	carp "Hook not found" unless $found;
+}
+
+
+=item B<unhookBefore(@options)
+
+Removes a hook from the before section. The items in I<@callback> are exactly as when adding the hook.
+If multiple identical items are present it removes them all.
+
+=cut
+
+sub unhookBefore {
+	my $self = shift;
+	my $hook = [ @_ ];
+	my $found = 0;
+
+	my $before = $self->{HOOKSBEFORE};
+	my @nb = ();
+	for (@$before) {
+		unless (Compare($_, $hook)) {
+			push @nb, $_;
+		} else {
+			$found = 1;
+# 			last;
+		}
+	}
+	$self->{HOOKSBEFORE } = \@nb;
+	carp "Hook not found" unless $found;
 }
 
 =back

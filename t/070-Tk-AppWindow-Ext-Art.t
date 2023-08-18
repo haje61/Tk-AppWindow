@@ -1,7 +1,7 @@
 
 use strict;
 use warnings;
-
+sleep 1;
 use Test::More;
 use Test::Tk;
 $mwclass = 'Tk::AppWindow';
@@ -203,7 +203,7 @@ sub CreateImgTests {
 	my $f;
 	push @tests, [sub {
 		my $page = $pages{$size};
-		$art->ConfigPut(-icontheme => $theme);
+		$art->configPut(-icontheme => $theme);
 		$f = $page->LabFrame(
 			-label => $theme,
 			-labelside => 'acrosstop',
@@ -214,6 +214,7 @@ sub CreateImgTests {
 	for (@$icons) {
 		my $icon = $_;
 		push @tests, [sub {
+# 			print "Icon $icon in theme $theme\n";
 			my $img = $art->GetIcon($icon, $size);
 			if (defined $img) {
 				$f->Label(

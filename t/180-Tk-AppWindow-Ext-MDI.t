@@ -1,6 +1,7 @@
 
 use strict;
 use warnings;
+sleep 1;
 use lib './t/lib';
 
 use Test::Tk;
@@ -30,6 +31,6 @@ if (defined $app) {
 	[sub { return $ext->Name  }, 'MDI', 'Extension MDI loaded'],
 );
 
-# $app->CommandExecute('file_new');
+# $app->cmdExecute('file_new');
 starttesting;
 

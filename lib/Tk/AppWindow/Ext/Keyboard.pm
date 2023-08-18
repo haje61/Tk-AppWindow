@@ -23,7 +23,7 @@ use base qw( Tk::AppWindow::BaseClasses::Extension );
 
 =head1 DESCRIPTION
 
-=head1 B<CONFIG VARIABLES>
+=head1 CONFIG VARIABLES
 
 =over 4
 
@@ -60,24 +60,52 @@ sub AddBinding {
 	my ($self, $command, $key) = @_;
 	my $bound = $self->{BOUND};
 	my $w = $self->GetAppWindow;
+	$key = $self->Convert2Tk($key);
 	if (exists $bound->{$command}) {
 		warn "Command '$command' is bound to key " . $bound->{$command} . ". Releasing this binding";
 		$w->bind("<$key>", '');
 	}
 	$bound->{$command} = $key;
-	$w->bind("<$key>", [$w, 'CommandExecute', $command]);
+	$w->bind("<$key>", [$w, 'cmdExecute', $command]);
 }
-
 
 sub ConfigureBindings {
 	my $self = shift;
-	my $bindings = $self->ConfigGet('-keyboardbindings');
+	my $bindings = $self->configGet('-keyboardbindings');
 	my @b = @$bindings;
 	while (@b) {
 		my $command = shift @b;
 		my $key = shift @b;
 		$self->AddBinding($command, $key);
 	}
+}
+
+sub Convert2Tk {
+	my ($self, $dkey) = @_;
+	my $shift = 0;
+	my $ctrl = 0;
+	my $alt = 0;
+	while ($dkey =~ s/^([^\+]+)\+//) {
+		if ($1 eq 'SHIFT') {
+			$shift = 1;
+		} elsif ($1 eq 'CTRL') {
+			$ctrl = 1;
+		} elsif ($1 eq 'ALT') {
+			$alt = 1;
+		} else {
+			die "Unrecognized key $1 in key conversion";
+		}
+	}
+	if ((length($dkey) eq 1) and ($dkey ge 'A') and ($dkey le 'Z')) {
+		$dkey = lc($dkey) unless $shift;
+		$shift = 0;
+	}
+	my $tkkey = '';
+	$tkkey = 'Control-' if $ctrl;
+	$tkkey = $tkkey . 'Alt-' if $alt;
+	$tkkey = $tkkey . 'Shift-' if $shift;
+	$tkkey = $tkkey . $dkey;
+	return $tkkey
 }
 
 sub ReConfigure {

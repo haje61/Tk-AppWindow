@@ -35,9 +35,9 @@ sub Close {
 sub ConfigureCM {
 	my $self = shift;
 	my $ext = $self->Extension;
-	my $cmopt = $ext->ConfigGet('-contentmanageroptions');
+	my $cmopt = $ext->configGet('-contentmanageroptions');
 	for (@$cmopt) {
-		my $val = $ext->ConfigGet($_);
+		my $val = $ext->configGet($_);
 		$self->configure($_, $val) if ((defined $val) and ($val ne ''));
 	}
 }

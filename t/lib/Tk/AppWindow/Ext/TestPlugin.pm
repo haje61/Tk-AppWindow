@@ -37,11 +37,11 @@ sub new {
 
 	$self->Require('Dummy');
 
-	$w->CommandsConfig(
+	$w->cmdConfig(
 		plugcmd => ['PlugTest', $self, 56],
 	);
 	
-	$w->ConfigInit(
+	$w->configInit(
 		-quitter => ['Quitter', $self, 1],
 		-plugoption => ['Value', $self, 'Romulus' ],
 	);

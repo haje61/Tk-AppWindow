@@ -40,9 +40,9 @@ sub Populate {
 sub ConfigureCM {
 	my $self = shift;
 	my $plug = $self->Extension;
-	my $cmopt = $plug->ConfigGet('-contentmanageroptions');
+	my $cmopt = $plug->configGet('-contentmanageroptions');
 	for (@$cmopt) {
-		my $val = $plug->ConfigGet($_);
+		my $val = $plug->configGet($_);
 		if ((defined $val) and ($val ne '')) {
 			$val = [$val] if $_ eq '-contenttabs';
 			$self->configure($_, $val) ;
@@ -101,14 +101,14 @@ my $se = Tk::AppWindow->new(
 #This table is best viewed with tabsize 3.
 #			 type					menupath			label						cmd						icon					keyb			config variable
  		[	'menu', 				'View',			"~Edit" 	], 
-		[	'menu_normal',		'Edit::',		"~Copy",					'<Control-c>',				'edit-copy',		'*Control-c'			], 
-		[	'menu_normal',		'Edit::',		"C~ut",					'<Control-x>'	,			'edit-cut',			'*Control-x'			], 
-		[	'menu_normal',		'Edit::',		"~Paste",				'<Control-v>'	,			'edit-paste',		'*Control-v'			], 
+		[	'menu_normal',		'Edit::',		"~Copy",					'<Control-c>',				'edit-copy',		'*CTRL+C'			], 
+		[	'menu_normal',		'Edit::',		"C~ut",					'<Control-x>'	,			'edit-cut',			'*CTRL+X'			], 
+		[	'menu_normal',		'Edit::',		"~Paste",				'<Control-v>'	,			'edit-paste',		'*CTRL+V'			], 
  		[	'menu_separator',	'Edit::', 		'e1' ], 
-		[	'menu_normal',		'Edit::',		"U~ndo",					'<Control-z>'	,			'edit-undo',		'*Control-z'			], 
-		[	'menu_normal',		'Edit::',		"~Redo",					'<Control-Z>'	,			'edit-redo',		'*Control-Z'			], 
-		[	'menu_separator',	'File::', 		'e2' ], 
-		[	'menu_normal',		'Edit::',		"~Select all",			'<Control-a>',				'edit-select-all','*Control-a'			], 
+		[	'menu_normal',		'Edit::',		"U~ndo",					'<Control-z>'	,			'edit-undo',		'*CTRL+Z'			], 
+		[	'menu_normal',		'Edit::',		"~Redo",					'<Control-Z>'	,			'edit-redo',		'*CTRL+SHIFT+Z'	], 
+		[	'menu_separator',	'Edit::', 		'e2' ], 
+		[	'menu_normal',		'Edit::',		"~Select all",			'<Control-a>',				'edit-select-all','*CTRL+A'			], 
 	],
 	-extensions => [qw[Art Balloon MDI ToolBar StatusBar MenuBar Navigator Help Settings]],
 	-toolitems => [

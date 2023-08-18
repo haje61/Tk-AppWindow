@@ -8,6 +8,7 @@ Tk::AppWindow::Ext::Plugins - load and unload plugins
 
 use strict;
 use warnings;
+use Carp;
 use vars qw($VERSION);
 $VERSION="0.01";
 
@@ -35,6 +36,11 @@ sub new {
 	my $self = $class->SUPER::new(@_);
 	$self->{PLUGINS} = {};
 
+	$self->AddPreConfig(
+		-plugins => ['PASSIVE', undef, undef, []],
+	);
+
+	$self->AddPostConfig('DoPostConfig', $self);
 	return $self;
 }
 
@@ -57,6 +63,14 @@ sub CanQuit {
 		$close = 0 unless $self->PluginUnload($_)
 	}
 	return $close
+}
+
+sub DoPostConfig {
+	my $self = shift;
+	my $plugins = $self->configGet('-plugins');
+	for (@$plugins) {
+		$self->PluginLoad($_);
+	}
 }
 
 =item B<GetPlugin>(I<$name>)
@@ -92,9 +106,9 @@ sub PluginLoad {
 	my ($self, $plug) = @_;
 	my $obj;
 	my $modname = "Tk::AppWindow::Plugins::$plug";
-	my $app $self->GetAppWindow;
+	my $app = $self->GetAppWindow;
 	eval "use $modname; \$obj = new $modname(\$app);";
-	die $@ if $@;
+	croak $@ if $@;
 	if (defined $obj) {
 		$self->{PLUGINS}->{$plug} = $obj;
 		return 1
@@ -112,8 +126,8 @@ Loads the plugin; returns 1 if succesfull;
 sub PluginUnload {
 	my ($self, $plug) = @_;
 	my $obj = $self->GetPlugin($plug);
-	if ($obj->Unload) {
-		delete $self->{PLUGINS}->{$plug}
+	if ($obj->UnLoad) {
+		delete $self->{PLUGINS}->{$plug};
 		return 1
 	}
 	return 0;
