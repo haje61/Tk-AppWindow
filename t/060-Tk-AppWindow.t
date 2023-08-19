@@ -71,20 +71,7 @@ createapp(
 );
 
 #testing accessors
-my @accessors = qw(AppName Verbose);
-for (@accessors) {
-	my $method = $_;
-	push @tests, [sub {
-		my $default = $app->$method;
-		$app->$method('blieb');
-		my $res1 = $app->$method;
-		$app->$method('quep');
-		my $res2 = $app->$method;
-		$app->$method($default);
-		return (($res1 eq 'blieb') and ($res2 eq 'quep'));
-	}, 1, "Accessor $method"];
-}
-
+testaccessors($app, qw/AppName Verbose/);
 
 push @tests, (
 	[sub { return $app->cmdExecute('test1') }, 'Caterpillar12', 'anonymous command without parameter'],

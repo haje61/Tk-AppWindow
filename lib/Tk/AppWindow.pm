@@ -620,7 +620,7 @@ sub PopMessage {
 
 sub PopTest {
 	my $self = shift;
-	$self->PopMessage("you did something");
+	$self->PopMessage('You did something');
 }
 
 sub PostConfig {

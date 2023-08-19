@@ -11,6 +11,7 @@ my %prereq = (
 	'Imager'								=> '1.019',
 	'Imager::File::PNG'				=> '0.99',
 	'MIME::Base64'						=> '3.16',
+	'Scalar::Util'						=> '1.63',
 	'Scalar::Util::Numeric'			=> '0.40',
 	'Test::Tk'							=> '3.01',
 	'Tk'									=> '804.023',

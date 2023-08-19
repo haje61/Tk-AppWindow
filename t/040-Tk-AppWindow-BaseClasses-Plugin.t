@@ -1,7 +1,6 @@
 
 use strict;
 use warnings;
-sleep 1;
 
 use Test::More tests => 1;
 BEGIN { use_ok('Tk::AppWindow::BaseClasses::Plugin') };

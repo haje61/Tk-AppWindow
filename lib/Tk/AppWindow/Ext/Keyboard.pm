@@ -61,12 +61,10 @@ sub AddBinding {
 	my $bound = $self->{BOUND};
 	my $w = $self->GetAppWindow;
 	$key = $self->Convert2Tk($key);
-	if (exists $bound->{$command}) {
-		warn "Command '$command' is bound to key " . $bound->{$command} . ". Releasing this binding";
-		$w->bind("<$key>", '');
+	unless (exists $bound->{$command}) {
+		$bound->{$command} = $key;
+		$w->bind("<$key>", [$w, 'cmdExecute', $command]);
 	}
-	$bound->{$command} = $key;
-	$w->bind("<$key>", [$w, 'cmdExecute', $command]);
 }
 
 sub ConfigureBindings {

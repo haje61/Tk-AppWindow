@@ -46,21 +46,14 @@ sub new {
 
 =head1 METHODS
 
-=over 4
-
-=item B<CanQuit>
-
-Tests all plugins if they successfully unload.
-returns 1 if succesful 
-
 =cut
 
 sub CanQuit {
 	my $self = shift;
-	my @plugs = $self->PluginList;
+	my @plugs = $self->plugList;
 	my $close = 1;
 	for (@plugs) {
-		$close = 0 unless $self->GetPlugin($_)->CanQuit
+		$close = 0 unless $self->plugGet($_)->CanQuit
 	}
 	return $close
 }
@@ -69,41 +62,62 @@ sub DoPostConfig {
 	my $self = shift;
 	my $plugins = $self->configGet('-plugins');
 	for (@$plugins) {
-		$self->PluginLoad($_);
+		$self->plugLoad($_);
 	}
 }
 
-=item B<GetPlugin>(I<$name>)
+sub MenuItems {
+	my $self = shift;
+	my @items = ();
+	my @l = $self->plugList;
+	for (@l) {
+		push @items, $self->plugGet($_)->MenuItems
+	}
+	return @items;
+}
+
+=item B<plugExists(I<$name>)
 
 returns the requested plugin object.
 
 =cut
 
+sub plugExists {
+	my ($self, $plug) = @_;
+	return exists $self->{PLUGINS}->{$plug}
+}
 
-sub GetPlugin {
+=item B<plugGet>(I<$name>)
+
+returns the requested plugin object.
+
+=cut
+
+sub plugGet {
 	my ($self, $plug) = @_;
 	return $self->{PLUGINS}->{$plug}
 }
 
-=item B<PluginList>
+=item B<plugList>
 
 returns a sorted list of loaded plugins.
 
 =cut
 
-sub PluginList {
+sub plugList {
 	my $plugs = $_[0]->{PLUGINS};
 	return sort keys %$plugs
 }
 
-=item B<PluginLoad>(I<$name>)
+=item B<plugLoad>(I<$name>)
 
 Loads the plugin; returns 1 if succesfull;
 
 =cut
 
-sub PluginLoad {
+sub plugLoad {
 	my ($self, $plug) = @_;
+	return if $self->plugExists($plug);
 	my $obj;
 	my $modname = "Tk::AppWindow::Plugins::$plug";
 	my $app = $self->GetAppWindow;
@@ -117,17 +131,19 @@ sub PluginLoad {
 	return 0
 }
 
-=item B<PluginLoad>(I<$name>)
+=item B<plugUnload>(I<$name>)
 
-Loads the plugin; returns 1 if succesfull;
+Unloads the plugin; returns 1 if succesfull;
 
 =cut
 
-sub PluginUnload {
+sub plugUnload {
 	my ($self, $plug) = @_;
-	my $obj = $self->GetPlugin($plug);
-	if ($obj->UnLoad) {
+	return unless $self->plugExists($plug);
+	my $obj = $self->plugGet($plug);
+	if ($obj->Unload) {
 		delete $self->{PLUGINS}->{$plug};
+		$obj->configureBars;
 		return 1
 	}
 	return 0;
@@ -147,6 +163,16 @@ sub Reconfigure {
 		$succes = 0 unless $self->GetPlugin($_)->Reconfigure
 	}
 	return $succes
+}
+
+sub ToolItems {
+	my $self = shift;
+	my @items = ();
+	my @l = $self->plugList;
+	for (@l) {
+		push @items, $self->plugGet($_)->ToolItems
+	}
+	return @items;
 }
 
 =back

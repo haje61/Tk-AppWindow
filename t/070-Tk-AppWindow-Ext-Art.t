@@ -1,7 +1,6 @@
 
 use strict;
 use warnings;
-sleep 1;
 use Test::More;
 use Test::Tk;
 $mwclass = 'Tk::AppWindow';
