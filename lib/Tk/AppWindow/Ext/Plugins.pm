@@ -11,6 +11,10 @@ use warnings;
 use Carp;
 use vars qw($VERSION);
 $VERSION="0.01";
+use Tk;
+use Pod::Usage;
+require Tk::YADialog;
+require Tk::AppWindow::PluginsForm;
 
 use base qw( Tk::AppWindow::BaseClasses::Extension );
 
@@ -35,12 +39,18 @@ sub new {
 	my $class = shift;
 	my $self = $class->SUPER::new(@_);
 	$self->{PLUGINS} = {};
-
-	$self->AddPreConfig(
+	$self->Require('ConfigFolder');
+	$self->addPreConfig(
+		-availableplugs => ['PASSIVE', undef, undef, []],
 		-plugins => ['PASSIVE', undef, undef, []],
 	);
 
-	$self->AddPostConfig('DoPostConfig', $self);
+	$self->addPostConfig('DoPostConfig', $self);
+
+	$self->cmdConfig(
+		plugsdialog => ['PopPlugsDialog', $self],
+	);
+
 	return $self;
 }
 
@@ -58,6 +68,20 @@ sub CanQuit {
 	return $close
 }
 
+sub ConfigureBars {
+	my ($self, $plug) = @_;
+	my $menu = $self->extGet('MenuBar');
+	if (defined $menu) {
+		my @items = $plug->MenuItems;
+		$menu->ReConfigure unless @items eq 0;
+	}
+	my $tool = $self->extGet('ToolBar');
+	if (defined $tool) {
+		my @items = $plug->ToolItems;
+		$tool->ReConfigure unless @items eq 0;
+	}
+}
+
 sub DoPostConfig {
 	my $self = shift;
 	my $plugins = $self->configGet('-plugins');
@@ -73,7 +97,32 @@ sub MenuItems {
 	for (@l) {
 		push @items, $self->plugGet($_)->MenuItems
 	}
+	unless ($self->extExists('Settings')) {
+		push @items, (
+			[	'menu_normal',		'appname::Quit',		'~Plugins',	'plugsdialog',	'configure',		'F10',	], 
+			[	'menu_separator',	'appname::Quit',		'h2'], 
+		)
+	}
 	return @items;
+}
+
+sub plugDescription {
+	my ($self, $plug) = @_;
+	my $file = Tk::findINC("Tk/AppWindow/Plugins/$plug.pm");
+	open my $fi, "<", $file or die $!;
+	open my $fh, '>', \my $str or die $!;
+	pod2usage(
+		-exitval => 'NOEXIT',
+		-verbose => 99,
+		-input => $fi,
+		-output => $fh,
+		-sections => ['DESCRIPTION'],
+	);
+	close $fh;
+	close $fi;
+	$str =~ s/^Description:\n//;
+	$str =~ s/\n+$//;
+	return $str;
 }
 
 =item B<plugExists(I<$name>)
@@ -119,16 +168,22 @@ sub plugLoad {
 	my ($self, $plug) = @_;
 	return if $self->plugExists($plug);
 	my $obj;
-	my $modname = "Tk::AppWindow::Plugins::$plug";
+	my $modname = $self->plugModname($plug);
 	my $app = $self->GetAppWindow;
 	eval "use $modname; \$obj = new $modname(\$app);";
 	croak $@ if $@;
 	if (defined $obj) {
 		$self->{PLUGINS}->{$plug} = $obj;
+		$self->ConfigureBars($obj);
 		return 1
 	}
 	warn "Plugin $plug not loaded";
 	return 0
+}
+
+sub plugModname {
+	my ($self, $plug) = @_;
+	return "Tk::AppWindow::Plugins::$plug"
 }
 
 =item B<plugUnload>(I<$name>)
@@ -143,10 +198,29 @@ sub plugUnload {
 	my $obj = $self->plugGet($plug);
 	if ($obj->Unload) {
 		delete $self->{PLUGINS}->{$plug};
-		$obj->configureBars;
+		$self->ConfigureBars($obj);
 		return 1
 	}
 	return 0;
+}
+
+sub plugUse {
+	my ($self, $plug) = @_;
+	my $modname = "Tk::AppWindow::Plugins::$plug";
+	eval "use $modname;";
+}
+
+sub PopPlugsDialog {
+	my $self = shift;
+	my $dialog = $self->YADialog(
+		-title => 'Configure plugins',
+		-buttons => ['Close'],
+	);
+	$dialog->PluginsForm(
+		-pluginsext => $self,
+	)->pack(-expand => 1, -fill => 'both');
+	$dialog->Show(-popover => $self->GetAppWindow);
+	$dialog->destroy;
 }
 
 =item B<Reconfigure>
@@ -163,6 +237,13 @@ sub Reconfigure {
 		$succes = 0 unless $self->GetPlugin($_)->Reconfigure
 	}
 	return $succes
+}
+
+sub SettingsPage {
+	my $self = shift;
+	return (
+		'Plugins' => ['PluginsForm', -pluginsext => $self ]
+	)
 }
 
 sub ToolItems {

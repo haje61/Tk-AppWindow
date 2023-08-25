@@ -22,7 +22,7 @@ createapp(
 
 my $ext;
 if (defined $app) {
-	$ext = $app->GetExt('MDI');
+	$ext = $app->extGet('MDI');
 }
 
 @tests = (

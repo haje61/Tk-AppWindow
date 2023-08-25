@@ -22,8 +22,8 @@ createapp(
 
 my $ext;
 if (defined $app) {
-	$ext = $app->GetExt('StatusBar');
-	my $bl = $app->GetExt('Balloon');
+	$ext = $app->extGet('StatusBar');
+	my $bl = $app->extGet('Balloon');
 
 	my @padding = (-side => 'left', -padx => 10, -pady => 10);
 	my $ws = $app->WorkSpace;

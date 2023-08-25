@@ -23,7 +23,7 @@ createapp(
 
 my $ext;
 if (defined $app) {
-	$ext = $app->GetExt('Navigator');
+	$ext = $app->extGet('Navigator');
 }
 
 @tests = (

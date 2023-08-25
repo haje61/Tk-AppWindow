@@ -20,7 +20,7 @@ createapp(
 
 my $ext;
 if (defined $app) {
-	$ext = $app->GetExt('Keyboard');
+	$ext = $app->extGet('Keyboard');
 }
 
 @tests = (

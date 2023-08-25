@@ -71,15 +71,15 @@ createapp(
 );
 
 #testing accessors
-testaccessors($app, qw/AppName Verbose/);
+testaccessors($app, qw/appName Verbose/);
 
 push @tests, (
 	[sub { return $app->cmdExecute('test1') }, 'Caterpillar12', 'anonymous command without parameter'],
 	[sub { return $app->cmdExecute('test1', 60) }, 'Caterpillar60', 'anonymous command with parameter'],
 	[sub { return $app->cmdExecute('test2') }, 'Butterfly35', 'object command without parameter'],
 	[sub { return $app->cmdExecute('test2', 76) }, 'Butterfly76', 'object command with parameter'],
-	[sub { return $app->GetExt('TestPlugin')->Name }, 'TestPlugin', 'TestPlugin loaded'],
-	[sub { return $app->GetExt('Dummy')->Name }, 'Dummy', 'Dummy plugin loaded'],
+	[sub { return $app->extGet('TestPlugin')->Name }, 'TestPlugin', 'TestPlugin loaded'],
+	[sub { return $app->extGet('Dummy')->Name }, 'Dummy', 'Dummy plugin loaded'],
 	[sub { return $app->cmdExecute('plugcmd') }, 'TestCmd56', 'plugin command without parameter'],
 	[sub { return $app->cmdExecute('plugcmd', 84) }, 'TestCmd84', 'plugin command with parameter'],
 	[sub { return $app->configGet('-plugoption') }, 'Romulus', 'plugin option loaded'],

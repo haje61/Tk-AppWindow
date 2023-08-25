@@ -44,9 +44,8 @@ sub new {
 	};
 	bless ($self, $class);
 	for (@required) {
-		return undef unless defined $self->GetExt($_);
+		return undef unless $self->extExists($_);
 	}
-	$self->after(1, [configureBars => $self]);
 	return $self;
 }
 
@@ -76,20 +75,6 @@ sub CanQuit { return 1 }
 Returns a reference to the toplevel frame. The toplevel frame should be a Tk::AppWindow class.
 
 =cut
-
-sub configureBars {
-	my $self = shift;
-	my $menu = $self->GetExt('MenuBar');
-	if (defined $menu) {
-		my @items = $self->MenuItems;
-		$menu->ReConfigure unless @items eq 0;
-	}
-	my $tool = $self->GetExt('ToolBar');
-	if (defined $tool) {
-		my @items = $self->ToolItems;
-		$tool->ReConfigure unless @items eq 0;
-	}
-}
 
 sub GetAppWindow { return $_[0]->{APPWINDOW} }
 

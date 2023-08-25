@@ -77,7 +77,7 @@ sub new {
 		-toolbarvisible => ['PanelVisible', $self, 1],
 	);
 
-	$self->AddPreConfig(
+	$self->addPreConfig(
 		-autotool => ['PASSIVE', undef, undef, 1],
 		-tooliconsize => ['PASSIVE', 'ToolIconSize', 'toolIconSize', 16],
 		-toolitems => ['PASSIVE', undef, undef, []],
@@ -90,7 +90,7 @@ sub new {
 		tool_separator		=> ['ConfToolSeparator', $self],
 	);
 
-	$self->AddPostConfig('DoPostConfig', $self);
+	$self->addPostConfig('DoPostConfig', $self);
 	return $self;
 }
 
@@ -196,7 +196,7 @@ sub ConfToolButton {
 
 	my $bmp;
 	if (defined $icon) {
-		$bmp = $self->GetArt($icon, $self->configGet('-tooliconsize'));
+		$bmp = $self->getArt($icon, $self->configGet('-tooliconsize'));
 	}
 
 	my @balloon = ();
@@ -208,7 +208,7 @@ sub ConfToolButton {
 		if ($textpos eq 'none') {
 			push @balloon, -balloonmsg => $label;
 		}
-		my $art = $self->GetExt('Art');
+		my $art = $self->extGet('Art');
 		my $compound = $art->CreateCompound(
 			-text => $label,
 			-image => $bmp,
@@ -240,17 +240,19 @@ sub ConfToolSeparator {
 sub CreateItems {
 	my $self = shift;
 	my @u = ();
+	my @plugins = ();
 	my $w = $self->GetAppWindow;
 	if ($self->configGet('-autotool')) {
-		my @p = $self->ExtensionList;
+		my @p = $self->extList;
 		my @l = ($w);
-		for (@p) { push @l, $w->GetExt($_) }
+		for (@p) { push @l, $w->extGet($_) }
 		for (@l) {
-			push @u, $_->ToolItems;
+			push @u, $_->ToolItems if $_->Name ne 'Plugins';
+			push @plugins, $_->ToolItems if $_->Name eq 'Plugins';
 		}
 	}
 	my $m = $self->configGet('-toolitems');
-	push @u, @$m;
+	push @u, @$m, @plugins;
 	$self->Configure(@u);
 }
 
@@ -264,7 +266,7 @@ sub DoPostConfig {
 	my $self = shift;
 
 	#fixing possible mismatch of iconsize at launch
-	my $art = $self->GetExt('Art');
+	my $art = $self->extGet('Art');
 	my $size = $self->configGet('-tooliconsize');
 	$size = $art->GetAlternateSize($size);
 	$self->configPut(-tooliconsize => $size);

@@ -61,14 +61,14 @@ sub new {
 
 	$self->{MENUPOST} = [];
 	$self->Require('Keyboard');
-	$self->AddPreConfig(
+	$self->addPreConfig(
 		-automenu => ['PASSIVE', undef, undef, 1],
 		-mainmenuitems => ['PASSIVE', undef, undef, []],
 		-menucolspace =>['PASSIVE', undef, undef, 3],
 		-menuiconsize =>['PASSIVE', undef, undef, 16],
 	);
 
-	$self->AddPostConfig('DoPostConfig', $self);
+	$self->addPostConfig('DoPostConfig', $self);
 	return $self;
 }
 
@@ -123,7 +123,7 @@ sub ConfDoIcon {
 	my ($self, $icon, $item) = @_;
 	if (defined $icon) {
 		my $size = $self->configGet('-menuiconsize');
-		my $bmp = $self->GetArt($icon, $size);
+		my $bmp = $self->getArt($icon, $size);
 		if (defined $bmp) {
 			push @$item, -image => $bmp, -compound => 'left'
 		}
@@ -134,7 +134,7 @@ sub ConfDoKeyb {
 	my ($self, $command, $keyb, $item) = @_;
 	if (defined $keyb) {
 		if ((defined $command) and (not $keyb =~ s/^\*//)) {
-			my $kb = $self->GetAppWindow->GetExt('Keyboard');
+			my $kb = $self->GetAppWindow->extGet('Keyboard');
 			$kb->AddBinding($command, $keyb);
 		}
 		push @$item, -accelerator => $keyb;
@@ -176,11 +176,19 @@ sub Configure {
 		}
 	}
 	$self->CheckStackForImages($stack);
-	my $menu =$w->Menu(
-		-relief => 'flat',
-		-menuitems => $stack,
-	);
-	$w->configure(-menu => $menu);
+	my $menu = $w->cget('-menu');
+	unless (defined $menu) {
+		$menu = $w->Menu;
+		$w->configure(-menu => $menu);
+	} else {
+		$menu->delete(0, 'end');
+	}
+	$self->FillMenu($menu, $stack);
+# 	my $menu =$w->Menu(
+# 		-menuitems => $stack,
+# 	);
+# 	my $g = $w->geometry;
+# 	$w->geometry($g);
 }
 
 sub ConfMenu {
@@ -211,7 +219,7 @@ sub ConfMenuNormal {
 	my @item = ('command', $label);
 	if (defined $cmd) {
 		if ($cmd =~ /^<.+>/) {
-			$self->ConfVirtEvent($cmd, $keyb) if $cmd =~ /^<<.+>>/;
+# 			$self->ConfVirtEvent($cmd, $keyb) if $cmd =~ /^<<.+>>/;
 			push @item, -command => ['eventGenerate', $w, $cmd]
 		} else {
 			push @item, -command => ['cmdExecute', $w, $cmd];
@@ -316,7 +324,7 @@ sub CreateCompound {
 	my $space = $self->configGet('-menucolspace');
 	my $img = undef;
 	if (defined $icon) {
-		$img = $self->GetArt($icon, $self->configGet('-menuiconsize'));
+		$img = $self->getArt($icon, $self->configGet('-menuiconsize'));
 	}
 	if (defined $img) {
 		$comp->Image(-image => $img);
@@ -351,9 +359,9 @@ sub CreateMenu {
 	my $w = $self->GetAppWindow;
 	my @u = ();
 	if ($w->configGet('-automenu')) {
-		my @p = $self->ExtensionList;
+		my @p = $self->extList;
 		my @l = ($w);
-		for (@p) { push @l, $self->GetExt($_) }
+		for (@p) { push @l, $self->extGet($_) }
 		for (@l) {
 			push @u, $_->MenuItems;
 		}
@@ -414,13 +422,47 @@ sub DecodeMenuPath {
 
 sub DoPostConfig {
 	my $self = shift;
-	my $art = $self->GetExt('Art');
+	my $art = $self->extGet('Art');
 	if (defined $art) {
 		my $size = $self->configGet('-menuiconsize');
 		$size = $art->GetAlternateSize($size);
 		$self->configPut(-menuiconsize => $size)
 	}
 	$self->CreateMenu;
+}
+
+sub FillMenu {
+	my ($self, $menu, $items) = @_;
+	while (@$items) {
+		my $item = shift @$items;
+		my $type = shift @$item;
+		my $label = shift @$item;
+		my %opt = @$item;
+		if ($label =~ /^([^~]*)~([^~]*)/) {
+			$opt{'-underline'} = length($1);
+			$label = $1 . $2
+		}
+		$opt{'-label'} = $label;
+		if ($type eq 'cascade')  {
+			my $menuitems = delete $opt{'-menuitems'};
+
+			my %mnuopt = ();
+			for (qw/postcommand selectcolor tearoff tearoffcommand title type/) {
+				my $name = "-$_";
+				my $val = delete $opt{$name};
+				$mnuopt{$name} = $val if defined $val;
+			}
+
+			my $submenu = $menu->Menu(%mnuopt);
+			$opt{'-menu'} = $submenu;
+			$menu->add('cascade', %opt);
+			$self->FillMenu($submenu, $menuitems) if defined $menuitems;
+		} elsif ($type eq 'separator') {
+			$menu->add('separator');
+		} else {
+			$menu->add($type, %opt);
+		}
+	}
 }
 
 sub FindMenuEntry {

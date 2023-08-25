@@ -8,8 +8,9 @@ Tk::AppWindow::BaseClasses::Extension - Baseclass for all extensions in this fra
 
 use strict;
 use warnings;
+use vars qw($VERSION $AUTOLOAD);
+$VERSION="0.02";
 use Carp;
-use vars '$AUTOLOAD';
 
 =head1 SYNOPSIS
 
@@ -66,7 +67,7 @@ Calls the Attach method of the Balloon widget if the extens Balloon is loaded
 
 sub BalloonAttach {
 	my $self = shift;
-	my $b = $self->GetExt('Balloon');
+	my $b = $self->extGet('Balloon');
 	$b->Attach(@_) if defined $b;
 }
 
@@ -89,7 +90,7 @@ sub GetAppWindow { return $_[0]->{APPWINDOW} }
 
 =item B<MenuItems>
 
-Returns an empty list. It is there for you to overwrite. It is called by the B<MenuBar> plugin. You can return a list
+Returns an empty list. It is there for you to overwrite. It is called by the B<MenuBar> extension. You can return a list
 with menu items here. For details on the format see L<Tk::AppWindow::Ext::MenuBar>
 
 =cut
@@ -133,10 +134,27 @@ sub Require {
 	my $args = $self->GetArgsRef;
 	while (@_) {
 		my $m = shift;
-		unless (defined($f->GetExt($m))) {
-			$f->LoadExtension($m, $args);
+		unless (defined($f->extGet($m))) {
+			$f->extLoad($m, $args);
 		}
 	}
+}
+
+=item B<SettingsPage>
+
+Returns an empty list. It is there for you to overwrite. It is called by the B<Settings> extension. 
+You can return a paired list of pagenames and widget.
+
+ sub SettingsPage {
+.   return (
+       'Some title' => ['MyWidget', @options],
+    )
+ }
+
+=cut
+
+sub SettingsPage {
+	return ();
 }
 
 =item B<StatusMessage>I<($text>)>
@@ -147,7 +165,7 @@ Sends a message to the status bar if it is loaded. See L<Tk::AppWindow::Ext::Sta
 
 sub StatusMessage {
 	my $self = shift;
-	my $sb = $self->GetExt('StatusBar');
+	my $sb = $self->extGet('StatusBar');
 	$sb->Message(@_) if defined $sb;
 }
 

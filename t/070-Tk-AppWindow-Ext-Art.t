@@ -32,7 +32,7 @@ my %testicons = (
 );
 
 if (defined $app) {
-	$art = $app->GetExt('Art');
+	$art = $app->extGet('Art');
 	$notebook = $app->NoteBook->pack(-fill => 'both');
 	$pages{22} = $notebook->add(22, -label => 22);
 	$pages{32} = $notebook->add(32, -label => 32);

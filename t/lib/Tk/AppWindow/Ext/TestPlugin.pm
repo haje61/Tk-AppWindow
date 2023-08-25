@@ -9,7 +9,7 @@ sub new {
 	my $class = shift;
 	my $self = $class->SUPER::new(@_);
 	my $w = $self->GetAppWindow;
-	$w->AddPreConfig(
+	$w->addPreConfig(
 		#used for AppWindow.t
 		-check_1 => ['PASSIVE', undef, undef, 'Amsterdam'],
 		-check_2 => ['PASSIVE', undef, undef, 0],

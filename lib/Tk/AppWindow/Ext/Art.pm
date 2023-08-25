@@ -124,7 +124,7 @@ sub new {
 		available_icon_themes => ['AvailableThemes', $self],
 	);
 
-	$self->AddPreConfig(
+	$self->addPreConfig(
 		-compoundcolspace =>['PASSIVE', undef, undef, 3],
 		-iconsize => ['PASSIVE', 'iconSize', 'IconSize', 16],
 		-icontheme => ['PASSIVE', 'iconTheme', 'IconTheme', 'Oxygen'],
@@ -138,7 +138,7 @@ sub new {
 	}
 	$self->CollectThemes(@iconpath);
 
-	$self->AddPostConfig('DoPostConfig', $self);
+	$self->addPostConfig('DoPostConfig', $self);
 	
 	return $self;
 }

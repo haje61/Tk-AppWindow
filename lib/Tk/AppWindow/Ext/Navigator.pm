@@ -53,7 +53,7 @@ sub new {
 	my $class = shift;
 	my $self = $class->SUPER::new(@_);
 
-	$self->AddPreConfig(
+	$self->addPreConfig(
 		-documentinterface => ['PASSIVE', undef, undef, 'MDI'],
 	);
 
@@ -96,14 +96,14 @@ sub Delete {
 
 sub GetDirIcon {
 	my ($self, $name) = @_;
-	my $icon = $self->GetArt('folder', 16);
+	my $icon = $self->getArt('folder', 16);
 	return $icon if defined $icon;
 	return $self->SubWidget('NAVTREE')->DefaultDirIcon;
 }
 
 sub GetFileIcon {
 	my ($self, $name) = @_;
-	my $icon = $self->GetArt('text-x-plain', 16);
+	my $icon = $self->getArt('text-x-plain', 16);
 	return $icon if defined $icon;
 	return $self->SubWidget('NAVTREE')->DefaultFileIcon;
 }
@@ -119,7 +119,7 @@ sub MenuItems {
 
 sub SelectDocument {
 	my ($self, $name) = @_;
-	$self->GetExt($self->configGet('-documentinterface'))->Select($name);
+	$self->extGet($self->configGet('-documentinterface'))->Select($name);
 }
 
 sub SelectEntry {

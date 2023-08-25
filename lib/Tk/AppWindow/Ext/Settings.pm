@@ -143,11 +143,11 @@ sub CmdSettings {
 	);
 
 	my %qopts = ();
-	my $fil = $self->GetArt('text-x-plain');
+	my $fil = $self->getArt('text-x-plain');
 	$qopts{'-fileimage'} = $fil if defined $fil;
-	my $fol = $self->GetArt('folder');
+	my $fol = $self->getArt('folder');
 	$qopts{'-folderimage'} = $fol if defined $fol;
-	my $fon = $self->GetArt('gtk-select-font');
+	my $fon = $self->getArt('gtk-select-font');
 	$qopts{'-fontimage'} = $fon if defined $fon;
 
 	$f = $m->QuickForm(%qopts,
@@ -163,7 +163,17 @@ sub CmdSettings {
 			}
 		},
 	)->pack(-expand => 1, -fill => 'both');
-	$f->createForm;
+	my $nb = $f->createForm;
+	if (defined $nb) {
+		my @pages = $self->GetSettingsPages;
+		while (@pages) {
+			my $title = shift @pages;
+			my $opt = shift @pages;
+			my $class = shift @$opt;
+			my $page = $nb->add($title, -label => $title);
+			$page->$class(@$opt)->pack(-fill => 'both', -expand => 1);
+		}
+	}
 	$f->put($self->GetUserOptions);
 	
 	$m->ButtonPack($b);
@@ -189,6 +199,18 @@ sub GetUserOptions {
 		$usopt{$key} = $self->configGet($key);
 	}
 	return %usopt
+}
+
+sub GetSettingsPages {
+	my $self = shift;
+	my @p = $self->extList;
+	my @u = ();
+	my @l = ();
+	for (@p) { push @l, $self->extGet($_) }
+	for (@l) {
+		push @u, $_->SettingsPage;
+	}
+	return @u;
 }
 
 sub LoadSettings {
@@ -241,10 +263,10 @@ sub MenuItems {
 
 sub ReConfigureAll {
 	my $self = shift;
-	my @list = $self->ExtensionList;
+	my @list = $self->extList;
 	my %hash = ();
 	for (@list) {
-		$hash{$_} = $self->GetExt($_);
+		$hash{$_} = $self->extGet($_);
 	}
 	my $kb = delete $hash{'Keyboard'};
 	$kb->ReConfigure if defined $kb;
@@ -260,7 +282,6 @@ sub SaveSettings {
 		for (@_) {
 			my $option = $_;
 			my $value = $self->configGet($_);
-			print "saving $option with value $value\n";
 			print OFILE $option, '=', $value, "\n";
 		}
 		close OFILE;

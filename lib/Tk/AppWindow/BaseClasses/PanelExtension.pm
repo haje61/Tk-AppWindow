@@ -46,7 +46,7 @@ sub new {
 	$self->Require('Panels');
 	$self->{VISIBLE} = 1;
 
-	$self->AddPostConfig('PostConfig', $self);
+	$self->addPostConfig('PostConfig', $self);
 	return $self;
 }
 
@@ -64,7 +64,7 @@ sub Panel {
 
 sub PanelVisible {
 	my $self = shift;
-	my $panels = $self->GetExt('Panels');
+	my $panels = $self->extGet('Panels');
 	if (@_) {
 		my $status = shift;
 		my $panel = $self->{PANEL};

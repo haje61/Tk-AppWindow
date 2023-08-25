@@ -23,7 +23,7 @@ createapp(
 
 my $ext;
 if (defined $app) {
-	$ext = $app->GetExt('ToolBar');
+	$ext = $app->extGet('ToolBar');
 }
 
 @tests = (

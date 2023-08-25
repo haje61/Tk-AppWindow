@@ -16,7 +16,7 @@ createapp(
 
 my $ext;
 if (defined $app) {
-	$ext = $app->GetExt('Panels');
+	$ext = $app->extGet('Panels');
 
 	my %visible = ();
 	my $f = $app->Subwidget('WORK')->Frame(-relief => 'groove')->pack(-expand => 1, -fill => 'both');

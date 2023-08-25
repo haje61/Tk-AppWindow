@@ -89,7 +89,7 @@ sub new {
 	my $class = shift;
 
 	my $self = $class->SUPER::new(@_);
-	$self->AddPreConfig(
+	$self->addPreConfig(
 		-statusitemrelief => ['PASSIVE', undef, undef, 'groove'],
 		-statusitemborderwidth => ['PASSIVE', undef, undef, 2],
 		-statusitempadding => ['PASSIVE', undef, undef, 2],
@@ -104,8 +104,8 @@ sub new {
 		-statusbarpanel => ['Panel', $self, 'BOTTOM'],
 		-statusbarvisible => ['PanelVisible', $self, 1],
 	);
-	$self->AddPostConfig('InitMsgItem', $self);
-	$self->AddPostConfig('Cycle', $self);
+	$self->addPostConfig('InitMsgItem', $self);
+	$self->addPostConfig('Cycle', $self);
 	return $self;
 }
 
@@ -199,7 +199,7 @@ sub AddImageItem {
 	my $img = $options{'-valueimages'};
 	if (defined $img) {
 		for (keys %$img) {
-			$img->{$_} = $self->GetArt($img->{$_})
+			$img->{$_} = $self->getArt($img->{$_})
 		}
 	}
 	return $self->Add('image', $name, %options);
@@ -272,7 +272,7 @@ sub InitMsgItem {
 		unless (exists $self->{MI}) {
 			my $mi = $self->AddMessageItem('msg', -position => 0);
 			$self->{MI} = $mi;
-			my $bl = $self->GetExt('Balloon');
+			my $bl = $self->extGet('Balloon');
 			$bl->Balloon->configure(-statusbar => $mi) if defined $bl;
 			return $mi;
 		}

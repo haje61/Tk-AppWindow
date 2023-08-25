@@ -14,7 +14,7 @@ createapp(
 
 my $ext;
 if (defined $app) {
-	$ext = $app->GetExt('Help');
+	$ext = $app->extGet('Help');
 }
 
 @tests = (

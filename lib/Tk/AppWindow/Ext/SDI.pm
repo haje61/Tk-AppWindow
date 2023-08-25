@@ -111,7 +111,7 @@ sub new {
 	$self->{DOCS} = {};
 	$self->{HISTORY} = [];
 
-	$self->AddPreConfig(@preconfig,
+	$self->addPreConfig(@preconfig,
 		-contentmanagerclass => ['PASSIVE', undef, undef, 'Wx::Perl::FrameWorks::BaseClasses::ContentManager'],
 		-contentmanageroptions => ['PASSIVE', undef, undef, $cmo],
 		-maxhistory => ['PASSIVE', undef, undef, 12],
@@ -128,7 +128,7 @@ sub new {
 		pop_hist_menu => ['CmdPopulateHistoryMenu', $self],
 	);
 
-	$self->AddPostConfig('LoadHistory', $self);
+	$self->addPostConfig('LoadHistory', $self);
 	return $self;
 }
 
@@ -163,7 +163,7 @@ sub CloseDoc {
 	#confirm save dialog comes here
 		my $q = $self->YAMessage(
 			-title => 'Warning, file modified',
-			-image => $self->GetArt('dialog-warning', 32),
+			-image => $self->getArt('dialog-warning', 32),
 			-buttons => [qw(Yes No Cancel)],
 			-text => 
 				"Closing " . basename($name) .
@@ -196,7 +196,7 @@ sub CloseDoc {
 		delete $self->{DOCS}->{$name};
 
 		#delete from navigator
-		my $navigator = $self->GetExt('Navigator');
+		my $navigator = $self->extGet('Navigator');
 		if (defined $navigator) {
 			$navigator->Delete($name) if defined $navigator;
 		}
@@ -242,7 +242,7 @@ sub CmdFileNew {
 # 	return 0 unless defined $cm;
 
 	#add to navigator
-	my $navigator = $self->GetExt('Navigator');
+	my $navigator = $self->extGet('Navigator');
 	$navigator->Add($name) if defined $navigator;
 
 	$self->SelectDoc($name);
@@ -364,7 +364,7 @@ sub CmdFileSaveAs {
 
 sub CmdPopulateHistoryMenu {
 	my $self = shift;
-	my $mnu = $self->GetExt('MenuBar');
+	my $mnu = $self->extGet('MenuBar');
 	if (defined $mnu) {
 		my $path = $self->configGet('-historymenupath');
 		my ($menu, $index) = $mnu->FindMenuEntry($path);
@@ -545,7 +545,7 @@ sub RenameDoc {
 		$self->{DOCS}->{$new} = $doc;
 
 		#rename in navigator
-		my $navigator = $self->GetExt('Navigator');
+		my $navigator = $self->extGet('Navigator');
 		if (defined $navigator) {
 			$navigator->Delete($old);
 			$navigator->Add($new);
@@ -578,7 +578,7 @@ sub SelectDoc {
 	my ($self, $name) = @_;
 	$self->{CURRENT} = $name;
 	$self->configPut(-title => $self->configGet('-appname') . ' - ' . $self->GetTitle($name));
-	my $navigator = $self->GetExt('Navigator');
+	my $navigator = $self->extGet('Navigator');
 	$navigator->SelectEntry($name) if defined $navigator;
 }
 

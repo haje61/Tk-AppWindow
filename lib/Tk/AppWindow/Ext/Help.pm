@@ -77,7 +77,7 @@ sub new {
 	my $self = $class->SUPER::new(@_);
 
 
-	$self->AddPreConfig(
+	$self->addPreConfig(
 		-aboutinfo => ['PASSIVE', undef, undef, {
 			version => $VERSION,
 			license => 'Same as Perl',
@@ -107,7 +107,7 @@ sub CmdAbout {
 	my $db = $w->YADialog(
 		-buttons => ['Ok'],
 		-defaultbutton => 'Ok',
-		-title => 'About ' . $w->AppName,
+		-title => 'About ' . $w->appName,
 	);
 	$db->configure(-command => sub { $db->destroy });
 	my @padding = (-padx => 2);

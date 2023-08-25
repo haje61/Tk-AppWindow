@@ -25,7 +25,7 @@ use base qw( Tk::AppWindow::BaseClasses::Extension );
 
 =head1 DESCRIPTION
 
-=head1 B<CONFIG VARIABLES>
+=head1 CONFIG VARIABLES
 
 =over 4
 
@@ -61,15 +61,10 @@ sub new {
 	my $class = shift;
 	my $self = $class->SUPER::new(@_);
 
-	$self->AddPreConfig(
-		-savegeometry => ['PASSIVE', undef, undef, 1],
-	);
-
 	$self->configInit(
 		-configfolder => ['ConfigFolder', $self, $configfolder . $self->configGet('-appname')],
 	);
 
-	$self->AddPostConfig('PostConfig', $self);
 	return $self;
 }
 
@@ -81,18 +76,6 @@ None.
 
 =cut
 
-sub CanQuit {
-	my $self = shift;
-	if ($self->configGet('-savegeometry')) {
-		my $file = $self->configGet('-configfolder') . '/geometry';
-		if (open(OFILE, ">", $file)) {
-			print OFILE $self->geometry . "\n";
-			close OFILE
-		}
-	}
-	return 1
-}
-
 sub ConfigFolder {
 	my $self = shift;
 	if (@_) { $self->{CONFIGFOLDER} = shift }
@@ -103,21 +86,6 @@ sub ConfigFolder {
 		}
 	}
 	return $self->{CONFIGFOLDER}
-}
-
-sub PostConfig {
-	my $self = shift;
-	if ($self->configGet('-savegeometry')) {
-		my $file = $self->configGet('-configfolder') . '/geometry';
-		if (open(OFILE, "<", $file)) {
-			my $g = <OFILE>;
-			close OFILE;
-			chomp $g;
-			$self->geometry($g);
-		} else {
-			$self->geometry('600x400+100+100');
-		}
-	}
 }
 
 =back

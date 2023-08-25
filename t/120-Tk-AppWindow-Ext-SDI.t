@@ -16,13 +16,13 @@ my $settingsfolder = 't/settings';
 
 createapp(
 	-configfolder => $settingsfolder,
-	-extensions => [qw[Art ToolBar SDI]],
+	-extensions => [qw[Art MenuBar ToolBar SDI]],
 	-contentmanagerclass => 'TestTextManager',
 );
 
 my $ext;
 if (defined $app) {
-	$ext = $app->GetExt('SDI');
+	$ext = $app->extGet('SDI');
 }
 
 @tests = (

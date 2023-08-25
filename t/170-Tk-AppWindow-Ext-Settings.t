@@ -19,7 +19,7 @@ createapp(
 	-configfolder => $settingsfolder,
 	-extensions => [qw[Art MenuBar TestPlugin Settings]],
 	-useroptions => [
-		-set_boolean => ['boolean', 'Boolean test'],
+# 		-set_boolean => ['boolean', 'Boolean test'],
 		'*page' => 'Page 1',
 		'*section' => 'Section 1',
 		-set_color => ['color', 'Color test'],
@@ -39,7 +39,7 @@ createapp(
 
 my $ext;
 if (defined $app) {
-	$ext = $app->GetExt('Settings');
+	$ext = $app->extGet('Settings');
 }
 
 @tests = (

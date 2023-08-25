@@ -41,12 +41,12 @@ sub new {
 	my $class = shift;
 	my $self = $class->SUPER::new(@_);
 
-	$self->AddPreConfig(
+	$self->addPreConfig(
 		-keyboardbindings => ['PASSIVE', undef, undef, []],
 	);
 
 	$self->{BOUND} = {};
-	$self->AddPostConfig('ConfigureBindings', $self);
+	$self->addPostConfig('ConfigureBindings', $self);
 	return $self;
 }
 

@@ -99,6 +99,16 @@ Only available at create time.
 Specifies the image file to be used as logo for your application.
 Default value is Tk::findINC('Tk/AppWindow/aw_logo.png').
 
+=item Switch: B<-savegeometry>
+
+Default value is 1
+
+If set it will save the applications geometry on exit.
+When reloaded the previously saved geometry is restored.
+In experimental stage
+
+=back
+
 =item Switch: B<-verbose>
 
 Default value is 0.
@@ -148,22 +158,22 @@ sub Populate {
 	$self->{VERBOSE} = 0;
 
 	$self->cmdConfig(
-		poptest => ['PopTest', $self], #usefull for testing only
+		poptest => ['popTest', $self], #usefull for testing only
 		quit => ['CmdQuit', $self],
 		@$commands
 	);
 	$self->configInit(
-		-appname => ['AppName', $self, $appname],
+		-appname => ['appName', $self, $appname],
 		-verbose => ['Verbose', $self, 0],
 	);
 	
 	$self->{POSTCONFIG} = [];
 	$self->{PRECONFIG} = $preconfig;
 	for (@$extensions) {
-		$self->LoadExtension($_, $args);
+		$self->extLoad($_, $args);
 	}
-	
-	my $setplug = $self->GetExt('Settings');
+
+	my $setplug = $self->extGet('Settings');
 	if (defined $setplug) {
 		my @useroptions = $setplug->LoadSettings;
 		my $tab = $self->{CONFIGTABLE};
@@ -183,6 +193,7 @@ sub Populate {
 		-logcall => ['CALLBACK', undef, undef, sub { print STERR shift }], 
 		-logerrorcall => ['CALLBACK', undef, undef, sub { print STERR shift }], 
 		-logo => ['PASSIVE', undef, undef, Tk::findINC('Tk/AppWindow/aw_logo.png')],
+		-savegeometry => ['PASSIVE', undef, undef, 1],
 		@$pre,
 		DEFAULT => ['SELF'],
 	);
@@ -196,7 +207,7 @@ sub Populate {
 
 =over 4
 
-=item B<AddPostConfig>I<('Method', $obj, @options)>
+=item B<addPostConfig>I<('Method', $obj, @options)>
 
 Only to be called by extensions at create time.
 Specifies a callback te be executed after main loop starts.
@@ -205,34 +216,34 @@ Callbacks are executed in the order they are added.
 
 =cut
 
-sub AddPostConfig {
+sub addPostConfig {
 	my $self = shift;
 	my $pc = $self->{POSTCONFIG};
 	my $call = $self->CreateCallback(@_);
 	push @$pc, $call
 }
 
-=item B<AddPreConfig>I<(@configs)>
+=item B<addPreConfig>I<(@configs)>
 
 Only to be called by extensions at create time.
 Specifies configs to the ConfigSpec method executed in Populate.
 
 =cut
 
-sub AddPreConfig {
+sub addPreConfig {
 	my $self = shift;
 	my $p = $self->{PRECONFIG};
 	push @$p, @_
 }
 
-=item B<AppName>I<($name)>
+=item B<appName>I<($name)>
 
 Sets and returns the application name.
 Same as $app->configPut(-name => $name), or $app->configGet($name).
 
 =cut
 
-sub AppName {
+sub appName {
 	my $self = shift;
 	if (@_) { $self->{APPNAME} = shift }
 	return $self->{APPNAME}
@@ -246,6 +257,7 @@ overwrite it when you inherit Tk::AppWindow.
 =cut
 
 sub CanQuit {
+	my $self = shift;
 	return 1
 }
 
@@ -258,6 +270,14 @@ sub CmdQuit {
 	}
 	$quit = 0 unless $self->CanQuit;
 	if ($quit) {
+		if ($self->extExists('ConfigFolder') and $self->configGet('-savegeometry')) {
+			my $geometry = $self->geometry;
+			my $file = $self->configGet('-configfolder') . '/geometry';
+			if (open(OFILE, ">", $file)) {
+				print OFILE $geometry . "\n";
+				close OFILE
+			}
+		}
 		$self->destroy;
 	} 
 }
@@ -490,44 +510,38 @@ sub CreateCallback {
 	return Tk::AppWindow::BaseClasses::Callback->new(@_);
 }
 
-=item B<ExtensionList>
+=item B<extList>
 
 Returns a list of all loaded extensions
 
 =cut
 
-sub ExtensionList {
+sub extList {
 	my $self = shift;
 	my $pl = $self->{EXTLOADORDER};
 	return @$pl;
 }
 
-sub GetArgsRef { return $_[0]->{ARGS} }
+=item B<extExists('Name')
 
-=item B<GetArt>I<($icon, $size)>
-
-Checks if extension B<Art> is loaded and returns requested image if so.
-If $size is not specified, default size is used.
+Returns 1 if 'Name' is loaded.
 
 =cut
 
-sub GetArt {
-	my ($self, $icon, $size) = @_;
-	my $art = $self->GetExt('Art');
-	if (defined $art) {
-		return $art->GetIcon($icon, $size);
-	}
-	return undef
+sub extExists {
+	my ($self, $name) = @_;
+	my $plgs = $self->{EXTENSIONS};
+	return exists $plgs->{$name};
 }
 
-=item B<GetExt>('Name')
+=item B<extGet>('Name')
 
 Returns reference to extension object 'Name'.
 Returns undef if 'Name' is not loaded.
 
 =cut
 
-sub GetExt {
+sub extGet {
 	my ($self, $name) = @_;
 	my $plgs = $self->{EXTENSIONS};
 	if (exists $plgs->{$name}) {
@@ -536,7 +550,7 @@ sub GetExt {
 	return undef
 }
 
-=item B<LoadExtension>('Name');
+=item B<extLoad>('Name');
 
 Loads and initializes an extension.
 Terminates application if it fails.
@@ -545,7 +559,7 @@ Called at create time.
 
 =cut
 
-sub LoadExtension {
+sub extLoad {
 	my ($self, $name) = @_;
 	my $exts = $self->{EXTENSIONS};
 	my $ext = undef;
@@ -564,6 +578,24 @@ sub LoadExtension {
 			warn "unable to load extension $name\n";
 		}
 	}
+}
+
+sub GetArgsRef { return $_[0]->{ARGS} }
+
+=item B<getArt>I<($icon, $size)>
+
+Checks if extension B<Art> is loaded and returns requested image if so.
+If $size is not specified, default size is used.
+
+=cut
+
+sub getArt {
+	my ($self, $icon, $size) = @_;
+	my $art = $self->extGet('Art');
+	if (defined $art) {
+		return $art->GetIcon($icon, $size);
+	}
+	return undef
 }
 
 sub log {
@@ -600,39 +632,51 @@ sub OSName {
 	return $_[0]->{OSNAME}
 }
 
-=item B<PopMessage>I<($message, $icon, ?$size?)>
+=item B<popMessage>I<($message, $icon, ?$size?)>
 
 Pops up a message box with a close button.
 
 =cut
 
-sub PopMessage {
+sub popMessage {
 	my ($self, $text, $icon, $size) = @_;
 	$icon = 'dialog-information' unless defined $icon;
 	$size = 32 unless defined $size;
 	my $m = $self->YAMessage(
 		-text => $text,
-		-image => $self->GetArt($icon, $size),
+		-image => $self->getArt($icon, $size),
 	);
 	$m->Show(-popover => $self);
 	$m->destroy;
 }
 
-sub PopTest {
+sub popTest {
 	my $self = shift;
-	$self->PopMessage('You did something');
+	$self->popMessage('You did something');
 }
 
 sub PostConfig {
 	my $self = shift;
 	delete $self->{ARGS};
-   my $lgf = $self->cget('-logo');
-   if ((defined $lgf) and (-e $lgf)) {
-      my $logo = $self->Photo(-file => $lgf, -format => 'PNG');
-      $self->iconimage($logo);
-   }
+	my $lgf = $self->cget('-logo');
+	if ((defined $lgf) and (-e $lgf)) {
+		my $logo = $self->Photo(-file => $lgf, -format => 'PNG');
+		$self->iconimage($logo);
+	}
 	my $pc = $self->{POSTCONFIG};
 	for (@$pc) { $_->execute }
+
+	if ($self->extExists('ConfigFolder') and $self->configGet('-savegeometry')) {
+		my $file = $self->configGet('-configfolder') . '/geometry';
+		if (open(OFILE, "<", $file)) {
+			my $g = <OFILE>;
+			close OFILE;
+			chomp $g;
+			$self->geometry($g);
+		} else {
+			$self->geometry('600x400+100+100');
+		}
+	}
 }
 
 =item B<ToolItems>

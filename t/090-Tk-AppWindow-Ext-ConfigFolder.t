@@ -15,7 +15,7 @@ createapp(
 
 my $ext;
 if (defined $app) {
-	$ext = $app->GetExt('ConfigFolder');
+	$ext = $app->extGet('ConfigFolder');
 }
 
 @tests = (

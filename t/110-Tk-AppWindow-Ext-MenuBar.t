@@ -49,7 +49,7 @@ if (defined $app) {
 		$app->Label(-width => 10, -textvariable => \$var)->grid(-row => $row, -column => 1, -padx => 3, -pady => 3);
 		$row ++
 	}
-	$ext = $app->GetExt('MenuBar');
+	$ext = $app->extGet('MenuBar');
 	&Update;
 }
 

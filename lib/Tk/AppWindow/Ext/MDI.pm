@@ -46,11 +46,11 @@ sub new {
 	my $class = shift;
 	my $self = $class->SUPER::new(@_);
 
-	$self->AddPreConfig(
+	$self->addPreConfig(
 		-maxtablength => ['PASSIVE', undef, undef, 16],
 	);
 
-	$self->AddPostConfig('CreateInterface', $self);
+	$self->addPostConfig('CreateInterface', $self);
 	return $self;
 }
 
@@ -96,7 +96,7 @@ sub CmdFileNew {
 	my $cm = $self->CreateContentHandler($name);
 	if (defined $cm) {
 		#add to navigator
-		my $navigator = $self->GetExt('Navigator');
+		my $navigator = $self->extGet('Navigator');
 		$navigator->Add($name) if defined $navigator;
 
 		$self->Interface->selectPage($name);
@@ -116,7 +116,7 @@ sub CreateContentHandler {
 	return undef if $self->DocExists($name);
 	my $cmclass = $self->configGet('-contentmanagerclass');
 	my @op = ();
-	my $cti = $self->GetArt('tab-close', 16);
+	my $cti = $self->getArt('tab-close', 16);
 	push @op, -closeimage => $cti if defined $cti;
 	my $page = $self->Interface->addPage($name, @op,
 		-title => $self->GetTitle($name),
