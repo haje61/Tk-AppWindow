@@ -5,7 +5,7 @@ use Config;
 my $osname = $Config{'osname'};
 
 my %prereq = (
-	'Browser::Open'					=> '0.04',
+	'Env::Browser'						=> '0.06',
 	'File::Basename'					=> '2.86',
 	'File::Path'						=> '2.18',
 	'Imager'								=> '1.019',

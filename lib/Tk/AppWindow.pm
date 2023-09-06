@@ -633,6 +633,33 @@ sub OSName {
 	return $_[0]->{OSNAME}
 }
 
+sub popEntry {
+	my ($self, $title, $text, $value, $icon) = @_;
+	$icon = 'dialog-information' unless defined $icon;
+	my @padding = (-padx => 10, -pady => 10);
+	my $q = $self->YADialog(
+		-title => $title,
+		-buttons => [qw(Ok Cancel)],
+		-defaultbutton => 'Ok',
+	);
+	$q->Label(-image => $self->getArt($icon, 32))->pack(-side => 'left', @padding);
+	my $f = $q->Frame->pack(-side => 'left', @padding);
+	$f->Label(
+		-anchor => 'w',
+		-text => $text,
+	)->pack(-fill => 'x', -padx => 2, -pady => 2);
+	my $e = $f->Entry->pack(-fill => 'x', -padx => 2, -pady => 2);
+	$e->insert('end', $value) if defined $value;
+	
+	my $result;
+	my $answer = $q->Show(-popover => $self);
+	$result = $e->get if $answer eq 'Ok';
+# 	print "Result $result\n";
+
+	$q->destroy;
+	return $result
+}
+
 =item B<popMessage>I<($message, $icon, ?$size?)>
 
 Pops up a message box with a close button.

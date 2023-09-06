@@ -13,7 +13,6 @@ $VERSION="0.01";
 
 use base qw( Tk::AppWindow::BaseClasses::Extension );
 
-use Browser::Open qw(open_browser);
 use Tk;
 require Tk::YADialog;
 require Tk::NoteBook;
@@ -76,7 +75,7 @@ sub new {
 	my $class = shift;
 	my $self = $class->SUPER::new(@_);
 
-
+	$self->Require('WebBrowser');
 	$self->addPreConfig(
 		-aboutinfo => ['PASSIVE', undef, undef, {
 			version => $VERSION,
@@ -152,7 +151,7 @@ sub CmdAbout {
 		my $fg = $url->cget('-foreground');
 		$url->bind('<Enter>', sub { $url->configure(-foreground => 'blue') });
 		$url->bind('<Leave>', sub { $url->configure(-foreground => $fg) });
-		$url->bind('<Button-1>', sub { open_browser $url->cget('-text') });
+		$url->bind('<Button-1>', sub { $self->cmdExecute('browser_open', $url->cget('-text')) });
 		$row ++;
 	}
 	if (exists $inf->{license}) {
@@ -180,7 +179,7 @@ sub CmdHelp {
 		)->pack(-expand => 1, -fill => 'both');
 		$db->Show(-popover => $w);
 	} elsif ($type eq 'html') {
-		open_browser $file
+		$self->cmdExecute('browser_open', $file)
 	} else {
 		warn "Unknown help type: $type"
 	}

@@ -165,6 +165,7 @@ sub CanQuit {
 		}
 		last if $close eq 0;
 	}
+	$self->SaveHistory;
 	return $close
 }
 
