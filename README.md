@@ -5,7 +5,7 @@ Application framework based on perl/Tk
 
 Following Perl modules should be installed:
 
-  * Browser::Open
+  * Env::Browser
   * File::Basename
   * File::Path
   * Imager
