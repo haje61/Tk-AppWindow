@@ -26,7 +26,7 @@ my %types = (
 	},
 	message => {
 		class => 'SMessageItem',
-		pack => [-expand => 1, -fill => 'both'],
+		pack => [-expand => 1, -fill => 'x'],
 	},
 	progress => {
 		class => 'SProgressItem',

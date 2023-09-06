@@ -54,6 +54,7 @@ sub new {
 	my $self = $class->SUPER::new(@_);
 
 	$self->addPreConfig(
+		-navigatoriconsize => ['PASSIVE', 'ToolIconSize', 'toolIconSize', 32],
 		-documentinterface => ['PASSIVE', undef, undef, 'MDI'],
 	);
 
@@ -61,20 +62,12 @@ sub new {
 		-navigatorpanel => ['Panel', $self, 'LEFT'],
 		-navigatorvisible	=> ['PanelVisible', $self, 1],
 	);
-	
 	my $nb = $self->Subwidget($self->Panel)->YANoteBook(
+		-tabside => 'left',
 	)->pack(-expand => 1, -fill=> 'both');
 	$self->Advertise('NAVNB', $nb);
 
-	my $page = $nb->addPage('Documents');
-	my $dt = $page->DocumentTree(
-		-entryselect => ['SelectDocument', $self],
-		-diriconcall => ['GetDirIcon', $self],
-		-fileiconcall => ['GetFileIcon', $self],
-	)->pack(-expand => 1, -fill => 'both');
-	$self->Advertise('NAVTREE', $dt);
-	$self->update;
-
+	$self->addPostConfig('CreateDocumentList', $self);
 	return $self;
 }
 
@@ -89,6 +82,38 @@ sub Add {
 	$self->Subwidget('NAVTREE')->entryAdd($name);
 }
 
+sub CreateDocumentList {
+	my $self = shift;
+	my $nb = $self->Subwidget('NAVNB');
+
+	my @opt = ();
+	my $icon = $self->getArt('document-open',$self->configGet('-navigatoriconsize'));
+	@opt = (-titleimg => $icon) if defined $icon;
+	my $page = $nb->addPage('Documents', @opt);
+
+# 	my $lf = $page->Frame(
+# 		-relief => 'groove',
+# 		-borderwidth => 2,
+# 	)->pack(-fill => 'x');
+# 	$lf->Label(
+# 		-text => 'Document list',
+# # 		-justify => 'left',
+# 	)->pack(-anchor =>'w', -padx => 2, -pady => 2);
+	my $dt = $page->DocumentTree(
+		-entryselect => ['SelectDocument', $self],
+		-diriconcall => ['GetDirIcon', $self],
+		-fileiconcall => ['GetFileIcon', $self],
+	)->pack(-expand => 1, -fill => 'both');
+
+	my $balloon = $self->extGet('Balloon');
+	my $l = $nb->getTab('Documents')->Subwidget('Label');
+	$balloon->Attach($l, -balloonmsg => 'Document list') if (defined $balloon) and (defined $icon);
+
+	$self->Advertise('NAVTREE', $dt);
+	$nb->selectPage('Documents');
+# 	$self->update;
+}
+
 sub Delete {
 	my ($self, $name) = @_;
 	$self->Subwidget('NAVTREE')->entryDelete($name);
@@ -96,14 +121,14 @@ sub Delete {
 
 sub GetDirIcon {
 	my ($self, $name) = @_;
-	my $icon = $self->getArt('folder', 16);
+	my $icon = $self->getArt('folder');
 	return $icon if defined $icon;
 	return $self->SubWidget('NAVTREE')->DefaultDirIcon;
 }
 
 sub GetFileIcon {
 	my ($self, $name) = @_;
-	my $icon = $self->getArt('text-x-plain', 16);
+	my $icon = $self->getArt('text-x-plain');
 	return $icon if defined $icon;
 	return $self->SubWidget('NAVTREE')->DefaultFileIcon;
 }

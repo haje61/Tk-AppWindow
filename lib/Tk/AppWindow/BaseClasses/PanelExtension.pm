@@ -81,7 +81,8 @@ sub PanelVisible {
 
 sub PostConfig {
 	my $self = shift;
-	$self->PanelVisible($self->{VISIBLE});
+	my $delay = $self->configGet('-initpaneldelay');
+	$self->after($delay, sub { $self->PanelVisible($self->{VISIBLE}) });
 }
 
 =back

@@ -190,6 +190,7 @@ sub Populate {
 	my $pre = $self->{PRECONFIG};
 	$self->ConfigSpecs(
 		-errorcolor => ['PASSIVE', 'errorColor', 'ErrorColor', '#FF0000'],
+		-initpaneldelay => ['PASSIVE', undef, undef, 500],
 		-logcall => ['CALLBACK', undef, undef, sub { print STERR shift }], 
 		-logerrorcall => ['CALLBACK', undef, undef, sub { print STERR shift }], 
 		-logo => ['PASSIVE', undef, undef, Tk::findINC('Tk/AppWindow/aw_logo.png')],

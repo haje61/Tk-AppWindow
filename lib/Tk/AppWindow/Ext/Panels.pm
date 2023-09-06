@@ -12,6 +12,7 @@ use vars qw($VERSION);
 $VERSION="0.01";
 use Tk;
 require Tk::Adjuster;
+require Tk::Pane;
 
 use base qw( Tk::AppWindow::BaseClasses::Extension );
 
@@ -150,6 +151,7 @@ sub new {
 				-side => 'left',
 				-fill => 'y',
 				-canhide => 1,
+				-paneloptions => [-width => 150],
 				-adjuster => 'left',
 			},
 			RIGHT => {
@@ -158,6 +160,7 @@ sub new {
 				-side => 'left',
 				-fill => 'y',
 				-canhide => 1,
+				-paneloptions => [-width => 150],
 				-adjuster => 'right',
 			},
 		
@@ -249,10 +252,17 @@ sub PanelLayOut {
 		my $paneloptions = delete $options->{'-paneloptions'};
 		$paneloptions = [] unless defined $paneloptions;
 
-		my $panel = $parent->Frame(@$paneloptions);
+		my $adjuster = delete $options->{'-adjuster'};
+
+		my $panel;
+# 		if (defined $adjuster) {
+# 			$panel = $parent->Pane(@$paneloptions)
+# 		} else {
+			$panel = $parent->Frame(@$paneloptions);
+# 		}
+		
 		$self->Advertise($name, $panel);
 		
-		my $adjuster = delete $options->{'-adjuster'};
 		my $adj;
 		if (defined $adjuster) {
 			$adj = $parent->Adjuster(

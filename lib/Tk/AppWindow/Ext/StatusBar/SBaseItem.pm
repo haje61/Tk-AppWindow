@@ -22,7 +22,7 @@ sub Populate {
 		$self->Label(-text => "$label:")->pack($self->ItemPack);
 	}
 	$self->ConfigSpecs(
-		-updatecommand => ['CALLBACK', undef, undef, sub { return '' }],
+		-updatecommand => ['CALLBACK'],
 		DEFAULT => ['SELF'],
 	);
 }

@@ -46,6 +46,8 @@ sub new {
 	my $class = shift;
 	my $self = $class->SUPER::new(@_);
 
+	$self->{FORCECLOSE} = 0;
+	$self->{SELECTONCREATE} = 1;
 	$self->addPreConfig(
 		-maxtablength => ['PASSIVE', undef, undef, 16],
 	);
@@ -66,19 +68,26 @@ if $name is not specified closes the current document.
 =cut
 
 sub CmdFileClose {
-	my ($self, $name) =  @_;
+	my ($self, $name, $confirmsave) =  @_;
 	my $doc;
+
 	if (defined $name) {
-		$doc = $self->GetDoc($name);
+		$doc = $self->docGet($name);
 	} else {
-		$name = $self->Current;
-		$doc = $self->CurDoc;
+		$name = $self->docSelected;
+		$doc = $self->docCurrent;
 	}
 	return 1 unless (defined $doc);
-	my $geosave = $self->geometry;
-	if ($self->Interface->deletePage($name)) {
-		$self->geometry($geosave);
-		return 1;
+
+
+	my $close = 1;
+	$close = $self->docConfirmSave($name) unless $self->docForceClose;
+	if ($close) {
+		my $geosave = $self->geometry;
+		if ($self->Interface->deletePage($name)) {
+			$self->geometry($geosave);
+			return 1;
+		}
 	}
 	return 0
 }
@@ -99,7 +108,7 @@ sub CmdFileNew {
 		my $navigator = $self->extGet('Navigator');
 		$navigator->Add($name) if defined $navigator;
 
-		$self->Interface->selectPage($name);
+		$self->Interface->selectPage($name) if $self->selectOnCreate;
 		return 1;
 	}
 	return 0
@@ -113,7 +122,7 @@ Initiates a new content handler for $name.
 
 sub CreateContentHandler {
 	my ($self, $name) = @_;
-	return undef if $self->DocExists($name);
+	return undef if $self->docExists($name);
 	my $cmclass = $self->configGet('-contentmanagerclass');
 	my @op = ();
 	my $cti = $self->getArt('tab-close', 16);
@@ -137,8 +146,14 @@ sub CreateInterface {
 	my $self = shift;
 	$self->{INTERFACE} = $self->WorkSpace->YANoteBook(
 		-selecttabcall => ['Select', $self],
-		-closetabcall => ['CloseDoc', $self],
+		-closetabcall => ['docClose', $self],
 	)->pack(-expand => 1, -fill => 'both');
+}
+
+sub docForceClose {
+	my $self = shift;
+	if (@_) { $self->{FORCECLOSE} = shift }
+	return $self->{FORCECLOSE}
 }
 
 =item B<Interface>
@@ -183,6 +198,12 @@ sub Select {
 	$self->Interface->selectPage($name);
 	$self->SelectDoc($name);
 	$self->{DOCS}->{$name}->Focus;
+}
+
+sub selectOnCreate {
+	my $self = shift;
+	if (@_) { $self->{SELECTONCREATE} = shift }
+	return $self->{SELECTONCREATE}
 }
 
 =back

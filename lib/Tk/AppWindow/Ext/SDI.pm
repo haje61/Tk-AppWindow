@@ -141,72 +141,38 @@ sub new {
 sub CanQuit {
 	my $self = shift;
 	my $close = 1;
-	my @docs = $self->DocList;
+	my @docs = $self->docList;
 	for (@docs) {
-		$close = 0 unless $self->CmdFileClose($_);
+		my $name = $_;
+		my $doc = $self->docGet($name);
+		if ($doc->IsModified) {
+		#confirm save dialog comes here
+			my $q = $self->YAMessage(
+				-title => 'Warning, file modified',
+				-image => $self->getArt('dialog-warning', 32),
+				-buttons => [qw(Yes No Cancel)],
+				-text => 
+					"Closing " . basename($name) .
+					".\nText has been modified. Save it?",
+				-defaultbutton => 'Yes',
+			);
+			my $answer = $q->Show(-popover => $self->GetAppWindow);
+			if ($answer eq 'Yes') {
+				$self->CmdFileSave($name)
+			} elsif ($answer eq 'Cancel') {
+				$close = 0
+			}
+		}
+		last if $close eq 0;
 	}
-	$self->SaveHistory if $close;
 	return $close
 }
 
 
 sub ClearCurrent {
 	my $self = shift;
-	$self->Current(undef);
+	$self->docSelected(undef);
 	$self->configPut(-title => $self->configGet('-appname'));
-}
-
-sub CloseDoc {
-	my ($self, $name) = @_;
-	my $doc = $self->GetDoc($name);
-	if ($doc->IsModified) {
-	#confirm save dialog comes here
-		my $q = $self->YAMessage(
-			-title => 'Warning, file modified',
-			-image => $self->getArt('dialog-warning', 32),
-			-buttons => [qw(Yes No Cancel)],
-			-text => 
-				"Closing " . basename($name) .
-				".\nText has been modified. Save it?",
-			-defaultbutton => 'Yes',
-		);
-		my $answer = $q->Show(-popover => $self->GetAppWindow);
-		if ($answer eq 'Yes') {
-			unless ($self->CmdFileSave) {
-				return 0
-			}
-		} elsif ($answer eq 'Cancel') {
-			return 0
-		}
-	}
-	my $filename = $name;
-
-	if ($doc->Close) {
-		#Add to history
-		if (defined($filename) and (-e $filename)) {
-			my $hist = $self->{HISTORY};
-			unshift @$hist, $filename;
-
-			#Keep history list below maximum
-			my $siz = @$hist;
-			pop @$hist if ($siz > $self->configGet('-maxhistory'));
-		}
-
-		#delete from document hash
-		delete $self->{DOCS}->{$name};
-
-		#delete from navigator
-		my $navigator = $self->extGet('Navigator');
-		if (defined $navigator) {
-			$navigator->Delete($name) if defined $navigator;
-		}
-
-		if ((defined $self->Current) and ($self->Current eq $name)) { 
-			$self->ClearCurrent;
-		}
-		return 1
-	}
-	return 0
 }
 
 =item B<CmdFileClose>
@@ -217,9 +183,10 @@ Closes the current document
 
 sub CmdFileClose {
 	my $self =  shift;
-	my $doc = $self->CurDoc;
+	my $doc = $self->docCurrent;
 	return 1 unless (defined $doc);
-	if ($self->CloseDoc($self->Current)) {
+	if ($self->docConfirmSave($self->docSelected)) {
+		$self->docClose($self->docSelected);
 		my $geosave = $self->geometry;
 		$doc->destroy;
 		$self->geometry($geosave);
@@ -268,14 +235,14 @@ sub CmdFileOpen {
 # 			-popover => 'mainwindow',
 		);
 	}
-	if ($self->DocExists($file)) {
+	if ($self->docExists($file)) {
 		$self->SelectDoc;
 		return
 	}
 	if (defined $file) {
 		my $file = File::Spec->rel2abs($file);
 		if ($self->CmdFileNew($file)) {
-			my $doc = $self->GetDoc($file);
+			my $doc = $self->docGet($file);
 
 			#remove from history
 			my $h = $self->{HISTORY};
@@ -304,10 +271,10 @@ sub CmdFileSave {
 	
 	my $doc;
 	unless (defined $name) {
-		$doc = $self->CurDoc;
+		$doc = $self->docCurrent;
 		$name = $self->{CURRENT};
 	} else {
-		$doc = $self->GetDoc($name);
+		$doc = $self->docGet($name);
 	}
 
 	if (defined $doc) {
@@ -336,10 +303,10 @@ sub CmdFileSaveAs {
 
 	my $doc;
 	unless (defined $name) {
-		$doc = $self->CurDoc;
+		$doc = $self->docCurrent;
 		$name = $self->{CURRENT};
 	} else {
-		$doc = $self->GetDoc($name);
+		$doc = $self->docGet($name);
 	}
 
 	if (defined $doc) {
@@ -400,19 +367,72 @@ sub CreateContentHandler {
 	return undef;
 }
 
-sub Current {
-	my $self = shift;
-	if (@_) { $self->{CURRENT} = shift }
-	return $self->{CURRENT}
+sub docClose {
+	my ($self, $name) = @_;
+	my $doc = $self->docGet($name);
+	my $filename = $name;
+
+	if ($doc->Close) {
+		#Add to history
+		if (defined($filename) and (-e $filename)) {
+			my $hist = $self->{HISTORY};
+			unshift @$hist, $filename;
+
+			#Keep history list below maximum
+			my $siz = @$hist;
+			pop @$hist if ($siz > $self->configGet('-maxhistory'));
+		}
+
+		#delete from document hash
+		delete $self->{DOCS}->{$name};
+
+		#delete from navigator
+		my $navigator = $self->extGet('Navigator');
+		if (defined $navigator) {
+			$navigator->Delete($name) if defined $navigator;
+		}
+
+		if ((defined $self->docSelected) and ($self->docSelected eq $name)) { 
+			$self->ClearCurrent;
+		}
+		return 1
+	}
+	return 0
 }
 
-=item B<CurDoc>
+sub docConfirmSave {
+	my ($self, $name) = @_;
+	my $doc = $self->docGet($name);
+	if ($doc->IsModified) {
+	#confirm save dialog comes here
+		my $q = $self->YAMessage(
+			-title => 'Warning, file modified',
+			-image => $self->getArt('dialog-warning', 32),
+			-buttons => [qw(Yes No Cancel)],
+			-text => 
+				"Closing " . basename($name) .
+				".\nDocument has been modified. Save it?",
+			-defaultbutton => 'Yes',
+		);
+		my $answer = $q->Show(-popover => $self->GetAppWindow);
+		if ($answer eq 'Yes') {
+			unless ($self->CmdFileSave) {
+				return 0
+			}
+		} elsif ($answer eq 'Cancel') {
+			return 0
+		}
+	}
+	return 1
+}
+
+=item B<docCurrent>
 
 Returns the currently selected document object.
 
 =cut
 
-sub CurDoc {
+sub docCurrent {
 	my $self = shift;
 	my $current = $self->{CURRENT};
 	if (defined $current) {
@@ -421,38 +441,44 @@ sub CurDoc {
 	return undef
 }
 
-=item B<DocExists>I<($name)
+=item B<docExists>I<($name)
 
 Returns 1 if $name exists in the document pool. Else returns 0.
 
 =cut
 
-sub DocExists {
+sub docExists {
 	my ($self, $name) = @_;
 	return exists $self->{DOCS}->{$name}
 }
 
-=item B<DocList>
-
-Returns a list of all open documents.
-
-=cut
-
-sub DocList {
-	my $self = shift;
-	my $dochash = $self->{DOCS};
-	return keys %$dochash;
-}
-
-=item B<GetDoc>I<($name)
+=item B<docGet>I<($name)
 
 Returns document object for $name.
 
 =cut
 
-sub GetDoc {
+sub docGet {
 	my ($self, $name) = @_;
 	return $self->{DOCS}->{$name}
+}
+
+=item B<docList>
+
+Returns a list of all open documents.
+
+=cut
+
+sub docList {
+	my $self = shift;
+	my $dochash = $self->{DOCS};
+	return keys %$dochash;
+}
+
+sub docSelected {
+	my $self = shift;
+	if (@_) { $self->{CURRENT} = shift }
+	return $self->{CURRENT}
 }
 
 =item B<GetTitle>I<($name)
@@ -469,9 +495,9 @@ sub GetTitle {
 sub GetUntitled {
 	my $self = shift;
 	my $name = 'Untitled';
-	if ($self->DocExists($name)) {
+	if ($self->docExists($name)) {
 		my $num = 2;
-		while ($self->DocExists("$name ($num)")) { $num ++ }
+		while ($self->docExists("$name ($num)")) { $num ++ }
 		$name = "$name ($num)";
 	}
 	return $name
@@ -525,9 +551,9 @@ sub MenuItems {
 
 sub ReConfigure {
 	my $self = shift;
-	my @docs = $self->DocList;
+	my @docs = $self->docList;
 	for (@docs) {
-		$self->GetDoc($_)->ConfigureCM;
+		$self->docGet($_)->ConfigureCM;
 	}
 }
 
@@ -551,7 +577,7 @@ sub RenameDoc {
 			$navigator->Add($new);
 		}
 
-		if ($self->Current eq $old) {
+		if ($self->docSelected eq $old) {
 			$self->SelectDoc($new)
 		}
 
