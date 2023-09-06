@@ -399,6 +399,27 @@ sub CreateCompound {
 	return $compound;
 }
 
+sub CreateEmptyImage {
+	my ($self, $width, $height) = @_;
+	$width = $self->configGet('-iconsize') unless defined $width;
+	$height = $width unless defined $height;
+	my $empty = '/* XPM */
+static char * new_xpm[] = {
+"' . "$width $height" . ' 3 1",
+" 	c None",
+".	c #000000",
+"+	c #FFFFFF",
+';
+
+	my $line = '';
+	for (1 ..$width) { $line = "$line " }
+	$line = "\"$line\"\n";
+	for (1 .. $height) {
+		$empty = $empty . $line
+	}
+	return $self->Pixmap(-data => $empty);
+}
+
 sub CreateIndex {
 	my ($self, $tindex) = @_;
 	my %index = ();

@@ -10,7 +10,7 @@ use strict;
 use warnings;
 use Carp;
 use vars qw($VERSION);
-$VERSION="0.01";
+$VERSION="0.02";
 
 use Tk::GtkSettings qw(gtkKey initDefaults export2xrdb groupOption);
 initDefaults;
@@ -188,11 +188,15 @@ sub Populate {
 		}
 	}
 	my $pre = $self->{PRECONFIG};
+	my $logcall = sub {
+		my $message = shift;
+		print STERR "$message\n";
+	};
 	$self->ConfigSpecs(
-		-errorcolor => ['PASSIVE', 'errorColor', 'ErrorColor', '#FF0000'],
 		-initpaneldelay => ['PASSIVE', undef, undef, 500],
-		-logcall => ['CALLBACK', undef, undef, sub { print STERR shift }], 
-		-logerrorcall => ['CALLBACK', undef, undef, sub { print STERR shift }], 
+		-logcall => ['CALLBACK', undef, undef, $logcall], 
+		-logerrorcall => ['CALLBACK', undef, undef, $logcall], 
+		-logwarningcall => ['CALLBACK', undef, undef, $logcall], 
 		-logo => ['PASSIVE', undef, undef, Tk::findINC('Tk/AppWindow/aw_logo.png')],
 		-savegeometry => ['PASSIVE', undef, undef, 1],
 		@$pre,
@@ -440,6 +444,29 @@ sub configGet {
 	}
 }
 
+sub ConfigHook {
+	my $self = shift;
+	my $method = shift;
+	my $config = shift;
+	if (exists $self->{CONFIGTABLE}->{$config}) {
+		my $call = $self->{CONFIGTABLE}->{$config};
+		$call->$method(@_);
+		return 1
+	}
+	carp "Config option '$config' was not defined through configInit";
+	return 0
+}
+
+sub configHookAfter {
+	my $self = shift;
+	return $self->CmdHook('hookAfter', @_);
+}
+
+sub configHookBefore {
+	my $self = shift;
+	return $self->CmdHook('hookBefore', @_);
+}
+
 =item B<configInit>I<(@options)>
 
  $app->configInit(
@@ -495,6 +522,16 @@ sub configPut {
 	} else {
 		$self->configure($option, $value);
 	}
+}
+
+sub configUnhookAfter {
+	my $self = shift;
+	return $self->CmdHook('unhookAfter', @_);
+}
+
+sub configUnhookBefore {
+	my $self = shift;
+	return $self->CmdHook('unhookBefore', @_);
 }
 
 =item B<CreateCallback>('MethodName', $owner, @options);
@@ -601,14 +638,17 @@ sub getArt {
 
 sub log {
 	my ($self, $message) = @_;
-	$message = "$message\n" unless $message =~ /\n$/;
 	$self->Callback('-logcall', $message);
 }
 
 sub logError {
 	my ($self, $message) = @_;
-	$message = "$message\n" unless $message =~ /\n$/;
 	$self->Callback('-logerrorcall', $message);
+}
+
+sub logWarning {
+	my ($self, $message) = @_;
+	$self->Callback('-logwarningcall', $message);
 }
 
 =item B<MenuItems>

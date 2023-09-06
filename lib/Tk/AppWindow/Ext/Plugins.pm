@@ -61,6 +61,11 @@ sub new {
 sub CanQuit {
 	my $self = shift;
 	my @plugs = $self->plugList;
+	my $file = $self->configGet('-configfolder') . '/plugins';
+	if (open OFILE, ">", $file) {
+		for (@plugs) { print OFILE, "$_\n" }
+		close OFILE;
+	}
 	my $close = 1;
 	for (@plugs) {
 		$close = 0 unless $self->plugGet($_)->CanQuit
@@ -84,9 +89,22 @@ sub ConfigureBars {
 
 sub DoPostConfig {
 	my $self = shift;
-	my $plugins = $self->configGet('-plugins');
-	for (@$plugins) {
-		$self->plugLoad($_);
+	my $file = $self->configGet('-configfolder') . '/plugins';
+	if (-e $file) {
+		if (open OFILE, "<", $file) {
+			while (<OFILE>) {
+				my $plug = $_;
+				chomp($plug);
+				$self->plugLoad($plug);
+			}
+			for (@plugs) { print OFILE, "$_\n" }
+			close OFILE;
+		}
+	} else {
+		my $plugins = $self->configGet('-plugins');
+		for (@$plugins) {
+			$self->plugLoad($_);
+		}
 	}
 }
 

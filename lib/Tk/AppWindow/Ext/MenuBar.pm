@@ -87,6 +87,7 @@ sub CheckStackForImages {
 	my ($self, $stack) = @_;
 	my $hasimages = 0;
 	my $name = $self->configGet('-appname');
+	my $art = $self->extGet('Art');
 	for (@$stack) {
 		my %conv = ( @$_ );
 		if (exists $conv{'cascade'}) {
@@ -100,10 +101,10 @@ sub CheckStackForImages {
 	}
 	if ($hasimages) {
 		my $size = $self->configGet('-menuiconsize');
-		my $empty = $self->CreateEmptyImage($size, $size);
+		my $empty = $art->CreateEmptyImage($size) if defined $art;
 		for (@$stack) {
 			my %conv = ( @$_ );
-			unless (exists $conv{'-image'}) {
+			unless ((exists $conv{'-image'}) and (defined $empty)) {
 				push @$_, -image => $empty, -compound => 'left';
 			}
 		}
@@ -334,24 +335,6 @@ sub CreateCompound {
 		$comp->Text( -text => $text);
 	}
 	return $comp;
-}
-
-my $baseline = '                                                                                                                               ';
-
-sub CreateEmptyImage {
-	my ($self, $width, $height) = @_;
-	my $empty = '/* XPM */
-static char * new_xpm[] = {
-"' . "$width $height" . ' 3 1",
-" 	c None",
-".	c #000000",
-"+	c #FFFFFF",
-';
-	my $line = '"' . substr($baseline, 0, $width) . "\"\n";
-	for (1 .. $height) {
-		$empty = $empty . $line
-	}
-	return $self->Pixmap(-data => $empty);
 }
 
 sub CreateMenu {

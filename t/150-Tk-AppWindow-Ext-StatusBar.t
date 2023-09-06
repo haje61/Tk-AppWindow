@@ -28,18 +28,18 @@ if (defined $app) {
 	my @padding = (-side => 'left', -padx => 10, -pady => 10);
 	my $ws = $app->WorkSpace;
 	my $black = $ws->Button(
-		-text => 'Message',
-		-command => sub { $ext->Message('Oh, gosh, I hope I don\'t fall in love today') },
+		-text => 'Log message',
+		-command => sub { $app->log('Oh, gosh, I hope I don\'t fall in love today') },
 	)->pack(@padding);
 
 	my $red = $ws->Button(
-		-text => 'Message in Red',
-		-command => sub { $ext->Message('Oh, gosh, I hope I don\'t fall in love today', 'red') },
+		-text => 'Log error',
+		-command => sub { $app->logError('Oh, gosh, I hope I don\'t fall in love today') },
 	)->pack(@padding);
 
 	my $blue = $ws->Button(
-		-text => 'Message in Blue',
-		-command => sub { $ext->Message('Oh, gosh, I hope I don\'t fall in love today', 'blue') },
+		-text => 'Log warning',
+		-command => sub { $app->logWarning('Oh, gosh, I hope I don\'t fall in love today') },
 	)->pack(@padding);
 
 	my $boole = 1;

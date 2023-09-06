@@ -60,14 +60,14 @@ sub new {
 
 =over 4
 
-=item B<CmdFileClose>I(?$name?);
+=item B<CmdDocClose>I(?$name?);
 
 Closes $name. returns 1 if succesfull.
 if $name is not specified closes the current document.
 
 =cut
 
-sub CmdFileClose {
+sub CmdDocClose {
 	my ($self, $name, $confirmsave) =  @_;
 	my $doc;
 
@@ -86,22 +86,23 @@ sub CmdFileClose {
 		my $geosave = $self->geometry;
 		if ($self->Interface->deletePage($name)) {
 			$self->geometry($geosave);
+			$self->log("Closed $name");
 			return 1;
 		}
 	}
 	return 0
 }
 
-=item B<CmdFileNew>I(?$name?);
+=item B<CmdDocNew>I(?$name?);
 
 Initiates a new content handler for $name.
 If $name is not specified it creates and untitled document.
 
 =cut
 
-sub CmdFileNew {
+sub CmdDocNew {
 	my ($self, $name) = @_;
-	$name = $self->GetUntitled unless defined $name;
+	$name = $self->docUntitled unless defined $name;
 	my $cm = $self->CreateContentHandler($name);
 	if (defined $cm) {
 		#add to navigator
@@ -128,7 +129,7 @@ sub CreateContentHandler {
 	my $cti = $self->getArt('tab-close', 16);
 	push @op, -closeimage => $cti if defined $cti;
 	my $page = $self->Interface->addPage($name, @op,
-		-title => $self->GetTitle($name),
+		-title => $self->docTitle($name),
 		-closebutton => 1,
 	);
 	my $h = $page->$cmclass(-extension => $self)->pack(-expand => 1, -fill => 'both');
@@ -145,7 +146,7 @@ Creates a Tk::YANoteBook multiple document interface.
 sub CreateInterface {
 	my $self = shift;
 	$self->{INTERFACE} = $self->WorkSpace->YANoteBook(
-		-selecttabcall => ['Select', $self],
+		-selecttabcall => ['docSelect', $self],
 		-closetabcall => ['docClose', $self],
 	)->pack(-expand => 1, -fill => 'both');
 }
@@ -177,27 +178,27 @@ sub MenuItems {
 	return ($self->SUPER::MenuItems,
 #This table is best viewed with tabsize 3.
 #			 type					menupath			label						cmd						icon					keyb			config variable
-		[	'menu_normal',		'File::f2',		"S~ave all",			'file_save_all',		'document-save',	'CTRL+L'	], 
+		[	'menu_normal',		'File::f2',		"S~ave all",			'doc_save_all',		'document-save',	'CTRL+L'	], 
 	)
 }
 
-sub RenameDoc {
+sub docSelect {
+	my ($self, $name) = @_;
+	$self->Interface->selectPage($name);
+	$self->SelectDoc($name);
+	$self->{DOCS}->{$name}->Focus;
+}
+
+sub docRename {
 	my ($self, $old, $new) = @_;
-	$self->SUPER::RenameDoc($old, $new);
+	$self->SUPER::docRename($old, $new);
 	my $i = $self->Interface;
 	$i->renamePage($old, $new);
 	my $tab = $i->GetTab($new);
 	$tab->configure(
 		-name => $new,
-		-title => $self->GetTitle($new),
+		-title => $self->docTitle($new),
 	);
-}
-
-sub Select {
-	my ($self, $name) = @_;
-	$self->Interface->selectPage($name);
-	$self->SelectDoc($name);
-	$self->{DOCS}->{$name}->Focus;
 }
 
 sub selectOnCreate {

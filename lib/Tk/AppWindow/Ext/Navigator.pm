@@ -82,35 +82,32 @@ sub Add {
 	$self->Subwidget('NAVTREE')->entryAdd($name);
 }
 
-sub CreateDocumentList {
-	my $self = shift;
+sub addPage {
+	my ($self, $name, $image, $text) = @_;
 	my $nb = $self->Subwidget('NAVNB');
 
 	my @opt = ();
-	my $icon = $self->getArt('document-open',$self->configGet('-navigatoriconsize'));
+	my $icon = $self->getArt($image, $self->configGet('-navigatoriconsize'));
 	@opt = (-titleimg => $icon) if defined $icon;
-	my $page = $nb->addPage('Documents', @opt);
+	my $page = $nb->addPage($name, @opt);
+	my $balloon = $self->extGet('Balloon');
+	my $l = $nb->getTab($name)->Subwidget('Label');
+	$balloon->Attach($l, -balloonmsg => $text) if (defined $balloon) and (defined $icon);
+	return $page;
+}
 
-# 	my $lf = $page->Frame(
-# 		-relief => 'groove',
-# 		-borderwidth => 2,
-# 	)->pack(-fill => 'x');
-# 	$lf->Label(
-# 		-text => 'Document list',
-# # 		-justify => 'left',
-# 	)->pack(-anchor =>'w', -padx => 2, -pady => 2);
+sub CreateDocumentList {
+	my $self = shift;
+	my $page = $self->addPage('Documents', 'document-open', 'Document list');
+
 	my $dt = $page->DocumentTree(
 		-entryselect => ['SelectDocument', $self],
 		-diriconcall => ['GetDirIcon', $self],
 		-fileiconcall => ['GetFileIcon', $self],
 	)->pack(-expand => 1, -fill => 'both');
 
-	my $balloon = $self->extGet('Balloon');
-	my $l = $nb->getTab('Documents')->Subwidget('Label');
-	$balloon->Attach($l, -balloonmsg => 'Document list') if (defined $balloon) and (defined $icon);
-
 	$self->Advertise('NAVTREE', $dt);
-	$nb->selectPage('Documents');
+	$nb->Subwidget('NAVNB')->selectPage('Documents');
 # 	$self->update;
 }
 
@@ -144,7 +141,7 @@ sub MenuItems {
 
 sub SelectDocument {
 	my ($self, $name) = @_;
-	$self->extGet($self->configGet('-documentinterface'))->Select($name);
+	$self->extGet($self->configGet('-documentinterface'))->docSelect($name);
 }
 
 sub SelectEntry {

@@ -12,6 +12,7 @@ sub Populate {
 	$self->SUPER::Populate($args);
 
 	my $e = $self->Label(
+		-text => ' ',
 		-anchor => 'w',
 	)->pack(-side => 'left', -expand => 1, -fill => 'x');
 	$self->{COLORBCK} = $e->cget('-foreground');

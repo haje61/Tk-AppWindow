@@ -55,7 +55,7 @@ Default value [].
 Configure your tool bar here. Example:
 
  [    #type             #label   #command     #icon             #help
-    [	'tool_button',   'New',   'file_new',   'document-new',   'Create a new document'],
+    [	'tool_button',   'New',   'doc_new',   'document-new',   'Create a new document'],
     [	'tool_separator' ],
  ]
 

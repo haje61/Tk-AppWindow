@@ -90,6 +90,8 @@ sub new {
 
 	my $self = $class->SUPER::new(@_);
 	$self->addPreConfig(
+		-errorcolor => ['PASSIVE', 'errorColor', 'ErrorColor', '#FF0000'],
+		-warningcolor => ['PASSIVE', 'warningColor', 'WarningColor', '#0000FF'],
 		-statusitemrelief => ['PASSIVE', undef, undef, 'groove'],
 		-statusitemborderwidth => ['PASSIVE', undef, undef, 2],
 		-statusitempadding => ['PASSIVE', undef, undef, 2],
@@ -274,6 +276,9 @@ sub InitMsgItem {
 			$self->{MI} = $mi;
 			my $bl = $self->extGet('Balloon');
 			$bl->Balloon->configure(-statusbar => $mi) if defined $bl;
+			$self->configPut(-logcall => sub { $mi->Message(shift) });
+			$self->configPut(-logerrorcall => sub { $mi->Message(shift, $self->configGet('-errorcolor')) });
+			$self->configPut(-logwarningcall => sub { $mi->Message(shift, $self->configGet('-warningcolor')) });
 			return $mi;
 		}
 	}

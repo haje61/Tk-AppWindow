@@ -79,15 +79,15 @@ Default value 0.
 
 =over 4
 
-=item B<file_close>
+=item B<doc_close>
 
-=item B<file_new>
+=item B<doc_new>
 
-=item B<file_open>
+=item B<doc_open>
 
-=item B<file_save>
+=item B<doc_save>
 
-=item B<file_save_as>
+=item B<doc_save_as>
 
 =back
 
@@ -120,11 +120,11 @@ sub new {
 		-readonly => ['PASSIVE', undef, undef, 0],
 	);
 	$self->cmdConfig(
-		file_new => ['CmdFileNew', $self],
-		file_open => ['CmdFileOpen', $self],
-		file_save => ['CmdFileSave', $self],
-		file_save_as => ['CmdFileSaveAs', $self],
-		file_close => ['CmdFileClose', $self],
+		doc_new => ['CmdDocNew', $self],
+		doc_open => ['CmdDocOpen', $self],
+		doc_save => ['CmdDocSave', $self],
+		doc_save_as => ['CmdDocSaveAs', $self],
+		doc_close => ['CmdDocClose', $self],
 		pop_hist_menu => ['CmdPopulateHistoryMenu', $self],
 	);
 
@@ -158,7 +158,7 @@ sub CanQuit {
 			);
 			my $answer = $q->Show(-popover => $self->GetAppWindow);
 			if ($answer eq 'Yes') {
-				$self->CmdFileSave($name)
+				$self->CmdDocSave($name)
 			} elsif ($answer eq 'Cancel') {
 				$close = 0
 			}
@@ -176,13 +176,13 @@ sub ClearCurrent {
 	$self->configPut(-title => $self->configGet('-appname'));
 }
 
-=item B<CmdFileClose>
+=item B<CmdDocClose>
 
 Closes the current document
 
 =cut
 
-sub CmdFileClose {
+sub CmdDocClose {
 	my $self =  shift;
 	my $doc = $self->docCurrent;
 	return 1 unless (defined $doc);
@@ -196,16 +196,16 @@ sub CmdFileClose {
 	return 0
 }
 
-=item B<CmdFileNew>
+=item B<CmdDocNew>
 
 Creates a new document. In and SDI environment it closes
 the currently existing one first.
 
 =cut
 
-sub CmdFileNew {
+sub CmdDocNew {
 	my ($self, $name) = @_;
-	$name = $self->GetUntitled unless defined $name; 
+	$name = $self->docUntitled unless defined $name; 
 	my $cm = $self->CreateContentHandler($name);
 # 	return 0 unless defined $cm;
 
@@ -213,11 +213,11 @@ sub CmdFileNew {
 	my $navigator = $self->extGet('Navigator');
 	$navigator->Add($name) if defined $navigator;
 
-	$self->SelectDoc($name);
+	$self->docSelect($name);
 	return 1;
 }
 
-=item B<CmdFileOpen>I(?$file?);
+=item B<CmdDocOpen>I(?$file?);
 
 Creates a new document. In and SDI environment it closes
 the currently existing one first.
@@ -226,7 +226,7 @@ If $file is not specified it launches a file dialog.
 
 =cut
 
-sub CmdFileOpen {
+sub CmdDocOpen {
 	my ($self, $file) = @_;
 	unless (defined($file)) {
 		my @op = ();
@@ -237,12 +237,12 @@ sub CmdFileOpen {
 		);
 	}
 	if ($self->docExists($file)) {
-		$self->SelectDoc;
-		return
+		$self->docSelect($file);
+		return 1
 	}
 	if (defined $file) {
 		my $file = File::Spec->rel2abs($file);
-		if ($self->CmdFileNew($file)) {
+		if ($self->CmdDocNew($file)) {
 			my $doc = $self->docGet($file);
 
 			#remove from history
@@ -250,23 +250,27 @@ sub CmdFileOpen {
 			my ($index) = grep { $h->[$_] eq $file } (0 .. @$h-1);
 			splice @$h, $index, 1 if defined $index;
 
-			return 1 if $doc->Load($file);
+			if ($doc->Load($file)) {
+				$self->log("Opened $file");
+				return 1
+			}
 		}
+		$self->logWarning("Opening '$file' failed");
 	}
  	return 0
 }
 
-=item B<CmdFileSave>I(?$file?);
+=item B<CmdDocSave>I(?$file?);
 
 Saves a document.
 
 If $file is not specified it saves the current document.
 
-For a new document it will call I<CmdFileSaveAs>.
+For a new document it will call I<CmdDocSaveAs>.
 
 =cut
 
-sub CmdFileSave {
+sub CmdDocSave {
 	my ($self, $name) = @_;
 	return 0 if $self->configGet('-readonly');
 	
@@ -280,25 +284,28 @@ sub CmdFileSave {
 
 	if (defined $doc) {
 		unless ($name =~ /^Untitled/) {
-			return $doc->Save($name);
+			if ($doc->Save($name)) {
+				$self->log("Saved '$name'");
+				return 1
+			}
 		} else {
-			return $self->CmdFileSaveAs($name);
+			return $self->CmdDocSaveAs($name);
 		}
 	}
 	return 1
 }
 
-=item B<CmdFileSaveAs>I(?$file?);
+=item B<CmdDocSaveAs>I(?$file?);
 
 Saves a document under a new name. Launches a file dialog.
 
 If $file is not specified it saves the current document.
 
-For a new document it will call I<CmdFileSaveAs>.
+For a new document it will call I<CmdDocSaveAs>.
 
 =cut
 
-sub CmdFileSaveAs {
+sub CmdDocSaveAs {
 	my ($self, $name) = @_;
 	return 0 if $self->configGet('-readonly');
 
@@ -320,7 +327,8 @@ sub CmdFileSaveAs {
 		if (defined $file) {
 			$file = File::Spec->rel2abs($file);
 			if ($doc->Save($file)) {
-				$self->RenameDoc($name, $file);
+				$self->log("Saved '$file'");
+				$self->docRename($name, $file);
 				return 1
 			} else {
 				return 0
@@ -344,7 +352,7 @@ sub CmdPopulateHistoryMenu {
 				my $f = $_;
 				$submenu->add('command',
 					-label => $f,
-					-command => sub { $self->CmdFileOpen($f) }
+					-command => sub { $self->CmdDocOpen($f) }
 				);
 			}
 			$submenu->add('separator');
@@ -358,7 +366,7 @@ sub CmdPopulateHistoryMenu {
 
 sub CreateContentHandler {
 	my ($self, $name) = @_;
-	if ($self->CmdFileClose) {
+	if ($self->CmdDocClose) {
 		my $cmclass = $self->configGet('-contentmanagerclass');
 		my $h = $self->WorkSpace->$cmclass(-extension => $self)->pack(-expand => 1, -fill => 'both');
 		$self->{DOCS}->{$name} = $h;
@@ -417,7 +425,7 @@ sub docConfirmSave {
 		);
 		my $answer = $q->Show(-popover => $self->GetAppWindow);
 		if ($answer eq 'Yes') {
-			unless ($self->CmdFileSave) {
+			unless ($self->CmdDocSave) {
 				return 0
 			}
 		} elsif ($answer eq 'Cancel') {
@@ -476,24 +484,55 @@ sub docList {
 	return keys %$dochash;
 }
 
+sub docSelect {
+	my ($self, $name) = @_;
+	$self->SelectDoc($name);
+}
+
 sub docSelected {
 	my $self = shift;
 	if (@_) { $self->{CURRENT} = shift }
 	return $self->{CURRENT}
 }
 
-=item B<GetTitle>I<($name)
+=item B<docRename>I<($old, $new)
+
+Renames a loaded document.
+
+=cut
+
+sub docRename {
+	my ($self, $old, $new) = @_;
+
+	unless ($old eq $new) {
+		my $doc = delete $self->{DOCS}->{$old};
+		$self->{DOCS}->{$new} = $doc;
+
+		#rename in navigator
+		my $navigator = $self->extGet('Navigator');
+		if (defined $navigator) {
+			$navigator->Delete($old);
+			$navigator->Add($new);
+		}
+
+		if ($self->docSelected eq $old) {
+			$self->docSelect($new)
+		}
+	}
+}
+
+=item B<docTitle>I<($name)
 
 Strips the path from $name for the title bar.
 
 =cut
 
-sub GetTitle {
+sub docTitle {
 	my ($self, $name) = @_;
 	return basename($name, '');
 }
 
-sub GetUntitled {
+sub docUntitled {
 	my $self = shift;
 	my $name = 'Untitled';
 	if ($self->docExists($name)) {
@@ -531,21 +570,21 @@ sub MenuItems {
  		[	'menu', 				undef,			"~File" 	], 
 	);
 	push @items,
-		[	'menu_normal',		'File::',		"~New",					'file_new',				'document-new',	'CTRL+N'			], 
+		[	'menu_normal',		'File::',		"~New",					'doc_new',				'document-new',	'CTRL+N'			], 
 		[	'menu_separator',	'File::', 		'f1'], 
 	unless $readonly;
 	push @items,
-		[	'menu_normal',		'File::',		"~Open",					'file_open',			'document-open',	'CTRL+O'			], 
+		[	'menu_normal',		'File::',		"~Open",					'doc_open',			'document-open',	'CTRL+O'			], 
  		[	'menu', 				'File::',		"Open ~recent", 		'pop_hist_menu', 	],
 	;
 	push @items,
 		[	'menu_separator',	'File::', 		'f2' ], 
-		[	'menu_normal',		'File::',		"~Save",					'file_save',			'document-save',	'CTRL+S'			], 
-		[	'menu_normal',		'File::',		"S~ave as",				'file_save_as',		'document-save-as',],
+		[	'menu_normal',		'File::',		"~Save",					'doc_save',			'document-save',	'CTRL+S'			], 
+		[	'menu_normal',		'File::',		"S~ave as",				'doc_save_as',		'document-save-as',],
 	unless $readonly;
 	push @items,
 		[	'menu_separator',	'File::', 		'f3' ], 
-		[	'menu_normal',		'File::',		"~Close",				'file_close',			'document-close',	'CTRL+SHIFT+O'	], 
+		[	'menu_normal',		'File::',		"~Close",				'doc_close',			'document-close',	'CTRL+SHIFT+O'	], 
 	;
 	return @items
 }
@@ -555,33 +594,6 @@ sub ReConfigure {
 	my @docs = $self->docList;
 	for (@docs) {
 		$self->docGet($_)->ConfigureCM;
-	}
-}
-
-=item B<RenameDoc>I<($old, $new)
-
-Renames a loaded document.
-
-=cut
-
-sub RenameDoc {
-	my ($self, $old, $new) = @_;
-
-	unless ($old eq $new) {
-		my $doc = delete $self->{DOCS}->{$old};
-		$self->{DOCS}->{$new} = $doc;
-
-		#rename in navigator
-		my $navigator = $self->extGet('Navigator');
-		if (defined $navigator) {
-			$navigator->Delete($old);
-			$navigator->Add($new);
-		}
-
-		if ($self->docSelected eq $old) {
-			$self->SelectDoc($new)
-		}
-
 	}
 }
 
@@ -604,7 +616,7 @@ sub SaveHistory {
 sub SelectDoc {
 	my ($self, $name) = @_;
 	$self->{CURRENT} = $name;
-	$self->configPut(-title => $self->configGet('-appname') . ' - ' . $self->GetTitle($name));
+	$self->configPut(-title => $self->configGet('-appname') . ' - ' . $self->docTitle($name));
 	my $navigator = $self->extGet('Navigator');
 	$navigator->SelectEntry($name) if defined $navigator;
 }
@@ -616,19 +628,19 @@ sub ToolItems {
 
 	push @items,
 		#	 type					label			cmd					icon					help		
-		[	'tool_button',		'New',		'file_new',			'document-new',	'Create a new document'],
+		[	'tool_button',		'New',		'doc_new',			'document-new',	'Create a new document'],
 	unless $readonly;
 
 	push @items,
-		[	'tool_button',		'Open',		'file_open',		'document-open',	'Open a document'], 
+		[	'tool_button',		'Open',		'doc_open',		'document-open',	'Open a document'], 
 	;
 
 	push @items,
-		[	'tool_button',		'Save',		'file_save',		'document-save',	'Save current document'], 
+		[	'tool_button',		'Save',		'doc_save',		'document-save',	'Save current document'], 
 	unless $readonly;
 
 	push @items,
-		[	'tool_button',		'Close',		'file_close',		'document-close',	'Close current document'], 
+		[	'tool_button',		'Close',		'doc_close',		'document-close',	'Close current document'], 
 	; 
 	return @items
 }

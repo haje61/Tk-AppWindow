@@ -30,6 +30,6 @@ if (defined $app) {
 	[sub { return $ext->Name  }, 'MDI', 'Extension MDI loaded'],
 );
 
-# $app->cmdExecute('file_new');
+# $app->cmdExecute('doc_new');
 starttesting;
 
