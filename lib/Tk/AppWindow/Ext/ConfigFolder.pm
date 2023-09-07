@@ -52,9 +52,9 @@ In experimental stage
 
 my $configfolder;
 if ($Config{osname} eq 'MSWin32') {
-	$configfolder = $ENV{LOCALAPPDATA} . '/' 
+	$configfolder = $ENV{LOCALAPPDATA} . '\\' 
 } else {
-	$configfolder = $ENV{HOME} . '/.local/'
+	$configfolder = $ENV{HOME} . '/.local/share/'
 }
 
 sub new {

@@ -216,7 +216,7 @@ sub ConfToolButton {
 		);
 		$but = $tb->Button(-image => $compound);
 	} else {
-		$but = $tb->Button(-text => 'Label');
+		$but = $tb->Button(-text => $label);
 	}
 	$self->BalloonAttach($but, @balloon) if @balloon;
 	my $call;

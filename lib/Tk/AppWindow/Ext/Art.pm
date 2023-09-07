@@ -125,7 +125,7 @@ sub new {
 	);
 
 	$self->addPreConfig(
-		-compoundcolspace =>['PASSIVE', undef, undef, 3],
+		-compoundcolspace =>['PASSIVE', undef, undef, 5],
 		-iconsize => ['PASSIVE', 'iconSize', 'IconSize', 16],
 		-icontheme => ['PASSIVE', 'iconTheme', 'IconTheme', 'Oxygen'],
 	);

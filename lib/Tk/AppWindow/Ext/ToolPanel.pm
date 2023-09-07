@@ -74,9 +74,18 @@ sub new {
 
 =cut
 
-sub Add {
-	my $self = shift;
-	return $self->Subwidget('TOOLNB')->Add(@_);
+sub addPage {
+	my ($self, $name, $image, $text) = @_;
+	my $nb = $self->Subwidget('NAVNB');
+
+	my @opt = ();
+	my $icon = $self->getArt($image, $self->configGet('-toolpaneliconsize'));
+	@opt = (-titleimg => $icon) if defined $icon;
+	my $page = $nb->addPage($name, @opt);
+	my $balloon = $self->extGet('Balloon');
+	my $l = $nb->getTab($name)->Subwidget('Label');
+	$balloon->Attach($l, -balloonmsg => $text) if (defined $balloon) and (defined $icon);
+	return $page;
 }
 
 sub MenuItems {
