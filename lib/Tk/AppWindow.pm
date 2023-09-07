@@ -190,7 +190,7 @@ sub Populate {
 	my $pre = $self->{PRECONFIG};
 	my $logcall = sub {
 		my $message = shift;
-		print STERR "$message\n";
+		print STDERR "$message\n";
 	};
 	$self->ConfigSpecs(
 		-initpaneldelay => ['PASSIVE', undef, undef, 500],

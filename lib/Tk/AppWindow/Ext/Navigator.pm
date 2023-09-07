@@ -107,7 +107,7 @@ sub CreateDocumentList {
 	)->pack(-expand => 1, -fill => 'both');
 
 	$self->Advertise('NAVTREE', $dt);
-	$nb->Subwidget('NAVNB')->selectPage('Documents');
+	$self->Subwidget('NAVNB')->selectPage('Documents');
 # 	$self->update;
 }
 

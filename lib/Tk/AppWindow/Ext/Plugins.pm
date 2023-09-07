@@ -63,7 +63,7 @@ sub CanQuit {
 	my @plugs = $self->plugList;
 	my $file = $self->configGet('-configfolder') . '/plugins';
 	if (open OFILE, ">", $file) {
-		for (@plugs) { print OFILE, "$_\n" }
+		for (@plugs) { print OFILE "$_\n" }
 		close OFILE;
 	}
 	my $close = 1;
@@ -97,7 +97,6 @@ sub DoPostConfig {
 				chomp($plug);
 				$self->plugLoad($plug);
 			}
-			for (@plugs) { print OFILE, "$_\n" }
 			close OFILE;
 		}
 	} else {
