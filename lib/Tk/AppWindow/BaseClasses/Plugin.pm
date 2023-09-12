@@ -124,6 +124,14 @@ sub ToolItems {
 	return ();
 }
 
+=item B<Quit>
+
+Does nothing. It is there for you to overwrite. Here you do everything needed to terminate.
+
+=cut
+
+sub Quit { }
+
 =item B<UnLoad>
 
 Returns 1. For you to overwrite. Doe here what needs to be done to safely destroy the plugin.

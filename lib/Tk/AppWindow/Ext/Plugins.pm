@@ -61,11 +61,6 @@ sub new {
 sub CanQuit {
 	my $self = shift;
 	my @plugs = $self->plugList;
-	my $file = $self->configGet('-configfolder') . '/plugins';
-	if (open OFILE, ">", $file) {
-		for (@plugs) { print OFILE "$_\n" }
-		close OFILE;
-	}
 	my $close = 1;
 	for (@plugs) {
 		$close = 0 unless $self->plugGet($_)->CanQuit
@@ -271,6 +266,19 @@ sub ToolItems {
 		push @items, $self->plugGet($_)->ToolItems
 	}
 	return @items;
+}
+
+sub Quit {
+	my $self = shift;
+	my @plugs = $self->plugList;
+	my $file = $self->configGet('-configfolder') . '/plugins';
+	if (open OFILE, ">", $file) {
+		for (@plugs) { print OFILE "$_\n" }
+		close OFILE;
+	}
+	for (@plugs) {
+		$self->plugGet($_)->Quit
+	}
 }
 
 =back

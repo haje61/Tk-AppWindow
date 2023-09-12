@@ -1,21 +1,35 @@
 
 use strict;
 use warnings;
+use lib './t/lib';
 
 use Test::Tk;
 $mwclass = 'Tk::AppWindow';
+$delay = 1500;
 
 use Test::More tests => 4;
-BEGIN { use_ok('Tk::AppWindow::Ext::ToolBar') };
+BEGIN { 
+	use_ok('Tk::AppWindow::Ext::ToolPanel');
+};
 
+require TestTextManager;
 
 createapp(
-	-extensions => [qw[ToolPanel Art MenuBar ]],
+	-appname => 'Navigator',
+	-extensions => [qw[Art Balloon MenuBar ToolBar StatusBar MDI Navigator ToolPanel]],
+	-configfolder => 't/settings',
+	-contentmanagerclass => 'TestTextManager',
 );
 
 my $ext;
 if (defined $app) {
 	$ext = $app->extGet('ToolPanel');
+	$app->after(300, sub {
+		my $page1 = $ext->addPage('Sample1', 'configure-toolbars', 'Sample page 1');
+		$page1->Label(-text => 'Sample page 1')->pack(-expand => 1, -fill => 'both');
+		my $page2 = $ext->addPage('Sample2', 'configure-toolbars', 'Sample page 2');
+		$page2->Label(-text => '************ Sample page 2 ************')->pack(-expand => 1, -fill => 'both');
+	});
 }
 
 @tests = (

@@ -4,8 +4,11 @@ use warnings;
 use Test::Tk;
 $mwclass = 'Tk::AppWindow';
 
-use Test::More tests => 4;
-BEGIN { use_ok('Tk::AppWindow::Ext::Panels') };
+use Test::More tests => 5;
+BEGIN { 
+	use_ok('Tk::AppWindow::Ext::Panels');
+	use_ok('Tk::AppWindow::PanelNoteBook');
+};
 
 
 createapp(
@@ -23,7 +26,7 @@ if (defined $app) {
 	for (qw[LEFT RIGHT TOP BOTTOM]) {
 		my $panel = $_;
 		my $t = $app->Subwidget($panel)->Label(-relief => 'groove', -text => $panel)->pack(-expand => 1, -fill => 'both');
-		$ext->Show($panel);
+		$ext->panelShow($panel);
 		my $var = 1;
 		$visible{$_} = \$var;
 		$f->Checkbutton(
@@ -32,9 +35,9 @@ if (defined $app) {
 			-command => sub {
 				my $vis = $visible{$panel};
 				if ($$vis) {
-					$ext->Show($panel);
+					$ext->panelShow($panel);
 				} else {
-					$ext->Hide($panel);
+					$ext->panelHide($panel);
 				}
 			}
 		)->pack(-anchor => 'w');

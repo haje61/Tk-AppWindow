@@ -11,32 +11,32 @@ sub Populate {
 	$self->SUPER::Populate($args);
 	my $text = $self->Scrolled('TextUndo',
 	)->pack(-expand => 1, -fill => 'both');
-	$self->{T} = $text;
+	$self->CWidg($text);
 
 	$self->ConfigSpecs(
-		-background => [$text],
-		DEFAULT => ['SELF',],
+		-background => ['SELF', 'DESCENDANTS'],
+		DEFAULT => [$text],
 	);
 }
 
 sub doClear {
 	my $self = shift;
-	my $t = $self->{T};
+	my $t = $self->CWidg;
 	$t->delete('0.0', 'end');
 	$t->editReset;
 }
 
 sub doLoad {
 	my ($self, $file) = @_;
-	my $t = $self->{T};
-	$self->{T}->Load($file);
+	my $t = $self->CWidg;
+	$t->Load($file);
 	$t->editModified(0);
 	return 1
 }
 
 sub doSave {
 	my ($self, $file) = @_;
-	my $t = $self->{T};
+	my $t = $self->CWidg;
 	$t->Save($file);
 	$t->editModified(0);
 	return 1
@@ -44,12 +44,14 @@ sub doSave {
 
 sub Focus {
 	my $self = shift;
-	$self->{T}->focus;
+	my $t = $self->CWidg;
+	$t->focus;
 }
 
 sub IsModified {
 	my $self = shift;
-	return $self->{T}->editModified;	
+	my $t = $self->CWidg;
+	return $t->editModified;	
 }
 
 1;

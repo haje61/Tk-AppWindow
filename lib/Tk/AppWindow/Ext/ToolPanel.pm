@@ -11,7 +11,7 @@ use warnings;
 use vars qw($VERSION);
 $VERSION="0.01";
 
-use base qw( Tk::AppWindow::BaseClasses::PanelExtension );
+use base qw( Tk::AppWindow::BaseClasses::SidePanel );
 
 require Tk::YANoteBook;
 
@@ -58,13 +58,9 @@ sub new {
 
 	$self->configInit(
 		-toolpanel => ['Panel', $self, 'RIGHT'],
+		-toolpanektabside	=> ['Tabside', $self, 'right'],
 		-toolpanelvisible	=> ['PanelVisible', $self, 1],
 	);
-	my $nb = $self->Subwidget($self->Panel)->YANoteBook(
-		-tabside => 'right',
-	)->pack(-expand => 1, -fill=> 'both');
-	$self->Advertise('TOOLNB', $nb);
-
 	return $self;
 }
 
@@ -73,20 +69,6 @@ sub new {
 =over 4
 
 =cut
-
-sub addPage {
-	my ($self, $name, $image, $text) = @_;
-	my $nb = $self->Subwidget('NAVNB');
-
-	my @opt = ();
-	my $icon = $self->getArt($image, $self->configGet('-toolpaneliconsize'));
-	@opt = (-titleimg => $icon) if defined $icon;
-	my $page = $nb->addPage($name, @opt);
-	my $balloon = $self->extGet('Balloon');
-	my $l = $nb->getTab($name)->Subwidget('Label');
-	$balloon->Attach($l, -balloonmsg => $text) if (defined $balloon) and (defined $icon);
-	return $page;
-}
 
 sub MenuItems {
 	my $self = shift;

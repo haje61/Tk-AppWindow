@@ -23,6 +23,19 @@ createapp(
 my $ext;
 if (defined $app) {
 	$ext = $app->extGet('MDI');
+	my $disabled = 'Select enabled';
+	$app->Subwidget('TOP')->Button(
+		-textvariable => \$disabled,
+		-command => sub {
+			if ($ext->selectDisabled) {
+				$ext->selectDisabled(0);
+				$disabled = 'Select enabled';
+			} else {
+				$ext->selectDisabled(1);
+				$disabled = 'Select disabled';
+			}
+		}
+	)->pack(-side => 'right', -padx => 2);
 }
 
 @tests = (

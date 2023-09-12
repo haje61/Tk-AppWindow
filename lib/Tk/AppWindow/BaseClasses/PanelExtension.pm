@@ -70,9 +70,9 @@ sub PanelVisible {
 		my $panel = $self->{PANEL};
 		if ($self->configMode) {
 		} elsif ($status eq 1) {
-			$panels->Show($panel);
+			$panels->panelShow($panel);
 		} elsif ($status eq 0) {
-			$panels->Hide($panel);
+			$panels->panelHide($panel);
 		}
 		$self->{VISIBLE} = $status;
 	}

@@ -151,6 +151,9 @@ sub Populate {
 	$self->{ARGS} = $args;
 	$self->{CMNDTABLE} = {};
 	$self->{CONFIGTABLE} = {};
+	$self->{GEOBLOCK} = 0;
+	$self->{GEOCALLS} = {};
+	$self->{GEOEXCLUSIVE} = '';
 	$self->{EXTENSIONS} = {};
 	$self->{EXTLOADORDER} = [];
 	$self->{OSNAME} = $Config{'osname'};
@@ -192,6 +195,7 @@ sub Populate {
 		my $message = shift;
 		print STDERR "$message\n";
 	};
+	$self->bind('<Configure>', [$self, 'OnConfigure']);
 	$self->ConfigSpecs(
 		-initpaneldelay => ['PASSIVE', undef, undef, 500],
 		-logcall => ['CALLBACK', undef, undef, $logcall], 
@@ -275,6 +279,9 @@ sub CmdQuit {
 	}
 	$quit = 0 unless $self->CanQuit;
 	if ($quit) {
+		for (keys %$plgs) {
+			$plgs->{$_}->Quit;
+		}
 		if ($self->extExists('ConfigFolder') and $self->configGet('-savegeometry')) {
 			my $geometry = $self->geometry;
 			my $file = $self->configGet('-configfolder') . '/geometry';
@@ -618,6 +625,41 @@ sub extLoad {
 	}
 }
 
+sub geoAddCall {
+	my $self = shift;
+	my $panel = shift;
+	my $call = $self->CreateCallback(@_);
+	$self->{GEOCALLS}->{$panel} = $call if defined $call; 
+}
+
+sub geoBlock {
+	my $self = shift;
+	$self->{GEOBLOCK} = shift if @_;
+	return $self->{GEOBLOCK};
+}
+
+sub geoCalls {
+	my $self = shift;
+	return if $self->configMode;
+	return if $self->geoBlock;
+	my $exclusive = $self->geoExclusive;
+	my $calls = $self->{GEOCALLS};
+	if ($exclusive eq '') {
+# 		print "resize all\n";
+		for (keys %$calls) { $calls->{$_}->execute };
+	} else {
+# 		print "resize $exclusive\n";
+		$calls->{$exclusive}->execute;
+	}
+	delete $self->{'cfid'};
+}
+
+sub geoExclusive {
+	my $self = shift;
+	$self->{GEOEXCLUSIVE} = shift if @_;
+	return $self->{GEOEXCLUSIVE};
+}
+
 sub GetArgsRef { return $_[0]->{ARGS} }
 
 =item B<getArt>I<($icon, $size)>
@@ -667,6 +709,14 @@ sub MenuItems {
 		[	'menu', 				undef,			"~appname", 		], 
 		[	'menu_normal',		'appname::',		"~Quit",					'quit',		'application-exit',		'CTRL+Q',	], 
 	)
+}
+
+sub OnConfigure {
+	my $self = shift;
+	my $cfid = $self->{'cfid'};
+	$self->afterCancel($cfid) if defined $cfid;
+	my $id = $self->after(200, ['geoCalls', $self]);
+	$self->{'cfid'} = $id;
 }
 
 sub OSName {

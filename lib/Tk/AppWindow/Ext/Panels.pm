@@ -113,9 +113,15 @@ Default value is WORK.
 sub new {
 	my $class = shift;
 	my $self = $class->SUPER::new(@_);
+	$self->addPreConfig(
+		-showadjusteratcreate => ['PASSIVE', undef, undef, 1],
+	);
 
 	$self->{PACKINFO} = {};
+	$self->{ADJUSTACTIVE} = {};
 	$self->{ADJUSTERS} = {};
+	$self->{ADJUSTINFO} = {};
+	$self->{LAYOUT} = undef;
 
 	$self->configInit(
 		-panellayout => ['PanelLayOut', $self, [
@@ -176,29 +182,81 @@ sub new {
 
 =over 4
 
-=item B<Hide>I<($panel)>
-
-Hide $panel and its adjuster if any.
 
 =cut
 
-sub Hide {
+sub adjusterActive {
+	my $self = shift;
+	my $panel = shift;
+	$self->{ADJUSTACTIVE}->{$panel} = shift if @_;
+	my $active = $self->{ADJUSTACTIVE}->{$panel};
+	return 1 unless defined $active;
+	return $active; 
+}
+
+sub adjusterClear {
 	my ($self, $panel) = @_;
-	unless ($self->IsHidden($panel)) {
-		$self->Subwidget($panel)->packForget;
-		if (exists $self->{ADJUSTERS}->{$panel}) {
-			$self->{ADJUSTERS}->{$panel}->packForget;
+	my $adj = $self->{ADJUSTERS}->{$panel};
+	if (defined $adj) {
+		$adj->destroy;
+		delete $self->{ADJUSTERS}->{$panel};
+	}
+}
+
+sub adjusterDefine {
+	my $self = shift;
+	my $panel = shift;
+	$self->{ADJUSTINFO}->{$panel} = { @_}
+}
+
+sub adjusterSet {
+	my ($self , $panel) = @_;
+	my $packinfo = $self->{PACKINFO}->{$panel};
+	my $adjustinfo = $self->{ADJUSTINFO}->{$panel};
+	if (defined $adjustinfo) {
+		unless (exists $self->{ADJUSTERS}->{$panel}) {
+			my $parent = $self->Subwidget($panel)->parent;
+			my $adj = $parent->Adjuster(%$adjustinfo)->pack(%$packinfo);
+			$self->{ADJUSTERS}->{$panel} = $adj;
 		}
 	}
 }
 
-=item B<IsHidden>I<($panel)>
+sub adjusterStatus {
+	my ($self, $panel) = @_;
+	return exists $self->{ADJUSTERS}->{$panel}
+}
+
+sub adjusterWidget {
+	my ($self , $panel, $widget) = @_;
+	my $adjustinfo = $self->{ADJUSTINFO}->{$panel};
+	$adjustinfo->{'-widget'} = $widget if defined $widget;
+	return $adjustinfo->{'-widget'};
+}
+
+sub layout { return $_[0]->{LAYOUT}}
+
+=item B<panelHide>I<($panel)>
+
+panelHide $panel and its adjuster if any.
+
+=cut
+
+sub panelHide {
+	my ($self, $panel) = @_;
+	unless ($self->panelIsHidden($panel)) {
+		$self->Subwidget($panel)->packForget;
+		$self->adjusterClear($panel);
+	}
+}
+
+=item B<panelIsHidden>I<($panel)>
 
 Returns the state of $panel. 1 if hidden, 0 if not.
 
 =cut
 
-sub IsHidden {
+sub panelIsHidden {
 	my ($self, $panel) = @_;
 	my $mapped = $self->Subwidget($panel)->ismapped;
 	return not $mapped ;
@@ -216,6 +274,7 @@ sub MenuItems {
 sub PanelLayOut {
 	my ($self, $layout) = @_;
 	return unless defined $layout;
+	$self->{LAYOUT} = $layout;
 	my @l = @$layout;
 	while (@l) {
 		my $name = shift @l;
@@ -263,39 +322,41 @@ sub PanelLayOut {
 		
 		$self->Advertise($name, $panel);
 		
-		my $adj;
+# 		my $adj;
 		if (defined $adjuster) {
-			$adj = $parent->Adjuster(
+			$self->{ADJUSTINFO}->{$name} = {
 				-widget => $panel,
 				-side => $adjuster,
-			);
+			};
+# 			$adj = $parent->Adjuster(
+# 				-widget => $panel,
+# 				-side => $adjuster,
+# 			);
 		}
 		
 		if ($canhide) {
 			$self->{PACKINFO}->{$name} = $options;
-			$self->{ADJUSTERS}->{$name} = $adj if defined $adj;
+# 			$self->{ADJUSTERS}->{$name} = $adj if defined $adj;
 		} else {
 			$panel->pack(%$options);
-			$adj->pack(%$options) if defined $adj;
+# 			$adj->pack(%$options) if defined $adj;
 		}
 	}
 }
 
-=item B<Show>I<($panel)>
+=item B<panelShow>I<($panel)>
 
 Show $panel and its adjuster if any.
 
 =cut
 
-sub Show {
+sub panelShow {
 	my ($self, $name) = @_;
-	if ($self->IsHidden($name)) {
+	if ($self->panelIsHidden($name)) {
 		my $panel = $self->Subwidget($name);
 		my $packinfo = $self->{PACKINFO}->{$name};
 		$panel->pack(%$packinfo);
-		if (exists $self->{ADJUSTERS}->{$name}) {
-			$self->{ADJUSTERS}->{$name}->pack(%$packinfo)
-		}
+		$self->adjusterSet($name) if $self->adjusterActive($name);
 	}
 }
 

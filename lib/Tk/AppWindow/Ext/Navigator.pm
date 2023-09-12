@@ -11,9 +11,8 @@ use warnings;
 use vars qw($VERSION);
 $VERSION="0.01";
 
-use base qw( Tk::AppWindow::BaseClasses::PanelExtension );
+use base qw( Tk::AppWindow::BaseClasses::SidePanel );
 
-require Tk::YANoteBook;
 require Tk::DocumentTree;
 
 =head1 SYNOPSIS
@@ -60,12 +59,9 @@ sub new {
 
 	$self->configInit(
 		-navigatorpanel => ['Panel', $self, 'LEFT'],
+		-navigatortabside	=> ['Tabside', $self, 'left'],
 		-navigatorvisible	=> ['PanelVisible', $self, 1],
 	);
-	my $nb = $self->Subwidget($self->Panel)->YANoteBook(
-		-tabside => 'left',
-	)->pack(-expand => 1, -fill=> 'both');
-	$self->Advertise('NAVNB', $nb);
 
 	$self->addPostConfig('CreateDocumentList', $self);
 	return $self;
@@ -82,20 +78,6 @@ sub Add {
 	$self->Subwidget('NAVTREE')->entryAdd($name);
 }
 
-sub addPage {
-	my ($self, $name, $image, $text) = @_;
-	my $nb = $self->Subwidget('NAVNB');
-
-	my @opt = ();
-	my $icon = $self->getArt($image, $self->configGet('-navigatoriconsize'));
-	@opt = (-titleimg => $icon) if defined $icon;
-	my $page = $nb->addPage($name, @opt);
-	my $balloon = $self->extGet('Balloon');
-	my $l = $nb->getTab($name)->Subwidget('Label');
-	$balloon->Attach($l, -balloonmsg => $text) if (defined $balloon) and (defined $icon);
-	return $page;
-}
-
 sub CreateDocumentList {
 	my $self = shift;
 	my $page = $self->addPage('Documents', 'document-open', 'Document list');
@@ -107,8 +89,6 @@ sub CreateDocumentList {
 	)->pack(-expand => 1, -fill => 'both');
 
 	$self->Advertise('NAVTREE', $dt);
-	$self->Subwidget('NAVNB')->selectPage('Documents');
-# 	$self->update;
 }
 
 sub Delete {
