@@ -1,4 +1,4 @@
-package Tk::AppWindow::Ext::ToolPanel;
+package Tk::AppWindow::Ext::NavigatorPanel;
 
 =head1 NAME
 
@@ -53,10 +53,10 @@ sub new {
 	my $self = $class->SUPER::new(@_);
 
 	$self->configInit(
-		-toolpaneliconsize => ['IconSize', $self, 32],
-		-toolpanel => ['Panel', $self, 'RIGHT'],
-		-toolpanektabside	=> ['Tabside', $self, 'right'],
-		-toolpanelvisible	=> ['PanelVisible', $self, 1],
+		-navigatorpaneliconsize => ['IconSize', $self, 32],
+		-navigatorpanel => ['Panel', $self, 'LEFT'],
+		-navigatorpaneltabside	=> ['Tabside', $self, 'left'],
+		-navigatorpanelvisible	=> ['PanelVisible', $self, 1],
 	);
 	return $self;
 }
@@ -72,7 +72,7 @@ sub MenuItems {
 	return (
 #This table is best viewed with tabsize 3.
 #			 type					menupath			label			Icon		config variable	off on
-		[	'menu_check',		'View::',		"Show ~tool panel",	undef,	'-toolpanelvisible', undef, 	0,   1], 
+		[	'menu_check',		'View::',		"Show ~navigator panel",	undef,	'-navigatorpanelvisible', undef, 	0,   1], 
 	)
 }
 
@@ -96,4 +96,6 @@ Unknown. If you find any, please contact the author.
 =cut
 
 1;
+
+
 

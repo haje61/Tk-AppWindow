@@ -15,6 +15,8 @@ use Tk;
 use Pod::Usage;
 require Tk::YADialog;
 require Tk::AppWindow::PluginsForm;
+use Module::Load::Conditional('check_install', 'can_load');
+$Module::Load::Conditional::VERBOSE = 1;
 
 use base qw( Tk::AppWindow::BaseClasses::Extension );
 
@@ -120,7 +122,18 @@ sub MenuItems {
 
 sub plugDescription {
 	my ($self, $plug) = @_;
-	my $file = Tk::findINC("Tk/AppWindow/Plugins/$plug.pm");
+	my @path = ("Tk/AppWindow/Plugins/");
+	my $ns = $self->NameSpace;
+	if (defined $ns) {
+		$ns =~ s/\:\:/\//g;
+		push @path, "$ns/Plugins";
+	}
+	my $file;
+	for (@path) {
+		my $p = $_;
+		$file = Tk::findINC("$p/$plug.pm");
+		last if defined $file;
+	}
 	open my $fi, "<", $file or die $!;
 	open my $fh, '>', \my $str or die $!;
 	pod2usage(
@@ -179,23 +192,32 @@ Loads the plugin; returns 1 if succesfull;
 sub plugLoad {
 	my ($self, $plug) = @_;
 	return if $self->plugExists($plug);
-	my $obj;
-	my $modname = $self->plugModname($plug);
-	my $app = $self->GetAppWindow;
-	eval "use $modname; \$obj = new $modname(\$app);";
-	croak $@ if $@;
-	if (defined $obj) {
-		$self->{PLUGINS}->{$plug} = $obj;
-		$self->ConfigureBars($obj);
-		return 1
+	my @paths = ('Tk::AppWindow::Plugins');
+	my $namespace = $self->NameSpace;
+	if (defined $namespace) {
+		$namespace = $namespace . '::Plugins';
+		push @paths, $namespace;
 	}
-	warn "Plugin $plug not loaded";
+	for (@paths) {
+		my $p = $_;
+		my $obj;
+		
+		my $modname = $p . "::$plug";
+		my $app = $self->GetAppWindow;
+		my $inst = check_install(module => $modname);
+		if (defined $inst) {
+			if (can_load(modules => {$modname => $inst->{'version'}})){
+				$obj = $modname->new($app);
+			}
+		}
+		if (defined($obj)) {
+			$self->{PLUGINS}->{$plug} = $obj;
+			$self->ConfigureBars($obj);
+			return 1
+		}
+	}
+	warn "unable to load plugin $plug\n";
 	return 0
-}
-
-sub plugModname {
-	my ($self, $plug) = @_;
-	return "Tk::AppWindow::Plugins::$plug"
 }
 
 =item B<plugUnload>(I<$name>)
@@ -301,3 +323,4 @@ Unknown. Probably plenty. If you find any, please contact the author.
 =cut
 
 1;
+

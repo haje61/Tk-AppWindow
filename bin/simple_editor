@@ -74,6 +74,10 @@ sub doSave {
 	return 1
 }
 
+sub doSelect {
+	$_[0]->CWidg->focus
+}
+
 sub IsModified {
 	my $self = shift;
 	return $self->CWidg->editModified;	

@@ -81,3 +81,6 @@ if (defined $app) {
 );
 
 starttesting;
+
+unlink 't/settings/plugins';
+

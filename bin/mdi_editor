@@ -44,7 +44,7 @@ sub ConfigureCM {
 	for (@$cmopt) {
 		my $val = $plug->configGet($_);
 		if ((defined $val) and ($val ne '')) {
-			$val = [$val] if $_ eq '-contenttabs';
+# 			$val = [$val] if $_ eq '-contenttabs';
 			$self->configure($_, $val) ;
 		}
 	}
@@ -74,9 +74,8 @@ sub doSave {
 	return 1
 }
 
-sub Focus {
-	my $self = shift;
-	$self->CWidg->focus;
+sub doSelect {
+	$_[0]->CWidg->focus
 }
 
 sub IsModified {

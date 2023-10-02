@@ -26,6 +26,8 @@ use File::Basename;
 require Tk::AppWindow::BaseClasses::Callback;
 require Tk::YAMessage;
 require Tk::PNG;
+use Module::Load::Conditional('check_install', 'can_load');
+$Module::Load::Conditional::VERBOSE = 1;
 
 =head1 SYNOPSIS
 
@@ -107,8 +109,6 @@ If set it will save the applications geometry on exit.
 When reloaded the previously saved geometry is restored.
 In experimental stage
 
-=back
-
 =item Switch: B<-verbose>
 
 Default value is 0.
@@ -138,6 +138,8 @@ sub Populate {
 	my $extensions = delete $args->{'-extensions'};
 	$extensions = [] unless defined $extensions;
 	
+	my $namespace = delete $args->{'-namespace'};
+	
 	my $preconfig = delete $args->{'-preconfig'};
 	$preconfig = [] unless defined $preconfig;
 	
@@ -156,6 +158,7 @@ sub Populate {
 	$self->{GEOEXCLUSIVE} = '';
 	$self->{EXTENSIONS} = {};
 	$self->{EXTLOADORDER} = [];
+	$self->{NAMESPACE} = $namespace;
 	$self->{OSNAME} = $Config{'osname'};
 	$self->{WORKSPACE} = $self;
 	$self->{VERBOSE} = 0;
@@ -282,13 +285,10 @@ sub CmdQuit {
 		for (keys %$plgs) {
 			$plgs->{$_}->Quit;
 		}
-		if ($self->extExists('ConfigFolder') and $self->configGet('-savegeometry')) {
+		my $cff = $self->extGet('ConfigFolder');
+		if ((defined $cff) and $self->configGet('-savegeometry')) {
 			my $geometry = $self->geometry;
-			my $file = $self->configGet('-configfolder') . '/geometry';
-			if (open(OFILE, ">", $file)) {
-				print OFILE $geometry . "\n";
-				close OFILE
-			}
+			$cff->saveList('geometry', 'aw geometry', $geometry);
 		}
 		$self->destroy;
 	} 
@@ -443,6 +443,7 @@ the options added by B<configInit>
 
 sub configGet {
 	my ($self, $option) = @_;
+	croak "Option not defined" unless defined $option;
 	if (exists $self->{CONFIGTABLE}->{$option}) {
 		my $call = $self->{CONFIGTABLE}->{$option};
 		return $call->execute;
@@ -523,6 +524,7 @@ the options added by B<configInit>
 
 sub configPut {
 	my ($self, $option, $value) = @_;
+	croak "Option not defined" unless defined $option;
 	if (exists $self->{CONFIGTABLE}->{$option}) {
 		my $call = $self->{CONFIGTABLE}->{$option};
 		$call->execute($value);
@@ -567,9 +569,9 @@ sub extList {
 	return @$pl;
 }
 
-=item B<extExists('Name')
+=item B<extExists>I<($name)>
 
-Returns 1 if 'Name' is loaded.
+Returns 1 if $name is loaded.
 
 =cut
 
@@ -609,20 +611,46 @@ sub extLoad {
 	my $exts = $self->{EXTENSIONS};
 	my $ext = undef;
 	unless (exists $exts->{$name}) { #unless already loaded
-		my $obj;
-		my $modname = "Tk::AppWindow::Ext::$name";
-		eval "use $modname";
-		die $@ if $@;
-		$ext = $modname->new($self);
-		if (defined($ext)) {
-			$self->log("Extension $name loaded\n") if $self->Verbose;
-			$exts->{$name} = $ext;
-			my $o = $self->{EXTLOADORDER};
-			push @$o, $name;
-		} else {
-			warn "unable to load extension $name\n";
+		my @paths = ('Tk::AppWindow::Ext');
+		my $namespace = $self->NameSpace;
+		if (defined $namespace) {
+			$namespace = $namespace . '::Ext';
+			push @paths, $namespace;
 		}
+		for (@paths) {
+			my $p = $_;
+			my $obj;
+			
+			my $modname = $p . "::$name";
+			my $inst = check_install(module => $modname);
+			if (defined $inst) {
+				if (can_load(modules => {$modname => $inst->{'version'}})){
+					$ext = $modname->new($self);
+				}
+			}
+			if (defined($ext)) {
+				$self->log("Extension $name loaded\n") if $self->Verbose;
+				$exts->{$name} = $ext;
+				my $o = $self->{EXTLOADORDER};
+				push @$o, $name;
+				return
+			}
+		}
+		warn "unable to load extension $name\n";
 	}
+}
+
+=item B<fileSeparator>
+
+Returns the correct file separator for your operating system.
+'\' for windows and '/' for all the others.
+
+=cut
+
+sub fileSeparator {
+	my $self = shift;
+	return '\\' if $self->OSName eq 'MSWin32';
+	return '/'
 }
 
 sub geoAddCall {
@@ -711,16 +739,40 @@ sub MenuItems {
 	)
 }
 
+sub NameSpace {
+	return $_[0]->{NAMESPACE}
+}
+
 sub OnConfigure {
 	my $self = shift;
 	my $cfid = $self->{'cfid'};
 	$self->afterCancel($cfid) if defined $cfid;
-	my $id = $self->after(200, ['geoCalls', $self]);
+	my $id = $self->after(400, ['geoCalls', $self]);
 	$self->{'cfid'} = $id;
 }
 
 sub OSName {
 	return $_[0]->{OSNAME}
+}
+
+sub popDialog {
+	my ($self, $title, $text, $icon, @buttons) = @_;
+	$icon = 'dialog-information' unless defined $icon;
+	my @padding = (-padx => 10, -pady => 10);
+	my $q = $self->YADialog(
+		-title => $title,
+		-buttons => \@buttons,
+		-defaultbutton => $buttons[0],
+	);
+	my $img = $self->getArt($icon, 32); 
+	$q->Label(-image => $img)->pack(-side => 'left', @padding) if defined $img;
+	$q->Label(
+		-anchor => 'w',
+		-text => $text,
+	)->pack(-side => 'left', -fill => 'x', @padding);
+	my $answer = $q->Show(-popover => $self);
+	$q->destroy;
+	return $answer
 }
 
 sub popEntry {
@@ -784,17 +836,30 @@ sub PostConfig {
 	my $pc = $self->{POSTCONFIG};
 	for (@$pc) { $_->execute }
 
-	if ($self->extExists('ConfigFolder') and $self->configGet('-savegeometry')) {
-		my $file = $self->configGet('-configfolder') . '/geometry';
-		if (open(OFILE, "<", $file)) {
-			my $g = <OFILE>;
-			close OFILE;
-			chomp $g;
-			$self->geometry($g);
-		} else {
-			$self->geometry('600x400+100+100');
-		}
+	my $cff = $self->extGet('ConfigFolder');
+	if ((defined $cff) and $self->configGet('-savegeometry')) {
+		my ($g) = $cff->loadList('geometry', 'aw geometry');
+		$g = '600x400+100+100' unless defined $g;
+		$self->geometry($g);
 	}
+}
+
+sub progressAdd {
+	my ($self, $name, $label, $size, $variable) = @_;
+	my $sb = $self->extGet('StatusBar');
+	$sb->AddProgressItem($name,
+		-label => $label,
+		-length => 150,
+		-from => 0,
+		-to => $size,
+		-variable => $variable,
+	) if defined $sb;
+}
+
+sub progressRemove {
+	my ($self, $name) = @_;
+	my $sb = $self->extGet('StatusBar');
+	$sb->Delete($name) if defined $sb;
 }
 
 =item B<ToolItems>
@@ -887,3 +952,8 @@ Unknown. Probably plenty. If you find any, please contact the author.
 
 1;
 __END__
+
+
+
+
+

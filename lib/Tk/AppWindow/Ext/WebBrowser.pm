@@ -59,11 +59,8 @@ sub browserDialog {
 	if ((defined $browser) and ($self->browserInstalled($browser))) {
 		$ENV{BROWSER} = $browser;
 		$self->configPut(-webbrowser => $browser);
-		my $file = $self->configGet('-configfolder') . '/webbrowser';
-		if (open(OFILE, ">", $file)) {
-			print OFILE $browser . "\n";
-			close OFILE;
-		}
+		my $cff = $self->extGet('ConfigFolder');
+		$cff->saveList('webbrowser', 'aw webbrowser', $browser);
 	}
 }
 
@@ -86,15 +83,13 @@ sub browserInstalled {
 
 sub browserOpenURL {
 	my ($self, $url) = @_;
-	my $file = $self->configGet('-configfolder') . '/webbrowser';
+	my $cff = $self->extGet('ConfigFolder');
 	if (exists $ENV{BROWSER}) {#do nothing
 	} elsif ($self->configGet('-webbrowser') ne '') {#set browser from config
 		$ENV{BROWSER} = $self->configGet('-webbrowser');
-	} elsif (-e $file) {#set browser from file
-		if (open(OFILE, "<", "$file")) {
-			my $b = <OFILE>;
-			close OFILE;
-			chomp $b;
+	} elsif ($cff->confExists('webbrowser')) {#set browser from file
+		my ($b) = $cff->loadList('webbrowser', 'aw webbrowser');
+		if (defined $b) {
 			$ENV{BROWSER} = $b;
 			$self->configPut(-webbrowser => $b);
 		}
@@ -132,3 +127,4 @@ Unknown. If you find any, please contact the author.
 =cut
 
 1;
+

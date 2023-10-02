@@ -279,7 +279,7 @@ sub MenuItems {
 	return (
 #This table is best viewed with tabsize 3.
 #			 type					menupath			label					Icon		config variable	   off  on
-		[	'menu_check',		'View::',		"Show ~toolbar",	undef,	'-toolbarvisible',	0,   1], 
+		[	'menu_check',		'View::',		"Show ~toolbar",	undef,	'-toolbarvisible', undef,	0,   1], 
 	)
 }
 

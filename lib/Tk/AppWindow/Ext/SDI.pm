@@ -115,6 +115,10 @@ sub CmdDocNew {
 	return 0
 }
 
+sub CommandDocSaveAll {
+	return ()
+}
+
 sub ContentSpace {
 	return $_[0]->WorkSpace;
 }

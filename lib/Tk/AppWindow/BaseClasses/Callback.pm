@@ -55,7 +55,7 @@ When you call B<execute> the options you pass to it will be placed after $owner 
 
  my $c = Tk::AppWindow::BaseClasses::Callback->new(\&SomeAnonymusSub, @options);
 
-When you call B<execute> the options you pass to it will be placed before @options
+When you call B<execute> the options you pass to it will be placed after @options
 
 =cut
 
@@ -75,15 +75,20 @@ sub new {
 
 sub Callback {
 	my ($self, $cmd, @options) = @_;
+	croak 'Command not defined' unless defined $cmd;
 	my @call = @$cmd;
 	my $sub = shift @call;
 	my @opt = ();
 	unless ((ref $sub) and ($sub =~/^CODE/)) {
 		my $owner = shift @call;
-		$sub = $owner->can($sub);
-		return &$sub($owner, @options, @call);
+		my $call = $owner->can($sub);
+		unless (defined $call) {
+			croak "Method $call not found on object $owner";
+			return undef
+		}
+		return &$call($owner, @call,  @options);
 	} else {
-		return &$sub(@options, @call);
+		return &$sub(@call, @options);
 	}
 }
 
@@ -230,3 +235,4 @@ Unknown. If you find any, please contact the author.
 
 1;
 __END__
+

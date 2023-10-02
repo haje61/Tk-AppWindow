@@ -11,7 +11,7 @@ use warnings;
 use vars qw($VERSION);
 $VERSION="0.01";
 
-use base qw( Tk::AppWindow::BaseClasses::SidePanel );
+use base qw( Tk::AppWindow::BaseClasses::Extension );
 
 require Tk::DocumentTree;
 
@@ -51,16 +51,11 @@ Default value 1. Show or hide navigator panel.
 sub new {
 	my $class = shift;
 	my $self = $class->SUPER::new(@_);
+	
+	$self->Require('NavigatorPanel');
 
 	$self->addPreConfig(
-		-navigatoriconsize => ['PASSIVE', 'ToolIconSize', 'toolIconSize', 32],
 		-documentinterface => ['PASSIVE', undef, undef, 'MDI'],
-	);
-
-	$self->configInit(
-		-navigatorpanel => ['Panel', $self, 'LEFT'],
-		-navigatortabside	=> ['Tabside', $self, 'left'],
-		-navigatorvisible	=> ['PanelVisible', $self, 1],
 	);
 
 	$self->addPostConfig('CreateDocumentList', $self);
@@ -80,7 +75,7 @@ sub Add {
 
 sub CreateDocumentList {
 	my $self = shift;
-	my $page = $self->addPage('Documents', 'document-open', 'Document list');
+	my $page = $self->extGet('NavigatorPanel')->addPage('Documents', 'document-open', 'Document list');
 
 	my $dt = $page->DocumentTree(
 		-entryselect => ['SelectDocument', $self],
@@ -108,15 +103,6 @@ sub GetFileIcon {
 	my $icon = $self->getArt('text-x-plain');
 	return $icon if defined $icon;
 	return $self->SubWidget('NAVTREE')->DefaultFileIcon;
-}
-
-sub MenuItems {
-	my $self = shift;
-	return (
-#This table is best viewed with tabsize 3.
-#			 type					menupath			label			Icon		config variable	off on
-		[	'menu_check',		'View::',		"Show ~navigation panel",	undef,	'-navigatorvisible',	0,   1], 
-	)
 }
 
 sub SelectDocument {
@@ -149,3 +135,4 @@ Unknown. If you find any, please contact the author.
 =cut
 
 1;
+

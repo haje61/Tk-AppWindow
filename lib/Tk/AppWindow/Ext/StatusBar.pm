@@ -311,7 +311,7 @@ sub MenuItems {
 	return (
 #This table is best viewed with tabsize 3.
 #			 type					menupath			label						Icon		config variable
-		[	'menu_check',		'View::',		"Show ~statusbar",	undef,	'-statusbarvisible',	0,   1], 
+		[	'menu_check',		'View::',		"Show ~statusbar",	undef,	'-statusbarvisible',	undef, 0,   1], 
 	)
 }
 

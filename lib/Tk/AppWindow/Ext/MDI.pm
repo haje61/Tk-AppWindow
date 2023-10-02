@@ -52,11 +52,12 @@ sub new {
 
 	$self->Require( qw[ConfigFolder] );
 
+	$self->{CMOPTIONS} = {};
+	$self->{DEFERRED} = {};
 	$self->{DOCS} = {};
 	$self->{FORCECLOSE} = 0;
 	$self->{HISTORY} = [];
 	$self->{INTERFACE} = undef;
-	$self->{DEFERRED} = {};
 	$self->{SELECTDISABLED} = 0;
 	$self->{SELECTED} = undef;
 
@@ -65,7 +66,7 @@ sub new {
 	$cmo = [] unless defined $cmo;
 	my @preconfig = ();
 	for (@$cmo) {
-		push @preconfig, $_, ['PASSIVE', undef, undef, '']
+		push @preconfig, $_ => ['PASSIVE', undef, undef, ''];
 	}
 
 	$self->addPreConfig(@preconfig,
@@ -87,15 +88,9 @@ sub new {
 		set_title => ['setTitle', $self],
 		pop_hist_menu => ['CmdPopulateHistoryMenu', $self],
 	);
-	$self->addPreConfig(
-	);
-
-	$self->cmdConfig(
-		
-	);
 
 	$self->addPostConfig('CreateInterface', $self);
-
+	$self->historyLoad;
 	return $self;
 }
 
@@ -107,7 +102,10 @@ sub new {
 
 sub CanQuit {
 	my $self = shift;
-	return $self->docConfirmSaveAll;
+	if ($self->docConfirmSaveAll) {
+		$self->docForceClose(1);
+		return 1
+	}
 }
 
 sub CmdDocClose {
@@ -124,6 +122,8 @@ sub CmdDocClose {
 		}
 		$self->geometry($geosave);
 	}
+	$self->log("Closed '$name'") if $close;
+	$self->logWarning("Failed closing '$name'") unless $close;
 	return $close
 }
 
@@ -143,10 +143,9 @@ sub CmdDocOpen {
 	unless (defined($file)) {
 		my @op = ();
 		@op = (-popover => 'mainwindow') unless $self->OSName eq 'MSWin32';
-		$file = $self->getOpenFile(@op,
-# 			-initialdir => $initdir,
-# 			-popover => 'mainwindow',
-		);
+		my $sel = $self->docSelected;
+		push @op, -initialdir => dirname($sel) if defined $sel;
+		$file = $self->getOpenFile(@op);
 	}
 	if (defined $file) {
 		if ($self->docExists($file)) {
@@ -154,9 +153,10 @@ sub CmdDocOpen {
 			return 1
 		}
 		my $file = File::Spec->rel2abs($file);
-		if ($self->CmdDocNew($file)) {
+		if ($self->cmdExecute('doc_new', $file)) {
 			$self->historyRemove($file);
 			$self->docSelect($file);
+			$self->log("Opened '$file'");
 		}
 		return 1
 	}
@@ -167,7 +167,7 @@ sub CmdDocSave {
 	my ($self, $name) = @_;
 	return 1 if $self->configGet('-readonly');
 	$name = $self->docSelected unless defined $name;
-	return 0 unless defined $name;
+	return 1 unless defined $name;
 	return 1 unless $self->docModified($name);
 	
 	my $doc = $self->docGet($name);
@@ -177,7 +177,11 @@ sub CmdDocSave {
 			if ($doc->Save($name)) {
 				$self->log("Saved '$name'");
 				return 1
+			} else {
+				$self->logWarning("Failed saving '$name'");
+				return 0
 			}
+			
 		} else {
 			return $self->CmdDocSaveAs($name);
 		}
@@ -193,8 +197,8 @@ sub CmdDocSaveAs {
 
 	my $doc = $self->docGet($name);
 	if (defined $doc) {
-		my @op = ();
-		@op = (-popover => 'mainwindow') unless $self->OSName eq 'MSWin32';
+		my @op = (-initialdir => dirname($name));
+		push @op, -popover => 'mainwindow' unless $self->OSName eq 'MSWin32';
 		my $file = $self->getSaveFile(@op,);
 		if (defined $file) {
 			$file = File::Spec->rel2abs($file);
@@ -203,6 +207,7 @@ sub CmdDocSaveAs {
 				$self->docRename($name, $file);
 				return 1
 			} else {
+				$self->logWarning("Failed saving '$file'");
 				return 0
 			}
 		}
@@ -215,7 +220,7 @@ sub CmdDocSaveAll {
 	my @list = $self->docList;
 	my $succes = 1;
 	for (@list) {
-		$succes = 0 unless $self->CmdDocSave($_)
+		$succes = 0 unless $self->cmdExecute('doc_save', $_)
 	}
 	return $succes
 }
@@ -253,22 +258,19 @@ sub CommandDocSaveAll {
 
 sub ConfirmSaveDialog {
 	my ($self, $name) = @_;
-	my $q = $self->YAMessage(
-		-title => 'Warning, file modified',
-		-image => $self->getArt('dialog-warning', 32),
-		-buttons => [qw(Yes No Cancel)],
-		-text => 
-			"Closing " . basename($name) .
-			".\nDocument has been modified. Save it?",
-		-defaultbutton => 'Yes',
-	);
-	return $q->Show(-popover => $self->GetAppWindow);
+	my $title = 'Warning, file modified';
+	my $text = 	"Closing " . basename($name) .
+		".\nDocument has been modified. Save it?";
+	my $icon = 'dialog-warning';
+	return $self->popDialog($title, $text, $icon, qw/Yes No Cancel/);
 }
 
 sub ContentSpace {
 	my ($self, $name) = @_;
+	croak 'Name not defined' unless defined $name;
 	return $self->Interface->getPage($name);
 }
+
 =item B<CreateContentHandler>I($name);
 
 Initiates a new content handler for $name.
@@ -277,6 +279,7 @@ Initiates a new content handler for $name.
 
 sub CreateContentHandler {
 	my ($self, $name) = @_;
+	croak 'Name not defined' unless defined $name;
 	my $page = $self->ContentSpace($name);
 	my $cmclass = $self->configGet('-contentmanagerclass');
 	my $h = $page->$cmclass(-extension => $self)->pack(-expand => 1, -fill => 'both');
@@ -300,31 +303,41 @@ sub CreateInterface {
 
 sub deferredAssign {
 	my ($self, $name, $options) = @_;
+	croak 'Name not defined' unless defined $name;
 	$options = {} unless defined $options;
 	$self->{DEFERRED}->{$name} = $options;
 }
 
 sub deferredExists {
 	my ($self, $name) = @_;
+	croak 'Name not defined' unless defined $name;
 	return exists $self->{DEFERRED}->{$name}
 }
 
 sub deferredOpen {
 	my ($self, $name) = @_;
-	print "deferredOpen '$name'\n";
+	croak 'Name not defined' unless defined $name;
 	my $doc = $self->CreateContentHandler($name);
 	my $flag = 1;
 	$flag = 0 unless (-e $name) and ($doc->Load($name));
-# 	my $options = $self->deferredOptions($name);
-# 	for (keys %$options) {
-# 		$doc->configure($_, $options->{$_})
-# 	}
+	my $options = $self->deferredOptions($name);
+	$self->after(20, sub {
+		for (keys %$options) {
+			$doc->configure($_, $options->{$_})
+		}
+	});
 	$self->deferredRemove($name);
+	if ($flag) {
+		$self->log("Loaded $name");
+	} else {
+		$self->logWarning("Failed loading $name");
+	}
 	return $flag
 }
 
 sub deferredOptions {
 	my ($self, $name, $options) = @_;
+	croak 'Name not defined' unless defined $name;
 	my $def = $self->{DEFERRED};
 	$def->{$name} = $options if defined $options;
 	return $def->{$name} 
@@ -332,11 +345,13 @@ sub deferredOptions {
 
 sub deferredRemove {
 	my ($self, $name) = @_;
+	croak 'Name not defined' unless defined $name;
 	delete $self->{DEFERRED}->{$name}
 }
 
 sub docClose {
 	my ($self, $name) = @_;
+	croak 'Name not defined' unless defined $name;
 	if ($self->deferredExists($name)) {
 		$self->historyAdd($name);
 		$self->deferredRemove($name);
@@ -361,6 +376,7 @@ sub docClose {
 
 sub docConfirmSave {
 	my ($self, $name) = @_;
+	croak 'Name not defined' unless defined $name;
 	if ($self->docModified($name)) {
 		#confirm save dialog comes here
 		my $answer = $self->ConfirmSaveDialog($name);
@@ -387,6 +403,7 @@ sub docConfirmSaveAll {
 
 sub docExists {
 	my ($self, $name) = @_;
+	croak 'Name not defined' unless defined $name;
 	return 1 if exists $self->{DOCS}->{$name};
 	return 1 if $self->deferredExists($name);
 	return 0
@@ -406,7 +423,7 @@ Returns document object for $name.
 
 sub docGet {
 	my ($self, $name) = @_;
-# 	croak "docGet\n";
+	croak 'Name not defined' unless defined $name;
 	$self->deferredOpen($name) if $self->deferredExists($name);
 	return $self->{DOCS}->{$name}
 }
@@ -425,6 +442,7 @@ sub docList {
 
 sub docModified {
 	my ($self, $name) = @_;
+	croak 'Name not defined' unless defined $name;
 	return 0 if $self->deferredExists($name);
 	return $self->docGet($name)->IsModified;
 }
@@ -437,9 +455,10 @@ Renames a loaded document.
 
 sub docRename {
 	my ($self, $old, $new) = @_;
+	croak 'Old not defined' unless defined $old;
+	croak 'New not defined' unless defined $new;
 
 	unless ($old eq $new) {
-		print "renaming\n";
 		my $doc = delete $self->{DOCS}->{$old};
 		$self->{DOCS}->{$new} = $doc;
 
@@ -454,11 +473,13 @@ sub docRename {
 
 sub docSelect {
 	my ($self, $name) = @_;
+	croak 'Name not defined' unless defined $name;
 	return if $self->selectDisabled;
-	print "select $name\n";
 	$self->deferredOpen($name) if $self->deferredExists($name);
 	$self->docSelected($name);
 	$self->interfaceSelect($name);
+	$self->docGet($name)->doSelect;
+	$self->cmdExecute('set_title', $name);
 }
 
 sub docSelected {
@@ -491,6 +512,7 @@ sub docTitle {
 
 sub historyAdd {
 	my ($self, $filename) = @_;
+	croak 'Name not defined' unless defined $filename;
 	if (defined($filename) and (-e $filename)) {
 		my $hist = $self->{HISTORY};
 		unshift @$hist, $filename;
@@ -520,6 +542,7 @@ sub historyLoad {
 
 sub historyRemove {
 	my ($self, $file) = @_;
+	croak 'Name not defined' unless defined $file;
 	my $h = $self->{HISTORY};
 	my ($index) = grep { $h->[$_] eq $file } (0 .. @$h-1);
 	splice @$h, $index, 1 if defined $index;
@@ -553,7 +576,7 @@ sub Interface {
 
 sub interfaceAdd {
 	my ($self, $name) = @_;
-	print "interfaceAdd $name\n";
+	croak 'Name not defined' unless defined $name;
 
 	#add to document notebook
 	my $if = $self->Interface;
@@ -574,6 +597,7 @@ sub interfaceAdd {
 
 sub interfaceRemove {
 	my ($self, $name) = @_;
+	croak 'Name not defined' unless defined $name;
 
 	#remove from document notebook
 	my $if = $self->Interface;
@@ -586,8 +610,9 @@ sub interfaceRemove {
 
 sub interfaceRename {
 	my ($self, $old, $new) = @_;
+	croak 'Old not defined' unless defined $old;
+	croak 'New not defined' unless defined $new;
 
-	print "interfaceRename $old, $new\n";
 	#rename in document notebook
 	my $if = $self->Interface;
 	if (defined $if) {
@@ -609,6 +634,7 @@ sub interfaceRename {
 
 sub interfaceSelect {
 	my ($self, $name) = @_;
+	croak 'Name not defined' unless defined $name;
 
 	#select on document notebook
 	my $if = $self->Interface;
@@ -660,10 +686,18 @@ sub MenuItems {
 }
 
 
+sub ReConfigure {
+	my $self = shift;
+	my @docs = $self->docList;
+	for (@docs) {
+		$self->docGet($_)->ConfigureCM;
+	}
+}
+
 sub Quit {
 	my $self = shift;
 	my @docs = $self->docList;
-	$self->docForceClose(1);
+# 	$self->docForceClose(1);
 	for (@docs) {
 		$self->CmdDocClose($_);
 	}
@@ -674,6 +708,13 @@ sub selectDisabled {
 	my $self = shift;
 	if (@_) { $self->{SELECTDISABLED} = shift }
 	return $self->{SELECTDISABLED}
+}
+
+sub setTitle {
+	my ($self, $name) = @_;
+	my $appname = $self->configGet('-appname');
+	$self->configPut(-title => "$name - $appname") if defined $name;
+	$self->configPut(-title => $appname) unless defined $name;
 }
 
 sub ToolItems {
@@ -721,3 +762,7 @@ Unknown. If you find any, please contact the author.
 =cut
 
 1;
+
+
+
+

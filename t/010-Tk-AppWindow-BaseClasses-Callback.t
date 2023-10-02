@@ -83,7 +83,7 @@ for (sort keys %callbacks) {
 	ok(($va eq 0), "$call $va hooks after, expected 0");
 
 	#adding before hooks
-	my @resultsb = (2, 12, 104);
+	my @resultsb = (2, 10, 32);
 	for (1 .. 3) {
 		$callback->hookBefore(@$opt, $_);
 		my $ub = $callback->{HOOKSBEFORE};
@@ -97,7 +97,7 @@ for (sort keys %callbacks) {
 	&Clear($call);
 
 	#adding after hooks
-	my @resultsa = (16, 544, 34880);
+	my @resultsa = (16, 53, 133);
 	for (1 .. 3) {
 		$callback->hookAfter(@$opt, $_ + 3);
 		my $ua = $callback->{HOOKSAFTER};
@@ -110,7 +110,7 @@ for (sort keys %callbacks) {
 	&Clear($call);
 
 	#removing before hooks
-	my @xresultsb = (32, 528, 4232);
+	my @xresultsb = (25, 71, 87);
 	my $count = 3;
 	for (1 .. 3) {
 		$callback->unhookBefore(@$opt, $_);
@@ -127,7 +127,7 @@ for (sort keys %callbacks) {
 	&Clear($call);
 
 	#removing after hooks
-	my @xresultsa = (4, 10, 11);
+	my @xresultsa = (12, 19, 20);
 	$count = 3;
 	for (1 .. 3) {
 		$callback->unhookAfter(@$opt, $_ + 3);

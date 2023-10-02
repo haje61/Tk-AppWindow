@@ -42,10 +42,8 @@ sub doSave {
 	return 1
 }
 
-sub Focus {
-	my $self = shift;
-	my $t = $self->CWidg;
-	$t->focus;
+sub doSelect {
+	$_[0]->CWidg->focus
 }
 
 sub IsModified {

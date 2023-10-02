@@ -215,8 +215,9 @@ sub GetSettingsPages {
 
 sub LoadSettings {
 	my $self = shift;
-	my $file = $self->configGet('-configfolder') . "/" . $self->configGet('-settingsfile');
-	return () unless -e $file;
+	my $cff = $self->extGet('ConfigFolder');
+	my $file = $self->configGet('-settingsfile');
+	return () unless $cff->confExists($file);
 	my $uo = $self->configGet('-useroptions');
 	my %useroptions = ();
 	my @temp = (@$uo);
@@ -232,21 +233,15 @@ sub LoadSettings {
 		shift @temp;
 		$useroptions{$key} = 1;
 	}
+	my %hash = $cff->loadHash($file, 'aw settings');
 	my @output = ();
-	if (open(OFILE, "<", $file)) {
-		while (<OFILE>) {
-			my $line = $_;
-			chomp $line;
-			if ($line =~ s/^([^=]+)=//) {
-				my $option = $1;
-				if (exists $useroptions{$option}) {
-					push @output, $option, $line
-				} else {
-					warn "Ignoring invalid option: $option"
-				}
-			}
+	for (keys %hash) {
+		my $key = $_;
+		if (exists $useroptions{$key}) {
+			push @output, $key, $hash{$key}
+		} else {
+			warn "Ignoring invalid option: $key"
 		}
-		close OFILE;
 	}
 	return @output;
 }
@@ -277,17 +272,15 @@ sub ReConfigureAll {
 
 sub SaveSettings {
 	my $self = shift;
-	my $file = $self->configGet('-configfolder') . "/" . $self->configGet('-settingsfile');
-	if (open(OFILE, ">", $file)) {
-		for (@_) {
-			my $option = $_;
-			my $value = $self->configGet($_);
-			print OFILE $option, '=', $value, "\n";
-		}
-		close OFILE;
-		return 1
+	my %hash = ();
+	my $file = $self->configGet('-settingsfile');
+	for (@_) {
+		my $option = $_;
+		my $value = $self->configGet($_);
+		$hash{$option} = $value;
 	}
-	return 0
+	my $cff = $self->extGet('ConfigFolder');
+	$cff->saveHash($file, 'aw settings', %hash);
 }
 
 sub SettingsFile {
@@ -322,3 +315,5 @@ Unknown. If you find any, please contact the author.
 =cut
 
 1;
+
+

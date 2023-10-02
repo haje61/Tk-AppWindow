@@ -45,6 +45,7 @@ sub new {
 	my $self = $class->SUPER::new(@_);
 	$self->{TABSIDE} = 'top';
 	$self->{LASTSIZE} = {};
+	$self->{ICONSIZE} = 32;
 	$self->addPostConfig('CreateNoteBook', $self);
 	return $self;
 }
@@ -63,7 +64,7 @@ sub addPage {
 	my $nb = $self->nbGet;
 
 	my @opt = ();
-	my $icon = $self->getArt($image, $self->configGet('-navigatoriconsize'));
+	my $icon = $self->getArt($image, $self->IconSize);
 	@opt = (-titleimg => $icon) if defined $icon;
 	@opt = (-title => $text) unless defined $icon;
 	my $page = $nb->addPage($name, @opt);
@@ -71,6 +72,7 @@ sub addPage {
 	my $balloon = $self->extGet('Balloon');
 	my $l = $nb->getTab($name)->Subwidget('Label');
 	$balloon->Attach($l, -balloonmsg => $text) if (defined $balloon) and (defined $icon);
+	$self->after(500, sub { $nb->UpdateTabs });
 
 	return $page;
 }
@@ -88,6 +90,7 @@ sub CreateNoteBook {
 	)->pack(-expand => 1, -fill=> 'both', -padx => 2, -pady => 2);
 	$self->geoAddCall($self->Panel, 'OnResize', $self);
 	$self->Advertise($self->Name . 'NB', $nb);
+# 	$self->after(250, sub { $nb->UpdateTabs });
 	my $pn = $self->extGet('Panels');
 	$pn->adjusterWidget($self->Panel, $nb);
 	$pn->adjusterActive($self->Panel, 0);
@@ -97,6 +100,12 @@ sub CreateNoteBook {
 sub deletePage {
 	my ($self, $name) = @_;
 	$self->nbGet->deletePage($name);
+}
+
+sub IconSize {
+	my $self = shift;
+	$self->{ICONSIZE} = shift if @_;
+	return $self->{ICONSIZE};
 }
 
 sub nbGet {
@@ -236,3 +245,6 @@ Unknown. If you find any, please contact the author.
 
 1;
 __END__
+
+
+

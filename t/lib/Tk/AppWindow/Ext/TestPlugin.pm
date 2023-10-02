@@ -38,7 +38,7 @@ sub new {
 	$self->Require('Dummy');
 
 	$w->cmdConfig(
-		plugcmd => ['PlugTest', $self, 56],
+		plugcmd => ['PlugTest', $self],
 	);
 	
 	$w->configInit(
@@ -55,7 +55,9 @@ sub CanQuit {
 
 sub PlugTest {
 	my ($self, $par) = @_;
-	return 'TestCmd' . $par
+	my $r = 'TestCmd';
+	$r = $r . $par if defined $par;
+	return $r
 }
 
 sub Quitter {

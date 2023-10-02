@@ -265,9 +265,8 @@ sub panelIsHidden {
 sub MenuItems {
 	my $self = shift;
 	return (
-#This table is best viewed with tabsize 3.
-#			 type					menupath			label						cmd						icon					keyb			config variable
- 		[	'menu', 				undef,			"~View"], 
+#			 type        menupath   label						cmd						icon					keyb			config variable
+ 		[	'menu', 				undef,      "~View"], 
 	)
 }
 
@@ -313,33 +312,21 @@ sub PanelLayOut {
 
 		my $adjuster = delete $options->{'-adjuster'};
 
-		my $panel;
-# 		if (defined $adjuster) {
-# 			$panel = $parent->Pane(@$paneloptions)
-# 		} else {
-			$panel = $parent->Frame(@$paneloptions);
-# 		}
+		my $panel = $parent->Frame(@$paneloptions);
 		
 		$self->Advertise($name, $panel);
 		
-# 		my $adj;
 		if (defined $adjuster) {
 			$self->{ADJUSTINFO}->{$name} = {
 				-widget => $panel,
 				-side => $adjuster,
 			};
-# 			$adj = $parent->Adjuster(
-# 				-widget => $panel,
-# 				-side => $adjuster,
-# 			);
 		}
 		
 		if ($canhide) {
 			$self->{PACKINFO}->{$name} = $options;
-# 			$self->{ADJUSTERS}->{$name} = $adj if defined $adj;
 		} else {
 			$panel->pack(%$options);
-# 			$adj->pack(%$options) if defined $adj;
 		}
 	}
 }
@@ -380,3 +367,4 @@ Unknown. If you find any, please contact the author.
 =cut
 
 1;
+

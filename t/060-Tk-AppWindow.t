@@ -5,7 +5,7 @@ use lib './t/lib';
 use Tk;
 
 use Test::Tk;
-use Test::More tests => 26;
+use Test::More tests => 27;
 $mwclass = 'Tk::AppWindow';
 
 BEGIN { use_ok('Tk::AppWindow') };
@@ -41,7 +41,9 @@ sub Clear {
 
 sub Get {
 	my ($self, $par) = @_;
-	return $self->{BLOBVAL} . $par
+	my $val = $self->{BLOBVAL};
+	$val = $val . $par if defined $par;
+	return  $val
 }
 
 sub HitAfter {
@@ -63,10 +65,11 @@ my $blobber = Blobber->new;
 
 createapp(
 	-commands => [
-		test1 => [\&Blabber, 12],
-		test2 => ['Get', $blobber, 35],
+		test1 => [\&Blabber],
+		test2 => ['Get', $blobber],
 	],
-	-extensions => ['TestPlugin'],
+	-extensions => ['TestPlugin', 'TestExt'],
+	-namespace => 'Alternative::NameSpace',
 	-quitter => 0,
 );
 
@@ -74,13 +77,13 @@ createapp(
 testaccessors($app, qw/appName Verbose/);
 
 push @tests, (
-	[sub { return $app->cmdExecute('test1') }, 'Caterpillar12', 'anonymous command without parameter'],
+	[sub { return $app->cmdExecute('test1') }, 'Caterpillar', 'anonymous command without parameter'],
 	[sub { return $app->cmdExecute('test1', 60) }, 'Caterpillar60', 'anonymous command with parameter'],
-	[sub { return $app->cmdExecute('test2') }, 'Butterfly35', 'object command without parameter'],
+	[sub { return $app->cmdExecute('test2') }, 'Butterfly', 'object command without parameter'],
 	[sub { return $app->cmdExecute('test2', 76) }, 'Butterfly76', 'object command with parameter'],
 	[sub { return $app->extGet('TestPlugin')->Name }, 'TestPlugin', 'TestPlugin loaded'],
 	[sub { return $app->extGet('Dummy')->Name }, 'Dummy', 'Dummy plugin loaded'],
-	[sub { return $app->cmdExecute('plugcmd') }, 'TestCmd56', 'plugin command without parameter'],
+	[sub { return $app->cmdExecute('plugcmd') }, 'TestCmd', 'plugin command without parameter'],
 	[sub { return $app->cmdExecute('plugcmd', 84) }, 'TestCmd84', 'plugin command with parameter'],
 	[sub { return $app->configGet('-plugoption') }, 'Romulus', 'plugin option loaded'],
 	[sub {
@@ -138,12 +141,18 @@ push @tests, (
 		$app->cmdExecute('testcommand');
 		return $blobber->Report;
 	}, [0, 0], 'execute'],
+	[sub {
+		my $e = $app->extGet('TestExt');
+		return $e->Name
+	}, 'TestExt', 'alternative namespace'],
 );
 
 starttesting;
 
 sub Blabber {
 	my $par = shift;
-	return "Caterpillar$par";
+	my $cp = 'Caterpillar';
+	$cp = $cp . $par if defined $par;
+	return $cp;
 }
 

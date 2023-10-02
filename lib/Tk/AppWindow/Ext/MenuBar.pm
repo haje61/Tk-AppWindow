@@ -192,6 +192,18 @@ sub Configure {
 # 	$w->geometry($g);
 }
 
+sub ConfGetCommand {
+	my ($self, $cmd) = @_;
+	my $w = $self->GetAppWindow;
+	if (defined $cmd) {
+		if ($cmd =~ /^<.+>/) {
+			return -command => ['eventGenerate', $w, $cmd]
+		} else {
+			return -command => ['cmdExecute', $w, $cmd];
+		}
+	}
+}
+
 sub ConfMenu {
 	my ($self, $stack, $path, $label, $cmd, $icon) = @_;
 	my ($menu, $insertpos) = $self->DecodeMenuPath($stack, $path);
@@ -216,16 +228,8 @@ sub ConfMenuNormal {
 	my ($self, $stack, $path, $label, $cmd, $icon, $keyb) = @_;
 	my ($menu, $insertpos) = $self->DecodeMenuPath($stack, $path);
 	return 0 unless defined $insertpos;
-	my $w = $self->GetAppWindow;
 	my @item = ('command', $label);
-	if (defined $cmd) {
-		if ($cmd =~ /^<.+>/) {
-# 			$self->ConfVirtEvent($cmd, $keyb) if $cmd =~ /^<<.+>>/;
-			push @item, -command => ['eventGenerate', $w, $cmd]
-		} else {
-			push @item, -command => ['cmdExecute', $w, $cmd];
-		}
-	}
+	push @item, $self->ConfGetCommand($cmd) if defined $cmd;
 	$self->ConfDoKeyb($cmd, $keyb,\@item);
 	$self->ConfDoIcon($icon,\@item);
 	if ($insertpos <= @$menu) {
@@ -237,7 +241,7 @@ sub ConfMenuNormal {
 }
 
 sub ConfMenuCheck {
-	my ($self, $stack, $path, $label, $icon, $config, $offvalue, $onvalue) = @_;
+	my ($self, $stack, $path, $label, $icon, $config, $cmd, $offvalue, $onvalue) = @_;
 	my ($menu, $insertpos) = $self->DecodeMenuPath($stack, $path);
 	return 0 unless defined $insertpos;
 	my $w = $self->GetAppWindow;
@@ -246,6 +250,7 @@ sub ConfMenuCheck {
 
 	push @item, -offvalue => $offvalue if defined $offvalue;
 	push @item, -onvalue => $onvalue if defined $onvalue;
+	push @item, $self->ConfGetCommand($cmd) if defined $cmd;
 
 
 	$self->ConfDoIcon($icon,\@item);
@@ -259,7 +264,7 @@ sub ConfMenuCheck {
 }
 
 sub ConfMenuRadio {
-	my ($self, $stack, $path, $label, $icon, $config, $value) = @_;
+	my ($self, $stack, $path, $label, $icon, $config, $cmd, $value) = @_;
 	my ($menu, $insertpos) = $self->DecodeMenuPath($stack, $path);
 	return 0 unless defined $insertpos;
 	my $w = $self->GetAppWindow;
@@ -267,6 +272,7 @@ sub ConfMenuRadio {
 	my @item = ('radiobutton', $label);
 
 	push @item, -value => $value if defined $value;
+	push @item, $self->ConfGetCommand($cmd) if defined $cmd;
 
 	$self->ConfDoIcon($icon,\@item);
 	$self->ConfDoConfig($config,\@item);
@@ -279,7 +285,7 @@ sub ConfMenuRadio {
 }
 
 sub ConfMenuRadioGroup {
-	my ($self, $stack, $path, $label, $values, $icon, $config) = @_;
+	my ($self, $stack, $path, $label, $values, $icon, $config, $cmd) = @_;
 	my ($menu, $insertpos) = $self->DecodeMenuPath($stack, $path);
 	return 0 unless defined $insertpos;
 	my @item = ();
@@ -291,6 +297,7 @@ sub ConfMenuRadioGroup {
 		unshift @i, $value;
 		unshift @i, 'radiobutton';
 		push @i, -value => $value;
+		push @i, -command => $cmd if defined $cmd;
 		push @group, \@i;
 	}
 	my @mnu = ('cascade' => $label,

@@ -12,7 +12,7 @@ BEGIN { use_ok('Tk::AppWindow::Ext::MenuBar') };
 createapp(
 	-extensions => [qw[Art MenuBar TestPlugin]],
 	-mainmenuitems => [
-		[	'menu_check',		'Icons::Check 2',	"Check 1",		'edit-cut',	'-check_1', 'Rotterdam', 'Amsterdam'],
+		[	'menu_check',		'Icons::Check 2',	"Check 1",		'edit-cut',	'-check_1', undef, 'Rotterdam', 'Amsterdam'],
 		[  'menu',				undef, 			'~File'],
 		[	'menu_normal',		'File::',		"~New",					'doc_new',				'document-new',	'Control-n'			], 
 		[	'menu_separator',	'File::',		'f1' ], 
