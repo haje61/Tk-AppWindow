@@ -9,7 +9,7 @@ Tk::AppWindow::Ext::ConfigFolder - save your settings files in a ConfigFolder
 use strict;
 use warnings;
 use vars qw($VERSION);
-$VERSION="0.01";
+$VERSION="0.02";
 
 use File::Path qw(make_path);
 use Config;
@@ -34,17 +34,9 @@ use base qw( Tk::AppWindow::BaseClasses::Extension );
 The default value depends on your operating system.
 
 On Windows: $ENV{LOCALAPPDATA}/appname
-Others: $ENV{HOME}/.local/appname
+Others: $ENV{HOME}/.local/share/appname
 
 You can overwrite it at launch by setting a folder yourself.
-
-=item Switch: B<-savegeometry>
-
-Default value is 1
-
-If set it will save the applications geometry on exit.
-When reloaded the previously saved geometry is restored.
-In experimental stage
 
 =back
 
@@ -296,11 +288,16 @@ Unknown. If you find any, please contact the author.
 
 =over 4
 
+=item L<Tk::AppWindow>
+
+=item L<Tk::AppWindow::BaseClasses::Extension>
 
 =back
 
 =cut
 
 1;
+
+
 
 

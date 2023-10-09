@@ -9,7 +9,7 @@ Tk::AppWindow::Ext::Navigator - Navigate opened documents and files
 use strict;
 use warnings;
 use vars qw($VERSION);
-$VERSION="0.01";
+$VERSION="0.02";
 
 use base qw( Tk::AppWindow::BaseClasses::SidePanel );
 
@@ -24,9 +24,11 @@ require Tk::YANoteBook;
 
 =head1 DESCRIPTION
 
-Adds a tool panel to your application.
+Adds a tool panel to your application. By default
+it sits on the right side of your application. You
+can add items to it's notebook.
 
-Appends an item to the View menu to toggle visibility
+Inherits L<Tk::AppWindow::BaseClasses::SidePanel>.
 
 =head1 CONFIG VARIABLES
 
@@ -40,9 +42,13 @@ Default value 'RIGHT'. Sets the name of the panel home to B<Navigator>.
 
 Default value 32.
 
+=item B<-toolpaneltabside>
+
+Default value 'right'. At which side of the notebook do you place your tabs.
+
 =item B<-toolpanelvisible>
 
-Default value 1. Show or hide navigator panel.
+Default value 1. Show or hide tool panel.
 
 =back
 
@@ -55,17 +61,11 @@ sub new {
 	$self->configInit(
 		-toolpaneliconsize => ['IconSize', $self, 32],
 		-toolpanel => ['Panel', $self, 'RIGHT'],
-		-toolpanektabside	=> ['Tabside', $self, 'right'],
+		-toolpaneltabside	=> ['Tabside', $self, 'right'],
 		-toolpanelvisible	=> ['PanelVisible', $self, 1],
 	);
 	return $self;
 }
-
-=head1 METHODS
-
-=over 4
-
-=cut
 
 sub MenuItems {
 	my $self = shift;
@@ -76,11 +76,9 @@ sub MenuItems {
 	)
 }
 
-=back
-
 =head1 AUTHOR
 
-=item Hans Jeuken (hanje at cpan dot org)
+Hans Jeuken (hanje at cpan dot org)
 
 =head1 BUGS
 
@@ -90,10 +88,19 @@ Unknown. If you find any, please contact the author.
 
 =over 4
 
+=item L<Tk::AppWindow>
+
+=item L<Tk::AppWindow::BaseClasses::Extension>
+
+=item L<Tk::AppWindow::BaseClasses::SidePanel>
+
+=item L<Tk::AppWindow::Ext::Panels>
 
 =back
 
 =cut
 
 1;
+
+
 

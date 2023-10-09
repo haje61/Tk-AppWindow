@@ -28,11 +28,7 @@ Adds a balloon widget to your application
 
 =head1 CONFIG VARIABLES
 
-=over 4
-
-none
-
-=back
+None.
 
 =cut
 
@@ -82,9 +78,14 @@ Unknown. If you find any, please contact the author.
 
 =over 4
 
+=item L<Tk::AppWindow>
+
+=item L<Tk::AppWindow::BaseClasses::Extension>
+
 
 =back
 
 =cut
 
 1;
+

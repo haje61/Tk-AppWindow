@@ -9,7 +9,7 @@ Tk::AppWindow::Ext::Keyboard - adding easy keyboard bindings
 use strict;
 use warnings;
 use vars qw($VERSION);
-$VERSION="0.01";
+$VERSION="0.02";
 use Tk;
 
 use base qw( Tk::AppWindow::BaseClasses::Extension );
@@ -29,7 +29,7 @@ use base qw( Tk::AppWindow::BaseClasses::Extension );
 
 =item Switch: B<-keyboardboardbindings>
 
-Default value is an empty list
+Default value is an empty list.
 
 Specify a paired list of keyboard bindings.
 
@@ -54,6 +54,10 @@ sub new {
 
 =over 4
 
+=item B<AddBinding>I<($command, $key)>
+
+Adds a keyboard binding to the MainWindow object.
+
 =cut
 
 sub AddBinding {
@@ -77,6 +81,13 @@ sub ConfigureBindings {
 		$self->AddBinding($command, $key);
 	}
 }
+
+=item B<Convert2TkI<($key)>
+
+Converts the modern description of a keyboard to to the Tk version.
+For example, 'CTRL+C' becomes 'Control-c'.
+
+=cut
 
 sub Convert2Tk {
 	my ($self, $dkey) = @_;
@@ -131,9 +142,14 @@ Unknown. If you find any, please contact the author.
 
 =over 4
 
+=item L<Tk::AppWindow>
+
+=item L<Tk::AppWindow::BaseClasses::Extension>
 
 =back
 
 =cut
 
 1;
+
+

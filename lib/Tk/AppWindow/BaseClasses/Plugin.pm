@@ -8,6 +8,8 @@ Tk::AppWindow::BaseClasses::Plugin - Baseclass for all plugins.
 
 use strict;
 use warnings;
+use vars qw($VERSION);
+$VERSION="0.02";
 use vars '$AUTOLOAD';
 
 =head1 SYNOPSIS
@@ -156,6 +158,9 @@ Unknown. If you find any, please contact the author.
 
 =over 4
 
+=item L<Tk::AppWindow::BaseClasses::Extension>
+
+=item L<Tk::AppWindow>
 
 =back
 
@@ -163,3 +168,5 @@ Unknown. If you find any, please contact the author.
 
 1;
 __END__
+
+

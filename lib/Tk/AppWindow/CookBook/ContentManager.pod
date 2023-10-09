@@ -1,0 +1,39 @@
+=head1 NAME
+
+Tk::AppWindow::CookBook::ContentManager - Write your own content manager
+
+=head1 OTHER RECIPIES
+
+=over 4
+
+=item L<Tk::AppWindow::CookBook::Extension>
+
+=item L<Tk::AppWindow::CookBook::Plugin>
+
+=back
+
+=head1 THE CODE
+
+=head1 AUTHOR
+
+Hans Jeuken (hanje at cpan dot org)
+
+=head1 SEE ALSO
+
+=over 4
+
+=item L<Tk::AppWindow>
+
+=item L<Tk::AppWindow::BaseClasses::ContentManager>
+
+=item L<Tk::AppWindow::Ext::MDI>
+
+=back
+
+=cut
+
+
+
+
+
+

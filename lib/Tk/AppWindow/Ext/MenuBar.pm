@@ -10,7 +10,7 @@ use strict;
 use warnings;
 use Tk;
 use vars qw($VERSION);
-$VERSION="0.01";
+$VERSION="0.02";
 
 use base qw( Tk::AppWindow::BaseClasses::Extension );
 
@@ -516,14 +516,140 @@ done with a two dimensional list. In Perl:
  my $app = new Tk::AppWindow(@options,
     -extensions => ['MenuBar'],
     -menuitems => [
-       [ $type, $path,  
+       [ $type, $path,  @options ],
+       [ $type2, $path2,  @options2 ],
     ],
  );
  $app->MainLoop;
 
-=head1 AUTHOR
+Variables used below have the following meaning:
 
 =over 4
+
+=item B<$path> 
+
+Determines where the menu entry should be placed.
+Lets document by example. Suppose you have a menu structure like this:
+
+ ~File -> ~Open
+       -> ~Close
+
+Where ~File is a submenu on the main menu bar and ~Open and ~close are it's entries.
+
+=over 4
+
+=item $path = B<undef>
+
+Adds your item to the end of the main menubar.
+
+=item $path = 'B<File>'
+
+Inserts your item in the main menubar before ~File
+
+=item $path = 'B<File|>'
+
+Inserts your item in the main menubar after ~File
+
+=item $path = 'B<File::>'
+
+Adds your item to the end of the ~File menu
+
+=item $path = 'B<File::Close>'
+
+Inserts your item in the ~File menu before the ~Close entry
+
+=item $path = 'B<File::Open|>'
+
+Inserts your item in the ~File menu after the ~Open entry
+
+=back
+
+=item B<$label> 
+
+The name of the menu entry. You can use the '~' to indicate a shortcut.
+
+=item B<$cmd> 
+
+The command executed or event generated on selection of the menu item.
+A command should be defined with B<cmdConfig>. You can set it to undef
+if no command is needed.
+
+=item B<$icon> 
+
+The name of an icon available through the B<getArt> method.
+You can set it to undef if you do not want an icon.
+
+=item B<$config> 
+
+For checkbutton and radiobutton entries. The config variable linked
+to this entry. You can set it to undef if no config variable needs
+to be involved.
+
+=item B<$keyboard>
+
+The name of the keyboard shortcut to be associated with this
+entry. The notation is that of modern desktops. The keyboard
+bindings will actually be created. If you don't want this
+you can add a '*' in front. Examples:
+
+=over 4
+
+=item CTRL+A
+
+=item SHIFT+F10
+
+=item *CTRL+C
+
+=back
+
+=item B<$offvalue>
+
+=item B<$onvalue>
+
+For checkbutton entries. If you do not specify them they default to 0 and 1.
+
+=item B<$value>
+
+For radiobutton entries.
+
+=item B<$values>
+
+A reference to a list of values: ['value1', 'value2'].
+
+=back
+
+The following types are available:
+
+=over 4
+
+=item ['B<menu>', I<$path, $label, $cmd, $icon>],
+
+Creates a submenu.
+
+=item ['B<menu_normal>', I<$path, $label, $cmd, $icon, $keyboard>],
+
+Creates a command entry.
+
+=item ['B<menu_check>', I<$path, $label, $icon, $config, $cmd, $offvalue, $onvalue>],
+
+Creates a checkbutton entry.
+
+=item ['B<menu_radio>', I<$path, $label, $icon, $config, $cmd, $value>],
+
+Creates a radiobutton entry.
+
+=item ['B<menu_radio_s>', I<$path, $label, $values, $icon, $config, $cmd>],
+
+Creates a submenu with a group of radiobuttons.
+
+=item ['B<menu_separator>', I<$path, $label>],
+
+Creates a separator. Although separators do not need a label, we prefer
+to still do so. They act as a path indicator for the path of other entries.
+
+=back
+
+=head1 AUTHOR
 
 Hans Jeuken (hanje at cpan dot org)
 
@@ -535,9 +661,15 @@ Unknown. If you find any, please contact the author.
 
 =over 4
 
+=item L<Tk::AppWindow>
+
+=item L<Tk::AppWindow::BaseClasses::Extension>
 
 =back
 
 =cut
 
 1;
+
+
+

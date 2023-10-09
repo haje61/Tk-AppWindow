@@ -10,7 +10,7 @@ Tk::AppWindow::Ext::Art - Use icon libraries quick & easy
 use strict;
 use warnings;
 use vars qw($VERSION);
-$VERSION="0.01";
+$VERSION="0.02";
 use Config;
 my $osname = $Config{'osname'};
 
@@ -84,6 +84,11 @@ Others: $ENV{HOME} . '/.local/share/icons', '/usr/share/icons'
 
 =over 4
 
+=item Switch: B<-compoundcolspace>
+
+Default value 5. Used in the B<CreateCompound> method to
+set horizontal spacing.
+
 =item Switch: B<-iconpath>
 
 For defaults see above.
@@ -100,6 +105,22 @@ Default is 16.
 =item Switch: B<-icontheme>
 
 Default is Oxygen.
+
+=back
+
+=head1 COMMANDS
+
+The following commands are defined.
+
+=over 4
+
+=item B<available_icon_sizes>
+
+Returns a list of available icon sizes.
+
+=item B<available_icon_themes>
+
+Returns a list of available icon themes.
 
 =back
 
@@ -368,36 +389,88 @@ sub CollectThemes {
 	$self->{THEMES} = \%themes
 }
 
+=item B<CreateCompound>I<(%args)>
+
+Creates and returns a compound image.
+%args can have the following keys;
+
+B<-image> Reference to a Tk::Image object.
+
+B<-orient> Either 'Horizontal' or 'Vertical'. Default is 'Horizontal'.
+
+B<-text> Text to be displayed.
+
+B<textside> Can be 'left', 'right', 'top' or 'bottom'. Default is 'right'.
+
+=cut
+
 sub CreateCompound {
 	my $self = shift;
 	my %args = (@_);
 	
 	my $side = delete $args{'-textside'};
+	my $orient = delete $args{'-orient'};
+	$orient = 'Horizontal' unless defined $orient;
+	my $text = delete $args{'-text'};
+	my $image = delete $args{'-image'};
 	$side = 'right' unless defined $side;
 	my $compound = $self->Compound;
 	if ($side eq 'left') {
-		$compound->Text(-text => $args{'-text'}, -anchor => 'c');
+		if ($orient eq 'Vertical') {
+			$self->CreateCompoundVertical($compound, $text);
+		} else {
+			$compound->Text(-text => $text, -anchor => 'c');
+		}
 		$compound->Space(-width => $self->configGet('-compoundcolspace'));
-		$compound->Image(-image => $args{'-image'});
+		$compound->Image(-image => $image);
 	} elsif ($side eq 'right') {
-		$compound->Image(-image => $args{'-image'});
+		$compound->Image(-image => $image);
 		$compound->Space(-width => $self->configGet('-compoundcolspace'));
-		$compound->Text(-text => $args{'-text'}, -anchor => 'c');
+		if ($orient eq 'Vertical') {
+			$self->CreateCompoundVertical($compound, $text);
+		} else {
+			$compound->Text(-text => $text, -anchor => 'c');
+		}
 	} elsif ($side eq 'top') {
-		$compound->Text(-text => $args{'-text'}, -anchor => 'c');
+		if ($orient eq 'Vertical') {
+			$self->CreateCompoundVertical($compound, $text);
+		} else {
+			$compound->Text(-text => $text, -anchor => 'c');
+		}
 		$compound->Line;
-		$compound->Image(-image => $args{'-image'});
+		$compound->Image(-image => $image);
 	} elsif ($side eq 'bottom') {
-		$compound->Image(-image => $args{'-image'});
+		$compound->Image(-image => $image);
 		$compound->Line;
-		$compound->Text(-text => $args{'-text'}, -anchor => 'c');
+		if ($orient eq 'Vertical') {
+			$self->CreateCompoundVertical($compound, $text);
+		} else {
+			$compound->Text(-text => $text, -anchor => 'c');
+		}
 	} elsif ($side eq 'none') {
-		$compound->Image(-image => $args{'-image'});
+		$compound->Image(-image => $image);
 	} else {
 		warn "illegal value $side for -textside. Should be 'left', 'right' 'top', bottom' or 'none'"
 	}
 	return $compound;
 }
+
+sub CreateCompoundVertical {
+	my ($self, $compound, $text) = @_;
+	my @t = split(//, $text);
+	for (@t) {
+		$compound->Text(-text => $_, -anchor => 'c');
+		$compound->Line;
+	}
+}
+
+=item B<CreateEmptyImage>I<(?$width?, ?$height?)>
+
+Creates and returns aan empty image. Nothing to see, just taking up space.
+If $width is not specified it defaults to the B<-iconsize> config variable.
+If $height is not specified it defaults to $width.
+
+=cut
 
 sub CreateEmptyImage {
 	my ($self, $width, $height) = @_;
@@ -678,15 +751,18 @@ Loads image I<$file> and returns it as a Wx::Image object.
 =cut
 
 sub LoadImage {
-	my ($self, $file, $size) = @_;
+	my ($self, $file, $width, $height) = @_;
+	if (defined $width) {
+		$height = $width unless defined $height
+	}
 	if (-e $file) {
 		my ($name,$path,$suffix) = fileparse(lc($file), @extensions);
 		if (exists $photoext{$suffix}) {
 			my $img = Imager->new(file=>$file);
 			if (defined $img) {
-				if (defined $size) {
-					$img = $img->scale(xpixels => $size, ypixels => $size) if $size ne $img->getwidth;
-				}
+				$width = $img->getwidth unless defined $width;
+				$height = $img->getheight unless defined $height;
+				$img = $img->scale(xpixels => $width, ypixels => $height) if ($width ne $img->getwidth) or ($height ne $img->getheight);;
 				my $data;
 				$img->write(data => \$data, type => 'png');
 				return $self->GetAppWindow->Photo(
@@ -709,7 +785,7 @@ sub LoadImage {
 				return undef;
 			}
 			my $renderer = Image::LibRSVG->new;
-			$renderer->loadFromFileAtSize($file, $size, $size);
+			$renderer->loadFromFileAtSize($file, $width, $height);
 			my $png = $renderer->getImageBitmap("png", 100);
 			my $img = $self->GetAppWindow->Photo(
 				-data => encode_base64($png), 
@@ -771,12 +847,12 @@ sub LoadThemeFile {
 	}
 }
 
-=item B<ParentTheme>I<($theme)>
-
-Returns the parent theme index that $theme inherits.
-Returns undef if there is no parent theme.
-
-=cut
+#=item B<ParentTheme>I<($theme)>
+#
+#Returns the parent theme index that $theme inherits.
+#Returns undef if there is no parent theme.
+#
+#=cut
 
 sub ParentTheme {
 	my ($self, $theme) = @_;
@@ -803,8 +879,12 @@ Unknown. If you find any, please contact the author.
 
 =item L<Tk::AppWindow>
 
+=item L<Tk::AppWindow::BaseClasses::Extension>
+
 =back
 
 =cut
 
 1;
+
+

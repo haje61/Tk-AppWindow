@@ -9,7 +9,7 @@ Tk::AppWindow::Ext::Panels - manage the layout of your application
 use strict;
 use warnings;
 use vars qw($VERSION);
-$VERSION="0.01";
+$VERSION="0.02";
 use Tk;
 require Tk::Adjuster;
 require Tk::Pane;
@@ -361,10 +361,15 @@ Unknown. If you find any, please contact the author.
 
 =over 4
 
+=item L<Tk::AppWindow>
+
+=item L<Tk::AppWindow::BaseClasses::Extension>
 
 =back
 
 =cut
 
 1;
+
+
 

@@ -9,7 +9,7 @@ Tk::AppWindow::Ext::Help - about box and help facilities
 use strict;
 use warnings;
 use vars qw($VERSION);
-$VERSION="0.01";
+$VERSION="0.02";
 
 use base qw( Tk::AppWindow::BaseClasses::Extension );
 
@@ -57,6 +57,8 @@ Can be B<pod> or B<html>. Default value is B<pod>.
 
 =head1 B<COMMANDS>
 
+The following commands are defined.
+
 =over 4
 
 =item B<about>
@@ -65,7 +67,7 @@ Pops the about box.
 
 =item B<help>
 
-Pops the help dialog.
+Pops the help dialog or initiates the internet browser..
 
 =back
 
@@ -218,6 +220,9 @@ Unknown. If you find any, please contact the author.
 
 =over 4
 
+=item L<Tk::AppWindow>
+
+=item L<Tk::AppWindow::BaseClasses::Extension>
 
 =back
 
@@ -225,3 +230,5 @@ Unknown. If you find any, please contact the author.
 
 
 1;
+
+

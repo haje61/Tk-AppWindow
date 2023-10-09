@@ -9,7 +9,7 @@ Tk::AppWindow::Ext::ToolBar - add a tool bar
 use strict;
 use warnings;
 use vars qw($VERSION);
-$VERSION="0.01";
+$VERSION="0.02";
 use Tk;
 require Tk::Compound;
 
@@ -322,9 +322,16 @@ Unknown. If you find any, please contact the author.
 
 =over 4
 
+=item L<Tk::AppWindow>
+
+=item L<Tk::AppWindow::BaseClasses::Extension>
+
+=item L<Tk::AppWindow::BaseClasses::PanelExtension>
 
 =back
 
 =cut
 
 1;
+
+

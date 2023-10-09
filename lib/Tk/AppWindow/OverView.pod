@@ -1,0 +1,33 @@
+=head1 NAME
+
+Tk::AppWindow::OverView - Getting started with L<Tk::AppWindow>
+
+=head1 DESCRIPTION
+
+=head1 EXTENSIONS
+
+=head1 CONFIGVARIABLES
+
+=head1 COMMANDS
+
+=head1 HOOKS
+
+=head1 AUTHOR
+
+Hans Jeuken (hanje at cpan dot org)
+
+=head1 SEE ALSO
+
+=over 4
+
+=item L<Tk::AppWindow>
+
+=item L<Tk::AppWindow::BaseClasses::Extension>
+
+=back
+
+=cut
+
+
+
+

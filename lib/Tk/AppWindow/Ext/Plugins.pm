@@ -10,7 +10,7 @@ use strict;
 use warnings;
 use Carp;
 use vars qw($VERSION);
-$VERSION="0.01";
+$VERSION="0.02";
 use Tk;
 use Pod::Usage;
 require Tk::YADialog;
@@ -29,9 +29,35 @@ use base qw( Tk::AppWindow::BaseClasses::Extension );
 
 =head1 DESCRIPTION
 
+Gives your user the opportunity to tune the application to his wishes,
+by loading and unloading plugins.
+
+Plugins are kind of like extensions, they add functionality. However,
+a plugin cannot define configvariables. It can issue commands though.
+
+This extension will load the extension B<ConfigFolder> if it is not loaded already.
+
 =head1 CONFIG VARIABLES
 
 =over 4
+
+=item Switch: B<-availableplugs>
+
+A list of available plugins that can be loaded.
+
+=item Switch: B<-plugins>
+
+List of plugins that will be loaded at startup.
+
+=back
+
+=head1 COMMANDS
+
+=over 4
+
+=item B<plugsdialog>
+
+Creates a dialog window in which the user can select and unselect plugins
 
 =back
 
@@ -317,10 +343,17 @@ Unknown. Probably plenty. If you find any, please contact the author.
 
 =over 4
 
+=item L<Tk::AppWindow>
+
+=item L<Tk::AppWindow::BaseClasses::Extension>
+
+=item L<Tk::AppWindow::BaseClasses::Plugin>
 
 =back
 
 =cut
 
 1;
+
+
 

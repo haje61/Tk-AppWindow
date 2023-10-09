@@ -139,7 +139,7 @@ sub execute {
 	return @result
 }
 
-=item B<hookAfter(@callback)
+=item B<hookAfter>I<(@callback)>
 
 Adds a hook to the after section. The items in I<@callback> are exactly as creating a new instance.
 The callback will be called after the main callback is fed what the main callback returns as parameters.
@@ -168,7 +168,7 @@ sub hookBefore {
 }
 
 
-=item B<unhookAfter(@options)
+=item B<unhookAfter>I<(@callback)>
 
 Removes a hook from the after section. The items in I<@callback> are exactly as when adding the hook.
 If multiple identical items are present it removes them alls.
@@ -195,7 +195,7 @@ sub unhookAfter {
 }
 
 
-=item B<unhookBefore(@options)
+=item B<unhookBefore>I<(@callback)>
 
 Removes a hook from the before section. The items in I<@callback> are exactly as when adding the hook.
 If multiple identical items are present it removes them all.
@@ -235,4 +235,5 @@ Unknown. If you find any, please contact the author.
 
 1;
 __END__
+
 

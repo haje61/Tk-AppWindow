@@ -2,14 +2,14 @@ package Tk::AppWindow::BaseClasses::SidePanel;
 
 =head1 NAME
 
-Tk::AppWindow::Baseclasses::SidePanel - Basic functionality for esxtensions associated with a side panel, like Navigator and ToolPanel.
+Tk::AppWindow::Baseclasses::SidePanel - Basic functionality for extensions associated with a side panel, like NavigatorPanel and ToolPanel.
 
 =cut
 
 use strict;
 use warnings;
 use vars qw($VERSION);
-$VERSION="0.01";
+$VERSION="0.02";
 use Tk;
 require Tk::YANoteBook;
 
@@ -18,10 +18,10 @@ use base qw( Tk::AppWindow::BaseClasses::PanelExtension );
 =head1 SYNOPSIS
 
  #This is useless
- my $ext = Tk::AppWindow::BaseClasses::SidePanel->new($frame);
+ my $ext = Tk::AppWindow::BaseClasses::SidePanel->new($mainwindow);
 
  #This is what you should do
- package Tk::AppWindow::Ext::MyExtension
+ package Tk::AppWindow::Ext::MySidePanel
  use base(Tk::AppWindow::BaseClasses::SidePanel);
  sub new {
     my $class = shift;
@@ -32,11 +32,14 @@ use base qw( Tk::AppWindow::BaseClasses::PanelExtension );
 
 =head1 DESCRIPTION
 
+Provides a primer for panels that contain a resizable YANoteBook for
+selecting various tools.
+
+It inherits L<Tk::AppWindow::BaseClasses::PanelExtension>
+
 =head1 CONFIG VARIABLES
 
-=over 4
-
-=back
+None.
 
 =cut
 
@@ -56,22 +59,41 @@ sub new {
 
 =over 4
 
+=item B<addPage>I<($name, $image, $text, $statustext)>
+
+Adds a page to the notebook.
+
 =cut
 
 sub addPage {
-	my ($self, $name, $image, $text) = @_;
+	my ($self, $name, $image, $text, $statustext) = @_;
 	$text = $name, unless defined $text;
+	my $orient = 'Horizontal';
+	$orient = 'Vertical' if ($self->Tabside eq 'left') or ($self->Tabside eq 'right');
+	
 	my $nb = $self->nbGet;
 
 	my @opt = ();
-	my $icon = $self->getArt($image, $self->IconSize);
+	my $art = $self->extGet('Art');
+	my $icon;
+	if (defined $art) {
+		my $img = $art->GetIcon($image, $self->IconSize);
+		my @copt = (-orient => $orient);
+		if ($orient eq 'Vertical') {
+			push @copt, -textside => 'bottom'
+		} else {
+			push @copt, -textside => 'right'
+		}
+		$icon = $art->CreateCompound(@copt, -text => $text, -image => $img);
+		
+	}
 	@opt = (-titleimg => $icon) if defined $icon;
 	@opt = (-title => $text) unless defined $icon;
 	my $page = $nb->addPage($name, @opt);
 
 	my $balloon = $self->extGet('Balloon');
 	my $l = $nb->getTab($name)->Subwidget('Label');
-	$balloon->Attach($l, -balloonmsg => $text) if (defined $balloon) and (defined $icon);
+	$balloon->Attach($l, -statusmsg => $statustext) if (defined $balloon) and (defined $statustext);
 	$self->after(500, sub { $nb->UpdateTabs });
 
 	return $page;
@@ -80,8 +102,6 @@ sub addPage {
 sub CreateNoteBook {
 	my $self = shift;
 	my $nb = $self->Subwidget($self->Panel)->YANoteBook(
-# 		-borderwidth => 4,
-# 		-relief => 'groove',
 		-onlyselect => 0,
 		-rigid => 0,
 		-selecttabcall => ['TabSelect', $self],
@@ -90,17 +110,27 @@ sub CreateNoteBook {
 	)->pack(-expand => 1, -fill=> 'both', -padx => 2, -pady => 2);
 	$self->geoAddCall($self->Panel, 'OnResize', $self);
 	$self->Advertise($self->Name . 'NB', $nb);
-# 	$self->after(250, sub { $nb->UpdateTabs });
 	my $pn = $self->extGet('Panels');
 	$pn->adjusterWidget($self->Panel, $nb);
 	$pn->adjusterActive($self->Panel, 0);
-# 	$self->TabUnselect;
 }
+
+=item B<deletePage>I<($name)>
+
+Deletes a page from the notebook.
+
+=cut
 
 sub deletePage {
 	my ($self, $name) = @_;
 	$self->nbGet->deletePage($name);
 }
+
+=item B<IconSize>I<(?$size?)>
+
+Set and return the iconsize in the tabs of the notebook
+
+=cut
 
 sub IconSize {
 	my $self = shift;
@@ -108,10 +138,22 @@ sub IconSize {
 	return $self->{ICONSIZE};
 }
 
+=item B<nbGet>
+
+Returns a reference to the notebook widget.
+
+=cut
+
 sub nbGet {
 	my $self = shift;
 	return $self->Subwidget($self->Name . 'NB');
 }
+
+=item B<nbMaximize>
+
+Maximizes the notebook widget
+
+=cut
 
 sub nbMaximize {
 	my ($self, $tab) = @_;
@@ -142,6 +184,12 @@ sub nbMaximize {
 	}
 	$nb->GeometryRequest($width, $height);
 }
+
+=item B<nbMinimize>
+
+Minimizes the notebook widget
+
+=cut
 
 sub nbMinimize {
 	my ($self, $tab) = @_;
@@ -178,7 +226,6 @@ sub OnResize {
 	my $height = $panel->height - $offset;
 	
 	$nb->GeometryRequest($width, $height) if ($width ne $owidth) or ($height ne $oheight);
-# 	print "Resize\n";
 }
 
 sub panelOffset {
@@ -191,6 +238,12 @@ sub panelOffset {
 	$pad = $pi{'-pady'} if exists $pi{'-pady'};
 	return ($border + $pad) * 2;
 }
+
+=item B<TabSelect>I<($tab)>
+
+Maximizes $tab and adds an adjuster
+
+=cut
 
 sub TabSelect {
 	my ($self, $tab) = @_;
@@ -206,11 +259,23 @@ sub TabSelect {
 	$self->after(200, ['geoBlock', $self, 0]);
 }
 
+=item B<Tabside>I<(?$side?)>
+
+Set and return the tabside in the notebook.
+
+=cut
+
 sub Tabside {
 	my $self = shift;
 	$self->{TABSIDE} = shift if @_;
 	return $self->{TABSIDE};
 }
+
+=item B<TabUnselect>I<($tab)>
+
+Minimizes $tab and removes the adjuster.
+
+=cut
 
 sub TabUnselect {
 	my ($self, $tab) = @_;
@@ -238,6 +303,12 @@ Unknown. If you find any, please contact the author.
 
 =over 4
 
+=item L<Tk::AppWindow::BaseClasses::Extension>
+
+=item L<Tk::AppWindow::BaseClasses::PanelExtension>
+
+=item L<Tk::AppWindow>
+
 
 =back
 
@@ -245,6 +316,8 @@ Unknown. If you find any, please contact the author.
 
 1;
 __END__
+
+
 
 
 

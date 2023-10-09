@@ -18,6 +18,24 @@ Construct Tk::Widget 'PluginsForm';
 require Tk::LabFrame;
 require Tk::Pane;
 
+=head1 DESCRIPTION
+
+This package is a L<Tk::Frame> based megawidget.
+It provides a for for loading and unloading plugins
+to a L<Tk::AppWindow> based application.
+
+=head1 OPTIONS
+
+=over 4
+
+=item Switch: B<-pluginsext>
+
+A reference to the B<Plugins> extension. Mandatory!
+
+=back
+
+=cut
+
 sub Populate {
 	my ($self,$args) = @_;
 
@@ -89,4 +107,23 @@ sub UnloadAll {
 	for (@$avail) { $ext->plugUnload($_); }
 }
 
+=head1 AUTHOR
+
+Hans Jeuken (hanje at cpan dot org)
+
+=head1 BUGS
+
+Unknown. If you find any, please contact the author.
+
+=head1 SEE ALSO
+
+=over 4
+
+=item L<Tk::AppWindow::Ext::Plugins>
+
+=back
+
+=cut
+
 1;
+

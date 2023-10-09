@@ -15,7 +15,7 @@ use Carp;
 =head1 SYNOPSIS
 
  #This is useless
- my $ext = Tk::AppWindow::BaseClasses::Extension->new($frame);
+ my $ext = Tk::AppWindow::BaseClasses::Extension->new($mainwindow);
 
  #This is what you should do
  package Tk::AppWindow::Ext::MyExtension
@@ -202,6 +202,7 @@ Unknown. If you find any, please contact the author.
 
 =over 4
 
+=item L<Tk::AppWindow>
 
 =back
 
@@ -209,3 +210,5 @@ Unknown. If you find any, please contact the author.
 
 1;
 __END__
+
+

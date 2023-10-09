@@ -101,6 +101,15 @@ Only available at create time.
 Specifies the image file to be used as logo for your application.
 Default value is Tk::findINC('Tk/AppWindow/aw_logo.png').
 
+=item Switch: B<-namespace>
+
+Specifies an additional name space for extensions and plugins.
+If you set it, for example, to 'Foo::Bar', then your extensions
+may also live in 'Foo::Bar::Ext' and your plugins may live 
+in 'Foo::Bar::Plugins'.
+
+Only available at create time.
+
 =item Switch: B<-savegeometry>
 
 Default value is 1
@@ -117,7 +126,7 @@ Does not do anything at this moment. Meant for logging.
 
 =back
 
-=head1 B<COMMANDS>
+=head1 COMMANDS
 
 =over 4
 
@@ -215,7 +224,7 @@ sub Populate {
 	$self->after(1, ['PostConfig', $self]);
 }
 
-=head1 B<METHODS>
+=head1 METHODS
 
 =over 4
 
@@ -324,12 +333,7 @@ sub cmdConfig {
 =item B<cmdExecute>('command_name', @options);
 
 Looks for the callback assigned to command_name and executes it.
-It first passes the options you specify here. Then it passes the
-options you specified in B<cmdConfig>. My advise is to make
-a clear choice. Either specify all options here and nothing in
-B<cmdConfig>. Or have all the options in B<cmdConfig> and
-specify nothing here. This method is called by menu items, toolbar items
-and whatever you specify.
+returns the result.
 
 =cut
 
@@ -346,7 +350,7 @@ sub cmdExecute {
 
 =item B<cmdExists>('command_name')
 
-Checks if command_name can be used as a command. Returns 1 or 0.
+Checks if command_name can be used as a command. Returns a boolean.
 
 =cut
 
@@ -410,7 +414,7 @@ sub cmdRemove {
 	return delete $self->{CMNDTABLE}->{$key};
 }
 
-=item B<cmdHookAfter>(I<'command_name'>, I<@callback>)
+=item B<cmdUnhookAfter>(I<'command_name'>, I<@callback>)
 
 unhooks a hook from after stack of the callback associated with 'command_name'.
 See L<Tk::AppWindow::BaseClasses::Callback>.
@@ -422,7 +426,7 @@ sub cmdUnhookAfter {
 	return $self->CmdHook('unhookAfter', @_);
 }
 
-=item B<cmdHookBefore>(I<'command_name'>, I<@callback>)
+=item B<cmdUnhookBefore>(I<'command_name'>, I<@callback>)
 
 unhooks a hook from before stack of the callback associated with 'command_name'.
 see L<Tk::AppWindow::BaseClasses::Callback>.
@@ -465,14 +469,30 @@ sub ConfigHook {
 	return 0
 }
 
+=item B<configHookAfter>(I<'-configvariable'>, I<@callback>)
+
+Adds a hook to the after stack of the callback associated with a config
+variable'. See L<Tk::AppWindow::BaseClasses::Callback>.
+Only works on config variables created through B<configInit>
+
+=cut
+
 sub configHookAfter {
 	my $self = shift;
-	return $self->CmdHook('hookAfter', @_);
+	return $self->ConfigHook('hookAfter', @_);
 }
+
+=item B<configHookAfter>(I<'-configvariable'>, I<@callback>)
+
+Adds a hook to teh before stack of the callback associated with a config
+variable'. See L<Tk::AppWindow::BaseClasses::Callback>.
+Only works on config variables created through B<configInit>
+
+=cut
 
 sub configHookBefore {
 	my $self = shift;
-	return $self->CmdHook('hookBefore', @_);
+	return $self->ConfigHook('hookBefore', @_);
 }
 
 =item B<configInit>I<(@options)>
@@ -533,10 +553,26 @@ sub configPut {
 	}
 }
 
+=item B<configUnhookAfter>(I<'-configvariable'>, I<@callback>)
+
+Removes a hook from the after stack of the callback associated with a config
+variable'. See L<Tk::AppWindow::BaseClasses::Callback>.
+Only works on config variables created through B<configInit>
+
+=cut
+
 sub configUnhookAfter {
 	my $self = shift;
 	return $self->CmdHook('unhookAfter', @_);
 }
+
+=item B<configUnhookBefore>(I<'-configvariable'>, I<@callback>)
+
+Removes a hook from the after stack of the callback associated with a config
+variable'. See L<Tk::AppWindow::BaseClasses::Callback>.
+Only works on config variables created through B<configInit>
+
+=cut
 
 sub configUnhookBefore {
 	my $self = shift;
@@ -723,7 +759,7 @@ sub logWarning {
 
 =item B<MenuItems>
 
-Returns a list of two items used by the B<MenuBar> plugin. The first defines the application menu.
+Returns a list of two items used by the B<MenuBar> extension. The first defines the application menu.
 The second is the menu option Quit in this menu. Overwrite this method to make it return
 a different list. See also B<Tk::AppWindow::Ext::MenuBar>
 
@@ -751,13 +787,28 @@ sub OnConfigure {
 	$self->{'cfid'} = $id;
 }
 
+=item B<OSName>
+
+Returns the name of the operating system you are running.
+
+=cut
+
 sub OSName {
 	return $_[0]->{OSNAME}
 }
 
+=item B<popDialog>I<($title, $message, $icon, @buttons)>
+
+Pops up a dialogbox with @buttons.
+The first button is the default button.
+Returns the name of the button pressed.
+If you press the Escape key it wil return '*Cancel*'.
+
+=cut
+
 sub popDialog {
 	my ($self, $title, $text, $icon, @buttons) = @_;
-	$icon = 'dialog-information' unless defined $icon;
+	$icon = 'dialog-question' unless defined $icon;
 	my @padding = (-padx => 10, -pady => 10);
 	my $q = $self->YADialog(
 		-title => $title,
@@ -774,6 +825,14 @@ sub popDialog {
 	$q->destroy;
 	return $answer
 }
+
+=item B<popEntry>I<($title, $message, $value, $icon)>
+
+Pops up a dialog box with an Entry widget.
+returns the entered value if the ok button is pressed.
+Otherwise returns undef..
+
+=cut
 
 sub popEntry {
 	my ($self, $title, $text, $value, $icon) = @_;
@@ -813,6 +872,7 @@ sub popMessage {
 	$icon = 'dialog-information' unless defined $icon;
 	$size = 32 unless defined $size;
 	my $m = $self->YAMessage(
+		-title => 'Message',
 		-text => $text,
 		-image => $self->getArt($icon, $size),
 	);
@@ -844,6 +904,13 @@ sub PostConfig {
 	}
 }
 
+=item B<progressAdd>I<($name, $label, $size, $variable)>
+
+Adds a progress bar to the status bar.
+Extension B<StatusBar> must be loaded for this to work.
+
+=cut
+
 sub progressAdd {
 	my ($self, $name, $label, $size, $variable) = @_;
 	my $sb = $self->extGet('StatusBar');
@@ -855,6 +922,13 @@ sub progressAdd {
 		-variable => $variable,
 	) if defined $sb;
 }
+
+=item B<progressRemove>I<($name)>
+
+Remves a progress bar from the status bar.
+Extension B<StatusBar> must be loaded for this to work.
+
+=cut
 
 sub progressRemove {
 	my ($self, $name) = @_;
@@ -915,33 +989,7 @@ Unknown. Probably plenty. If you find any, please contact the author.
 
 =item L<Tk::AppWindow::OverView>
 
-=item L<Tk::AppWindow::Ext::Art>
-
-=item L<Tk::AppWindow::Ext::Balloon>
-
-=item L<Tk::AppWindow::Ext::ConfigFolder>
-
-=item L<Tk::AppWindow::Ext::Help>
-
-=item L<Tk::AppWindow::Ext::Keybooard>
-
-=item L<Tk::AppWindow::Ext::MDI>
-
-=item L<Tk::AppWindow::Ext::MenuBar>
-
-=item L<Tk::AppWindow::Ext::Navigator>
-
-=item L<Tk::AppWindow::Ext::Panels>
-
-=item L<Tk::AppWindow::Ext::Plugins>
-
-=item L<Tk::AppWindow::Ext::SDI>
-
-=item L<Tk::AppWindow::Ext::Settings>
-
-=item L<Tk::AppWindow::Ext::StatusBar>
-
-=item L<Tk::AppWindow::Ext::ToolBar>
+=item L<Tk::AppWindow::BaseClasses::Extension>
 
 =back
 
@@ -952,6 +1000,8 @@ Unknown. Probably plenty. If you find any, please contact the author.
 
 1;
 __END__
+
+
 
 
 
