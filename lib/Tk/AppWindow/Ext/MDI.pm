@@ -160,7 +160,6 @@ sub new {
 	$self->{HISTORY} = [];
 	$self->{INTERFACE} = undef;
 	$self->{MONITOR} = {};
-	$self->{NOCLOSEBUTTON} = 0;
 	$self->{SELECTDISABLED} = 0;
 	$self->{SELECTED} = undef;
 
@@ -213,32 +212,18 @@ sub CanQuit {
 	return 0
 }
 
-sub CmdCloseButtonPressed {
-	my ($self, $name) =  @_;
-	my $close = 1;
-	return $close if exists $self->{NOCLOSEBUTTON};
-	if ($self->docConfirmSave($name)) {
-		$close = $self->docClose($name);
-		$self->interfaceRemove($name, 0) if $close;
-	}
-	return $close
-}
-
 sub CmdDocClose {
 	my ($self, $name) =  @_;
 	$name = $self->docSelected unless defined $name;
 	return 1 unless defined $name;
 	my $close = 1;
-	$self->{NOCLOSEBUTTON} = 1;
 	my $fc = $self->docForceClose;
-	my $cs = $self->docConfirmSave($name);	
 	if ($self->docForceClose or $self->docConfirmSave($name)) {
 		my $geosave = $self->geometry;
 		$close = $self->docClose($name);
 		$self->interfaceRemove($name) if $close;
 		$self->geometry($geosave);
 	}
-	delete $self->{NOCLOSEBUTTON};
 	$self->log("Closed '$name'") if $close;
 	$self->logWarning("Failed closing '$name'") unless $close;
 	return $close
@@ -431,7 +416,7 @@ sub CreateInterface {
 	my $self = shift;
 	$self->{INTERFACE} = $self->WorkSpace->YANoteBook(
 		-selecttabcall => ['docSelect', $self],
-		-closetabcall => ['CmdCloseButtonPressed', $self],
+		-closetabcall => ['CmdDocClose', $self],
 	)->pack(-expand => 1, -fill => 'both');
 }
 
@@ -1216,6 +1201,9 @@ Unknown. If you find any, please contact the author.
 =cut
 
 1;
+
+
+
 
 
 

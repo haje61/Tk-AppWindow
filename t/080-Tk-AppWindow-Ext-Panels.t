@@ -4,10 +4,9 @@ use warnings;
 use Test::Tk;
 $mwclass = 'Tk::AppWindow';
 
-use Test::More tests => 5;
+use Test::More tests => 4;
 BEGIN { 
 	use_ok('Tk::AppWindow::Ext::Panels');
-	use_ok('Tk::AppWindow::PanelNoteBook');
 };
 
 

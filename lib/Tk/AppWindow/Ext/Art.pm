@@ -746,7 +746,7 @@ sub IsImageFile {
 
 =item B<LoadImage>I<($file)>
 
-Loads image I<$file> and returns it as a Wx::Image object.
+Loads image I<$file> and returns it as a Tk::Photo object.
 
 =cut
 
@@ -886,5 +886,6 @@ Unknown. If you find any, please contact the author.
 =cut
 
 1;
+
 
 

@@ -44,7 +44,7 @@ them do the right stuff by overriding them.
 
 =over 4
 
-=item B<-extionsion>
+=item B<-extension>
 
 Reference to the document interface extension (MDI, SDI or other) that is creating the 
 content handler.
@@ -225,6 +225,7 @@ Unknown. If you find any, please contact the author.
 =cut
 
 1;
+
 
 
 
