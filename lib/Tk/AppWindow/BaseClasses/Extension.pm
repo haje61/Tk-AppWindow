@@ -59,18 +59,6 @@ sub AUTOLOAD {
 
 =over 4
 
-=item B<BalloonAttach>I<@options>
-
-Calls the Attach method of the Balloon widget if the extens Balloon is loaded
-
-=cut
-
-sub BalloonAttach {
-	my $self = shift;
-	my $b = $self->extGet('Balloon');
-	$b->Attach(@_) if defined $b;
-}
-
 =item B<CanQuit>
 
 Returns 1. It is there for you to overwrite. It is called when you attempt to close the window or execute the quit command.
@@ -157,18 +145,6 @@ sub SettingsPage {
 	return ();
 }
 
-=item B<StatusMessage>I<($text>)>
-
-Sends a message to the status bar if it is loaded. See L<Tk::AppWindow::Ext::StatusBar>
-
-=cut
-
-sub StatusMessage {
-	my $self = shift;
-	my $sb = $self->extGet('StatusBar');
-	$sb->Message(@_) if defined $sb;
-}
-
 =item B<ToolItems>
 
 Returns and empty list. It is there for you to overwrite. It is called by the B<ToolBar> extension. You can return a list
@@ -210,5 +186,6 @@ Unknown. If you find any, please contact the author.
 
 1;
 __END__
+
 
 
