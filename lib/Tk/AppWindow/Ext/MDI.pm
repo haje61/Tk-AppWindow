@@ -134,6 +134,10 @@ Returns a boolean for succes or failure.
 Saves all open and modified documents.
 Returns a boolean for succes or failure.
 
+=item B<doc_select>
+
+Select an opened document.
+
 =item B<pop_hist_menu>
 
 Is called when the file menu is opened in the menubar. It populates the
@@ -188,6 +192,7 @@ sub new {
 		doc_save => ['CmdDocSave', $self],
 		doc_save_as => ['CmdDocSaveAs', $self],
 		$self->CommandDocSaveAll,
+		doc_select => ['docSelect', $self],
 		set_title => ['setTitle', $self],
 		pop_hist_menu => ['CmdPopulateHistoryMenu', $self],
 	);
@@ -236,7 +241,7 @@ sub CmdDocNew {
 	$self->deferredAssign($name);
 	$self->interfaceAdd($name);
 
-	$self->docSelect($name);
+	$self->cmdExecute('doc_select', $name);
 	return 1;
 }
 
@@ -251,13 +256,13 @@ sub CmdDocOpen {
 	}
 	if (defined $file) {
 		if ($self->docExists($file)) {
-			$self->docSelect($file);
+			$self->cmdExecute('doc_select', $file);
 			return 1
 		}
 		my $file = File::Spec->rel2abs($file);
 		if ($self->cmdExecute('doc_new', $file)) {
 			$self->historyRemove($file);
-			$self->docSelect($file);
+			$self->cmdExecute('doc_select', $file);
 			$self->log("Opened '$file'");
 		}
 		return 1
@@ -668,7 +673,7 @@ sub docRename {
 		$self->monitorAdd($new);
 
 		if ($self->docSelected eq $old) {
-			$self->docSelect($new)
+			$self->cmdExecute('doc_select', $new)
 		}
 	}
 }
@@ -1201,6 +1206,7 @@ Unknown. If you find any, please contact the author.
 =cut
 
 1;
+
 
 
 

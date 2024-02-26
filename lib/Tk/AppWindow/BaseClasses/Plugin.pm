@@ -136,7 +136,7 @@ sub Quit { }
 
 =item B<UnLoad>
 
-Returns 1. For you to overwrite. Doe here what needs to be done to safely destroy the plugin.
+Returns 1. For you to overwrite. Do here what needs to be done to safely destroy the plugin.
 
 =cut
 
@@ -168,5 +168,6 @@ Unknown. If you find any, please contact the author.
 
 1;
 __END__
+
 
 

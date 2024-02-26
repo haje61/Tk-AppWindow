@@ -68,8 +68,8 @@ Adds a page to the notebook.
 sub addPage {
 	my ($self, $name, $image, $text, $statustext) = @_;
 	$text = $name, unless defined $text;
-	my $orient = 'Horizontal';
-	$orient = 'Vertical' if ($self->Tabside eq 'left') or ($self->Tabside eq 'right');
+#	my $orient = 'Horizontal';
+#	$orient = 'Vertical' if ($self->Tabside eq 'left') or ($self->Tabside eq 'right');
 	
 	my $nb = $self->nbGet;
 
@@ -77,14 +77,14 @@ sub addPage {
 	my $art = $self->extGet('Art');
 	my $icon;
 	if (defined $art) {
-		my $img = $art->GetIcon($image, $self->IconSize);
-		my @copt = (-orient => $orient);
-		if ($orient eq 'Vertical') {
-			push @copt, -textside => 'bottom'
-		} else {
-			push @copt, -textside => 'right'
-		}
-		$icon = $art->CreateCompound(@copt, -text => $text, -image => $img);
+		$icon = $art->GetIcon($image, $self->IconSize);
+#		my @copt = (-orient => $orient);
+#		if ($orient eq 'Vertical') {
+#			push @copt, -textside => 'bottom'
+#		} else {
+#			push @copt, -textside => 'right'
+#		}
+#		$icon = $art->CreateCompound(@copt, -text => $text, -image => $img);
 		
 	}
 	@opt = (-titleimg => $icon) if defined $icon;
@@ -93,7 +93,10 @@ sub addPage {
 
 	my $balloon = $self->extGet('Balloon');
 	my $l = $nb->getTab($name)->Subwidget('Label');
-	$balloon->Attach($l, -statusmsg => $statustext) if (defined $balloon) and (defined $statustext);
+	if (defined $balloon) {
+		$balloon->Attach($l, -statusmsg => $statustext) if defined $statustext;
+		$balloon->Attach($l, -balloonmsg => $text) if defined $text;
+	}
 	$self->after(500, sub { $nb->UpdateTabs });
 
 	return $page;
@@ -316,6 +319,7 @@ Unknown. If you find any, please contact the author.
 
 1;
 __END__
+
 
 
 

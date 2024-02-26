@@ -1,5 +1,7 @@
 # Tk-AppWindow
-Application framework based on perl/Tk
+
+An extendable application framework written in perl/Tk. The aim is maximum user configurability
+and ease of application building.
 
 # Requirements
 
@@ -29,4 +31,5 @@ Following Perl modules should be installed:
     make
     make test
     make install
+
 

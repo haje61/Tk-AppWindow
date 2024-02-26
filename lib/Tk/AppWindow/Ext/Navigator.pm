@@ -71,7 +71,7 @@ sub Add {
 
 sub CreateDocumentList {
 	my $self = shift;
-	my $page = $self->extGet('NavigatorPanel')->addPage('Documents', 'document-open', 'Docs', 'Document list');
+	my $page = $self->extGet('NavigatorPanel')->addPage('Documents', 'document-open', 'Document list');
 
 	my $dt = $page->DocumentTree(
 		-entryselect => ['SelectDocument', $self],
@@ -164,7 +164,7 @@ Selects document $name in the multiple document interface.
 
 sub SelectDocument {
 	my ($self, $name) = @_;
-	$self->extGet($self->configGet('-documentinterface'))->docSelect($name);
+	$self->cmdExecute('doc_select', $name);
 }
 
 =item B<SelectEntry>I<($name)>
@@ -203,6 +203,8 @@ Unknown. If you find any, please contact the author.
 =cut
 
 1;
+
+
 
 
 

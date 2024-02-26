@@ -12,12 +12,6 @@ use Carp;
 use vars qw($VERSION);
 $VERSION="0.02";
 
-use Tk::GtkSettings qw(gtkKey initDefaults export2xrdb groupOption);
-initDefaults;
-my $iconlib = gtkKey('gtk-icon-theme-name');
-groupOption('main', 'iconTheme', $iconlib) if defined $iconlib;
-export2xrdb;
-
 use base qw(Tk::Derived Tk::MainWindow);
 Construct Tk::Widget 'AppWindow';
 
@@ -38,9 +32,8 @@ $Module::Load::Conditional::VERBOSE = 1;
 
 =head1 DESCRIPTION
 
-B<Tk::AppWindow> is a modular application framework written in perl/Tk.
-It is a base application that can be extended.
-The aim is maximum user configurability and ease of application building.
+An extendable application framework written in perl/Tk. The aim is maximum user configurability
+and ease of application building.
 
 To get started read L<Tk::AppWindow::OverView>.
 
@@ -109,14 +102,6 @@ may also live in 'Foo::Bar::Ext' and your plugins may live
 in 'Foo::Bar::Plugins'.
 
 Only available at create time.
-
-=item Switch: B<-savegeometry>
-
-Default value is 1
-
-If set it will save the applications geometry on exit.
-When reloaded the previously saved geometry is restored.
-In experimental stage
 
 =item Switch: B<-verbose>
 
@@ -305,11 +290,6 @@ sub CmdQuit {
 	if ($quit) {
 		for (keys %$plgs) {
 			$plgs->{$_}->Quit;
-		}
-		my $cff = $self->extGet('ConfigFolder');
-		if ((defined $cff) and $self->configGet('-savegeometry')) {
-			my $geometry = $self->geometry;
-			$cff->saveList('geometry', 'aw geometry', $geometry);
 		}
 		$self->destroy;
 	} 
@@ -907,13 +887,6 @@ sub PostConfig {
 	}
 	my $pc = $self->{POSTCONFIG};
 	for (@$pc) { $_->execute }
-
-	my $cff = $self->extGet('ConfigFolder');
-	if ((defined $cff) and $self->configGet('-savegeometry')) {
-		my ($g) = $cff->loadList('geometry', 'aw geometry');
-		$g = '600x400+100+100' unless defined $g;
-		$self->geometry($g);
-	}
 }
 
 =item B<StatusMessage>I<($text>)>
@@ -1024,6 +997,8 @@ Unknown. Probably plenty. If you find any, please contact the author.
 
 1;
 __END__
+
+
 
 
 
