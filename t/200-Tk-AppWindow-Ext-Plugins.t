@@ -23,7 +23,7 @@ createapp(
 		return $v;
 	}]],
 	-extensions => [qw[Art Balloon MenuBar ToolBar Settings Plugins]],
-	-availableplugs => ['Test'],
+#	-availableplugs => ['Test'],
 	-configfolder => 't/settings',
 	-toolitems => [
 		[	'tool_button',		'Placeholder',		'poptest',	'document-open',	'Open a document'], 
@@ -41,6 +41,7 @@ createapp(
 
 my $ext;
 if (defined $app) {
+	$app->geometry('640x400+100+100') if defined $app;
 	$ext = $app->extGet('Plugins');
 	
 	$app->Button(
@@ -83,4 +84,6 @@ if (defined $app) {
 starttesting;
 
 unlink 't/settings/plugins';
+
+
 

@@ -20,6 +20,7 @@ createapp(
 
 my $ext;
 if (defined $app) {
+	$app->geometry('640x400+100+100') if defined $app;
 	$ext = $app->extGet('Keyboard');
 }
 
@@ -31,4 +32,5 @@ if (defined $app) {
 );
 
 starttesting;
+
 

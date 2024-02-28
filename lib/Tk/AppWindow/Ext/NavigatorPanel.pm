@@ -28,7 +28,7 @@ Adds a navigator panel to your application. By default
 it sits on the left side of your application. You
 can add items to it's notebook.
 
-Inherits L< Tk::AppWindow::BaseClasses::SidePanel>.
+Inherits L<Tk::AppWindow::BaseClasses::SidePanel>.
 
 =head1 CONFIG VARIABLES
 
@@ -78,7 +78,7 @@ sub MenuItems {
 
 =head1 AUTHOR
 
-=item Hans Jeuken (hanje at cpan dot org)
+Hans Jeuken (hanje at cpan dot org)
 
 =head1 BUGS
 
@@ -101,6 +101,7 @@ Unknown. If you find any, please contact the author.
 =cut
 
 1;
+
 
 
 

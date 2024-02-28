@@ -249,7 +249,7 @@ sub Cycle {
 	$self->after($time, ['Update', $self]) unless $time eq 0;
 }
 
-=item B<DeleteI<($name)>
+=item B<Delete>I<($name)>
 
 Removes $name from the status bar and destroys the item object.
 
@@ -351,9 +351,15 @@ Unknown. If you find any, please contact the author.
 
 =over 4
 
+=item L<Tk::AppWindow>
+
+=item L<Tk::AppWindow::BaseClasses::Extension>
+
+=item L<Tk::AppWindow::BaseClasses::PanelExtension>
 
 =back
 
 =cut
 
 1;
+

@@ -73,6 +73,8 @@ createapp(
 	-quitter => 0,
 );
 
+$app->geometry('640x400+100+100') if defined $app;
+
 #testing accessors
 testaccessors($app, qw/appName Verbose/);
 
@@ -155,4 +157,5 @@ sub Blabber {
 	$cp = $cp . $par if defined $par;
 	return $cp;
 }
+
 

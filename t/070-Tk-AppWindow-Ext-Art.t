@@ -32,6 +32,7 @@ my %testicons = (
 );
 
 if (defined $app) {
+	$app->geometry('640x400+100+100') if defined $app;
 	$art = $app->extGet('Art');
 	$notebook = $app->NoteBook->pack(-fill => 'both');
 	$pages{22} = $notebook->add(22, -label => 22);
@@ -225,4 +226,5 @@ sub CreateImgTests {
 		}, 1, "Theme $theme, size $size, icon $icon"];
 	}
 }
+
 

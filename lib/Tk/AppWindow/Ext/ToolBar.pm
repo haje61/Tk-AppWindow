@@ -98,7 +98,7 @@ sub new {
 
 =over 4
 
-=item B<AddItem>I<$item, ?$position?);
+=item B<AddItem>I<$item, ?$position?);>
 
 Adds an item to the toolbar. The item must be a valid tk widget.
 Your addition will be lost after a call to B<ReConfigure>.
@@ -124,7 +124,7 @@ sub AddItem {
 	}
 }
 
-=item B<AddSeparator>I<?$position?);
+=item B<AddSeparator>I<?$position?);>
 
 =over 4
 
@@ -289,7 +289,7 @@ sub ReConfigure {
 	$self->CreateItems;
 }
 
-=item B<RemoveItem>I<$position);
+=item B<RemoveItem>I<$position);>
 
 Removes the item at $position from the tool bar.
 The item will re-appear after a call to B<ReConfigure> if the item is included in the B<-toolitems> option.
@@ -333,5 +333,6 @@ Unknown. If you find any, please contact the author.
 =cut
 
 1;
+
 
 

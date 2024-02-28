@@ -52,8 +52,6 @@ B<-adjuster>
 If specified the panel is adjustable. The value is transferred to the
 B<-side> option of the adjuster.
 
-=back
-
 Default value:
 
 [
@@ -370,6 +368,7 @@ Unknown. If you find any, please contact the author.
 =cut
 
 1;
+
 
 
 

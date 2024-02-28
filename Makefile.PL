@@ -14,7 +14,6 @@ my %prereq = (
 	'Imager::File::PNG'     => '0.99',
 	'MIME::Base64'						    => '3.16',
 	'Scalar::Util'						    => '1.62',
-	'Module::Load'          => '0.36',
 	'Module::Load::Conditional' => '0.74',
 	'Pod::Usage'            => '2.01',
 	'Scalar::Util::Numeric'	=> '0.40',
@@ -49,6 +48,7 @@ WriteMakefile(
       }}
     ) : () ),
 );
+
 
 
 

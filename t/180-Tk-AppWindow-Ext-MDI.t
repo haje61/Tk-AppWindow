@@ -22,6 +22,7 @@ createapp(
 
 my $ext;
 if (defined $app) {
+	$app->geometry('640x400+100+100') if defined $app;
 	$ext = $app->extGet('MDI');
 	my $disabled = 'Select enabled';
 	$app->Subwidget('TOP')->Button(
@@ -45,4 +46,5 @@ if (defined $app) {
 
 # $app->cmdExecute('doc_new');
 starttesting;
+
 

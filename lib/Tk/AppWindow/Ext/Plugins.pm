@@ -13,6 +13,7 @@ use vars qw($VERSION);
 $VERSION="0.02";
 use Tk;
 use Pod::Usage;
+use File::Basename;
 require Tk::YADialog;
 require Tk::AppWindow::PluginsForm;
 use Module::Load::Conditional('check_install', 'can_load');
@@ -43,11 +44,17 @@ This extension will load the extension B<ConfigFolder> if it is not loaded alrea
 
 =item Switch: B<-availableplugs>
 
-A list of available plugins that can be loaded.
+If you set this list, only the specified plugins can be loaded by the 
+end user. If you do not set this option, there is no restriction to what
+plugins are available to the end user, except for blocked plugins.
+
+=item Switch: B<-blockedplugs>
+
+List of plugins that are blocked from the end user.
 
 =item Switch: B<-plugins>
 
-List of plugins that will be loaded at startup.
+List of plugins that will be loaded at startup, factory settings.
 
 =back
 
@@ -69,7 +76,8 @@ sub new {
 	$self->{PLUGINS} = {};
 	$self->Require('ConfigFolder');
 	$self->addPreConfig(
-		-availableplugs => ['PASSIVE', undef, undef, []],
+		-availableplugs => ['PASSIVE', undef, undef, undef],
+		-blockedplugs => ['PASSIVE', undef, undef, []],
 		-plugins => ['PASSIVE', undef, undef, []],
 	);
 
@@ -84,7 +92,42 @@ sub new {
 
 =head1 METHODS
 
+=over 4
+
 =cut
+
+
+sub AvailablePlugins {
+	my $self = shift;
+
+	my $ap = $self->configGet('-availableplugs');
+	return sort @$ap if defined $ap;
+	my $bp = $self->configGet('-blockedplugs');
+	my %blocked = ();
+	for ($bp) { $blocked{$_} = 1 }
+
+	my @namespaces = ( 'Tk::AppWindow' );
+	my $additional = $self->NameSpace;
+	push @namespaces, $additional if defined $additional;
+
+
+	my %plugins = ();
+	for (@namespaces) {
+		my $space = $_;
+		$space =~ s/\:\:/\//;
+		for (@INC) {
+			my $dir = "$_/$space/Plugins";
+			if ((-e $dir) and (-d $dir)) {
+				my @pm = <$dir/*.pm>;
+				for (@pm) {
+					my $plugin =  basename($_, '.pm');
+					$plugins{$plugin} = 1 unless exists $blocked{$plugin};
+				}
+			}
+		}
+	}
+	return sort keys %plugins
+}
 
 sub CanQuit {
 	my $self = shift;
@@ -176,7 +219,7 @@ sub plugDescription {
 	return $str;
 }
 
-=item B<plugExists(I<$name>)
+=item B<plugExists(I<$name>)>
 
 returns the requested plugin object.
 
@@ -354,6 +397,8 @@ Unknown. Probably plenty. If you find any, please contact the author.
 =cut
 
 1;
+
+
 
 
 

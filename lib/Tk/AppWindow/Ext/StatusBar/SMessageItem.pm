@@ -28,10 +28,6 @@ sub Populate {
 	);
 }
 
-=head1 METHODS
-
-=cut
-
 sub Clear {
 	$_[0]->configure(
 		-text => '',
@@ -58,3 +54,4 @@ sub Remove {
 sub Update {}
 
 1;
+

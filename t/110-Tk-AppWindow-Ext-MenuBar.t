@@ -42,6 +42,7 @@ my %showitems = ();
 my $row = 0;
 my $ext;
 if (defined $app) {
+	$app->geometry('640x400+100+100') if defined $app;
 	for (@configs) {
 		my $var = '';
 		$showitems{$_} = \$var;
@@ -67,3 +68,4 @@ sub Update {
 	}
 	$app->after(200, \&Update);
 }
+

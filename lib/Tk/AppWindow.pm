@@ -585,18 +585,6 @@ sub CreateCallback {
 	return Tk::AppWindow::BaseClasses::Callback->new(@_);
 }
 
-=item B<extList>
-
-Returns a list of all loaded extensions
-
-=cut
-
-sub extList {
-	my $self = shift;
-	my $pl = $self->{EXTLOADORDER};
-	return @$pl;
-}
-
 =item B<extExists>I<($name)>
 
 Returns 1 if $name is loaded.
@@ -623,6 +611,18 @@ sub extGet {
 		return $plgs->{$name}
 	}
 	return undef
+}
+
+=item B<extList>
+
+Returns a list of all loaded extensions
+
+=cut
+
+sub extList {
+	my $self = shift;
+	my $pl = $self->{EXTLOADORDER};
+	return @$pl;
 }
 
 =item B<extLoad>('Name');
@@ -997,6 +997,7 @@ Unknown. Probably plenty. If you find any, please contact the author.
 
 1;
 __END__
+
 
 
 

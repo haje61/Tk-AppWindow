@@ -51,6 +51,12 @@ sub new {
 
 =head1 METHODS
 
+=over 4
+
+=item B<browserDialog>
+
+Launches a dialog asking for the launch command of the web browser.
+
 =cut
 
 sub browserDialog {
@@ -63,6 +69,12 @@ sub browserDialog {
 		$cff->saveList('webbrowser', 'aw webbrowser', $browser);
 	}
 }
+
+=item B<browserInstalled>I<($browser);>
+
+Checks if $browser is installed. Returns true if so.
+
+=cut
 
 sub browserInstalled {
 	my ($self, $browser) = @_;
@@ -81,6 +93,12 @@ sub browserInstalled {
 	return $found
 }
 
+=item B<browserOpenUrl>I<($url);>
+
+Opens $url in the browser.
+
+=cut
+
 sub browserOpenURL {
 	my ($self, $url) = @_;
 	my $cff = $self->extGet('ConfigFolder');
@@ -98,6 +116,12 @@ sub browserOpenURL {
 	}
 	run($url) if exists $ENV{BROWSER};
 }
+
+=item B<browserReset>
+
+Removes all knowledge about the browser being used.
+
+=cut
 
 sub browserReset {
 	my $self = shift;
@@ -121,10 +145,14 @@ Unknown. If you find any, please contact the author.
 
 =over 4
 
+=item L<Tk::AppWindow>
+
+=item L<Tk::AppWindow::BaseClasses::Extension>
 
 =back
 
 =cut
 
 1;
+
 

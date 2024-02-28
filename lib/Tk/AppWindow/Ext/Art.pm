@@ -16,11 +16,12 @@ my $osname = $Config{'osname'};
 
 use base qw( Tk::AppWindow::BaseClasses::Extension );
 
+use Module::Load::Conditional('check_install', 'can_load');
+$Module::Load::Conditional::VERBOSE = 1;
+
 use File::Basename;
-use Module::Load;
 use Imager;
 use MIME::Base64;
-# use Tk;
 require Tk::Compound;
 require Tk::Photo;
 use Tk::PNG;
@@ -45,8 +46,13 @@ my @defaulticonpath = ();
 if ($osname eq 'MSWin32') {
 	push @defaulticonpath, $ENV{ALLUSERSPROFILE} . '\Icons'
 } else {
-	autoload('Image::LibRSVG');
-	push @extensions, '.svg';
+	my $modname = 'Image::LibRSVG';
+	my $inst = check_install(module => $modname);
+	if (defined $inst) {
+		if (can_load(modules => {$modname => $inst->{'version'}})){
+			push @extensions, '.svg';
+		}
+	}
 	push @defaulticonpath, $ENV{HOME} . '/.local/share/icons', '/usr/share/icons','/usr/local/share/icons';
 }
 
@@ -886,6 +892,7 @@ Unknown. If you find any, please contact the author.
 =cut
 
 1;
+
 
 
 

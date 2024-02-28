@@ -420,7 +420,7 @@ Creates a Tk::YANoteBook multiple document interface.
 sub CreateInterface {
 	my $self = shift;
 	$self->{INTERFACE} = $self->WorkSpace->YANoteBook(
-		-selecttabcall => ['docSelect', $self],
+		-selecttabcall => ['cmdExecute', $self, 'doc_select'],
 		-closetabcall => ['CmdDocClose', $self],
 	)->pack(-expand => 1, -fill => 'both');
 }
@@ -1206,6 +1206,7 @@ Unknown. If you find any, please contact the author.
 =cut
 
 1;
+
 
 
 

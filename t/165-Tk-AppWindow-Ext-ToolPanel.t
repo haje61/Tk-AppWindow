@@ -23,6 +23,7 @@ createapp(
 
 my $ext;
 if (defined $app) {
+	$app->geometry('640x400+100+100') if defined $app;
 	$ext = $app->extGet('ToolPanel');
 	$app->after(300, sub {
 		my $page1 = $ext->addPage('Sample1', 'configure-toolbars', 'Sample page 1');
@@ -37,3 +38,4 @@ if (defined $app) {
 );
 
 starttesting;
+

@@ -84,6 +84,8 @@ It uses L<Tk::TabbedForm> in the popup. See there for details of this option.
 
 =item B<settings>
 
+Launches the settings dialog.
+
 =back
 
 =cut
@@ -309,11 +311,17 @@ Unknown. If you find any, please contact the author.
 
 =over 4
 
+=item L<Tk::AppWindow>
+
+=item L<Tk::AppWindow::BaseClasses::Extension>
+
+=item L<Tk::AppWindow::BaseClasses::PanelExtension>
 
 =back
 
 =cut
 
 1;
+
 
 

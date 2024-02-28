@@ -44,7 +44,7 @@ sub Populate {
 	
 	$self->SUPER::Populate($args);
 
-	my $avail = $ext->configGet('-availableplugs');
+	my @avail = $ext->AvailablePlugins;
 	my $lf = $self->LabFrame(
 		-label => 'Available plugins',
 		-labelside => 'acrosstop',
@@ -54,7 +54,7 @@ sub Populate {
 		-scrollbars => 'oe',
 		-sticky => 'ns',
 	)->pack(-expand => 1, -fill => 'both');
-	for (@$avail) {
+	for (@avail) {
 		my $plug = $_;
 		my $val = $ext->plugExists($plug);
 		my $f = $pane->Frame(
@@ -126,4 +126,5 @@ Unknown. If you find any, please contact the author.
 =cut
 
 1;
+
 

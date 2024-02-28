@@ -18,6 +18,7 @@ createapp(
 my $ext;
 my $plug;
 if (defined $app) {
+	$app->geometry('640x400+100+100') if defined $app;
 	$ext = $app->extGet('Plugins');
 	$plug = $ext->plugGet('Geometry');
 }
@@ -28,4 +29,5 @@ if (defined $app) {
 );
 
 starttesting;
+
 
