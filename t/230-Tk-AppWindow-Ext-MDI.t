@@ -7,7 +7,7 @@ use Test::Tk;
 $mwclass = 'Tk::AppWindow';
 $delay = 500;
 
-use Test::More tests => 5;
+use Test::More tests => 9;
 BEGIN { 
 	use_ok('Tk::AppWindow::Ext::MDI');
 };
@@ -39,12 +39,14 @@ if (defined $app) {
 	)->pack(-side => 'right', -padx => 2);
 }
 
-@tests = (
+testaccessors($ext, 'docForceClose', 'docSelected', 'historyDisabled', 'selectDisabled');
+push @tests,
 	[sub { return defined $ext }, 1, 'Extension defined'],
-	[sub { return $ext->Name  }, 'MDI', 'Extension MDI loaded'],
-);
+	[sub { return $ext->Name  }, 'MDI', 'Extension MDI loaded'];
 
 # $app->cmdExecute('doc_new');
 starttesting;
+
+
 
 

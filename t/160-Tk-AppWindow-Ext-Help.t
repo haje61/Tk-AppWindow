@@ -10,6 +10,8 @@ BEGIN { use_ok('Tk::AppWindow::Ext::Help') };
 
 createapp(
 	-extensions => [qw[Art MenuBar Help]],
+	-helpfile => 't/sample_help.pod',
+#	-helpfile => 'https://www.google.com',
 );
 
 my $ext;
@@ -23,4 +25,5 @@ if (defined $app) {
 );
 
 starttesting;
+
 

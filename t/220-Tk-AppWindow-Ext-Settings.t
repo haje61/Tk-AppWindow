@@ -1,4 +1,16 @@
+package MyLabel;
 
+use strict;
+use warnings;
+
+use base qw(Tk::Derived Tk::Label);
+Construct Tk::Widget 'MyLabel';
+
+sub Apply {
+	print "Apply\n";
+}
+
+package main;
 use strict;
 use warnings;
 use lib './t/lib';
@@ -17,7 +29,7 @@ my @radiovalues = (qw[Small Medium Large]);
 
 createapp(
 	-configfolder => $settingsfolder,
-	-extensions => [qw[Art MenuBar TestPlugin Settings]],
+	-extensions => [qw[Art MenuBar TestPlugin Dummy Settings]],
 	-useroptions => [
 # 		-set_boolean => ['boolean', 'Boolean test'],
 		'*page' => 'Page 1',
@@ -26,14 +38,17 @@ createapp(
 # 		-set_list_command => ['list', 'List values test', 'available_icon_themes'],
 		-set_file => ['file', 'File test'],
 		'*end',
+		'*section' => 'Section 2',
 		-set_float => ['float', 'Float test'],
 		-set_folder => ['folder', 'Folder test'],
 		-set_font => ['font', 'Font test'],
+		'*column',
 		-set_integer => ['integer', 'Integer test'],
 		-set_list_values => ['list', 'List values test', -values => \@listvalues],
 # 		-set_radio_command => ['radio', 'Radio Command test', 'available_icon_sizes'],
 		-set_radio_values => ['radio', 'Radio values test', -values => \@radiovalues],
 		-set_text => ['text', 'Text test'],
+		'*end',
 	]
 );
 
@@ -48,4 +63,6 @@ if (defined $app) {
 );
 
 starttesting;
+
+
 
