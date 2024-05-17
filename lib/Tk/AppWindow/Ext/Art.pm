@@ -60,7 +60,7 @@ if ($mswin) {
 	my $xdgpath = $ENV{XDG_DATA_DIRS};
 	my @xdgdirs = split /\:/, $xdgpath;
 	for (@xdgdirs) {
-		push @defaulticonpath, $_
+		push @defaulticonpath, "$_/icons";
 	}
 }
 
@@ -547,7 +547,8 @@ sub DoPostConfig {
 	unless (exists $self->{THEMES}->{$theme}) {
 		for ($self->AvailableThemes) {
 			my $test = $self->{THEMES}->{$_};
-			if ($test->{'path'} =~ /$theme$/) {
+			my $path = $test->{'path'};
+			if ($path =~ /$theme$/) {
 				$theme = $_;
 				$self->configPut(-icontheme => $theme);
 				last;
