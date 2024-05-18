@@ -1,5 +1,9 @@
 Revision history for Perl extension Tk::AppWindow.
 
+0.05 Sat May 18 2024
+	-fixed failing tests of Art
+	-fixed undefined variable error in Art
+
 0.04 Fri May 17 2024
 	- Fixed indexing error for CPAN
 	- Added missing prerequisite to Makefile.PL and README.md
