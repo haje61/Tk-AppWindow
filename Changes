@@ -1,6 +1,6 @@
 Revision history for Perl extension Tk::AppWindow.
 
-0.08 Sun Jun 02 2024
+0.08 Fri Jun 14 2024
 	- fixed bug in extension MDI.
 	- added methods menuCreate and menuConfig to extension MenuBar
 	- fixed bug in base class PluginJobs
