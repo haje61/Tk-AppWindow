@@ -308,11 +308,13 @@ sub pageImage {
 	return undef unless defined $icon;
 	my $img;
 	if (defined $art) {
+		my $image = $art->getIcon($icon, $self->IconSize);
+		return undef unless defined $image;
 		my $side = $self->textsides->{$nb};
 		if (defined $side) {
 			$img = $art->createCompound(
 				-textside => $side,
-				-image => $art->getIcon($icon, $self->IconSize),
+				-image => $image,
 				-text => $text,
 			);
 		} else {
