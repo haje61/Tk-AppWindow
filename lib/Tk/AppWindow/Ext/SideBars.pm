@@ -362,7 +362,7 @@ sub TabSelect {
 	my ($self, $notebook, $tab) = @_;
 	return if $self->configMode;
 	$self->geoBlock(1);
-	my $pn = $self->panels;
+	my $pn = $self->extGet('Panels');
 	$self->after(1, sub {
 		$self->nbMaximize($notebook, $tab);
 		my $p = $pn->panelAssign($notebook);

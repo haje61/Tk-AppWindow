@@ -1,5 +1,8 @@
 Revision history for Perl extension Tk::AppWindow.
 
+0.14 Tue Sep 17 2024
+	- Fixed bug with selecting page in extension SideBars.
+
 0.13 Tue Sep 17 2024
 	- Fixed crashes with extension SideBars.
 	- Updated documentation.
