@@ -1,8 +1,8 @@
-package Tk::AppWindow::Ext::Navigator;
+package Tk::AppWindow::Ext::Selector;
 
 =head1 NAME
 
-Tk::AppWindow::Ext::Navigator - Navigate opened documents and files
+Tk::AppWindow::Ext::Selector - Navigate opened documents and files
 
 =cut
 
@@ -18,17 +18,16 @@ require Tk::DocumentTree;
 =head1 SYNOPSIS
 
  my $app = new Tk::AppWindow(@options,
-    -extensions => ['MDI', 'Navigator'],
+    -extensions => ['MDI', 'Selector'],
  );
  $app->MainLoop;
 
 =head1 DESCRIPTION
 
-B<Obsolete> use L<Tk::AppWindow::Ext::Selector> instead.
-Will be removed in the next version of I<Tk::AppWindow>.
-
 Adds a document list to your application.
-Loads extension NavigatorPanel if it is not already loaded.
+Creates a tool panel called navigator panel unless it already exists.
+
+Replaces L<Tk::AppWindow::Ext::Navigator> which is becoming obsolete.
 
 =head1 CONFIG VARIABLES
 
@@ -52,12 +51,20 @@ sub new {
 	my $class = shift;
 	my $self = $class->SUPER::new(@_);
 	
-	$self->Require('NavigatorPanel');
+	$self->Require('SideBars');
+
+	my $args = $self->GetArgsRef;
+	my $panel = delete $args->{'-selectorpanel'};
+	$panel = 'LEFT' unless defined $panel;
 
 	$self->addPreConfig(
 		-documentinterface => ['PASSIVE', undef, undef, 'MDI'],
 		-treeiconsize => ['PASSIVE'],
 	);
+
+
+	my $sb = $self->extGet('SideBars');
+	$sb->nbAdd('navigator panel', $panel, 'left') unless $sb->nbExists('navigator panel');
 
 	$self->addPostConfig('CreateDocumentList', $self);
 	return $self;
@@ -81,7 +88,8 @@ sub Add {
 
 sub CreateDocumentList {
 	my $self = shift;
-	my $page = $self->extGet('NavigatorPanel')->addPage('Documents', 'document-open', undef, 'Document list', 250);
+	my $sb = $self->extGet('SideBars');
+	my $page = $sb->pageAdd('navigator panel', 'Documents', 'document-open', undef, 'Document list', 250);
 
 	my $dt = $page->DocumentTree(
 		-entryselect => ['SelectDocument', $self],
