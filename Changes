@@ -2,6 +2,7 @@ Revision history for Perl extension Tk::AppWindow.
 
 0.19 Wed Dec 18 2024
 	- Lowered required version of File::Spec to 3.75
+	- Fixed bug in extension Settings. *frame was not recognized as Tk::QuickForm directive.
 
 0.18 Wed Dec 18 2024
 	- Added method popForm to Tk::AppWindow.
